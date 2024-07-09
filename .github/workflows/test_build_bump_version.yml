@@ -23,3 +23,7 @@ jobs:
   bump_version:
     needs: [codeql, test]
     uses: ./.github/workflows/bump_version.yml
+
+  deploy_to_pypi:
+    needs: [bump_version]
+    uses: ./.github/workflows/deploy_to_pypi.yml
