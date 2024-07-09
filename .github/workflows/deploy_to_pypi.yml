@@ -1,9 +1,7 @@
 name: Publish the completed package to Pypi
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 # permissions:                    # Global permissions configuration starts here
 #   contents: read                # 'read' access to repository contents
