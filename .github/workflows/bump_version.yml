@@ -1,13 +1,7 @@
 name: Publish the completed package to Pypi
 
 on:
-  push:
-    branches:
-      - main
-
-# permissions:                    # Global permissions configuration starts here
-#   contents: read                # 'read' access to repository contents
-#   pull-requests: read          # 'write' access to pull requests
+  workflow_call:
 
 jobs:
   codeql:
@@ -22,7 +16,6 @@ jobs:
 
 
   publish:
-    needs: [test, codeql]
     runs-on: ubuntu-latest
     environment: 
       name: 'published'
@@ -55,14 +48,4 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add pyproject.toml
           git commit -m "bump version from workflow"
-          git push origin
-      - name: Build
-        run: poetry build
-      - name: Use Pypi test
-        run: |
-          poetry config repositories.test-pypi https://test.pypi.org/legacy/
-          poetry config pypi-token.test-pypi  ${{ secrets.PYPI_TOKEN }}
-      - name: Publish
-        run: poetry publish -r test-pypi
-
-    
+          git push origin HEAD:${{ github.head_ref }}

@@ -1,0 +1,46 @@
+name: Publish the completed package to Pypi
+
+on:
+  push:
+    branches:
+      - main
+
+# permissions:                    # Global permissions configuration starts here
+#   contents: read                # 'read' access to repository contents
+#   pull-requests: read          # 'write' access to pull requests
+
+jobs:
+
+  deploy_to_pypi:
+    runs-on: ubuntu-latest
+    environment: 
+      name: 'published'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - uses: snok/install-poetry@93ada01c735cc8a383ce0ce2ae205a21c415379b # v1
+        with:
+          version: 1.8.3 # pin the version as they keep changing their APIs
+          virtualenvs-create: false
+          virtualenvs-in-project: false
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          poetry install --with dev --no-interaction --sync
+          python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
+      - name: Build
+        run: poetry build
+      - name: Use Pypi test
+        run: |
+          poetry config repositories.test-pypi https://test.pypi.org/legacy/
+          poetry config pypi-token.test-pypi  ${{ secrets.PYPI_TOKEN }}
+      - name: Publish
+        run: poetry publish -r test-pypi
+
+    
