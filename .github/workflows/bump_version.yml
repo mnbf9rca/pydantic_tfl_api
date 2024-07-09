@@ -1,0 +1,40 @@
+name: Publish the completed package to Pypi
+
+on:
+  workflow_call:
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    environment: 
+      name: 'versioned'
+    permissions:                # Job-level permissions configuration starts here
+      contents: write           # 'write' access to repository contents
+      pull-requests: write      # 'write' access to pull requests    
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          fetch-depth: 2
+      - name: Set up Python
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5
+        with:
+          python-version: 3.12
+      - uses: snok/install-poetry@93ada01c735cc8a383ce0ce2ae205a21c415379b # v1
+        with:
+          version: 1.8.3 # pin the version as they keep changing their APIs
+          virtualenvs-create: false
+          virtualenvs-in-project: false
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          poetry install --with dev --no-interaction --sync
+          python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
+      - name: Bump version
+        run: |
+          poetry version minor
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add pyproject.toml
+          git commit -m "bump version from workflow"
+          git push origin HEAD:${{ github.head_ref }}

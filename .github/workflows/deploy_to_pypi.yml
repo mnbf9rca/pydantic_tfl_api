@@ -1,40 +1,24 @@
 name: Publish the completed package to Pypi
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 # permissions:                    # Global permissions configuration starts here
 #   contents: read                # 'read' access to repository contents
 #   pull-requests: read          # 'write' access to pull requests
 
 jobs:
-  codeql:
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: ./.github/workflows/codeql.yml
 
-  test:
-    uses: ./.github/workflows/test-workflow.yml
-
-
-  publish:
-    needs: [test, codeql]
+  deploy_to_pypi:
     runs-on: ubuntu-latest
     environment: 
       name: 'published'
-    permissions:                # Job-level permissions configuration starts here
-      contents: write           # 'write' access to repository contents
-      pull-requests: write      # 'write' access to pull requests    
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5
+        uses: actions/setup-python@v5
         with:
           python-version: 3.12
       - uses: snok/install-poetry@93ada01c735cc8a383ce0ce2ae205a21c415379b # v1
@@ -48,14 +32,6 @@ jobs:
           . venv/bin/activate
           poetry install --with dev --no-interaction --sync
           python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
-      - name: Bump version
-        run: |
-          poetry version minor
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add pyproject.toml
-          git commit -m "bump version from workflow"
-          git push origin
       - name: Build
         run: poetry build
       - name: Use Pypi test

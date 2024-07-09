@@ -1,0 +1,29 @@
+name: run tests then bump version
+
+on:
+  pull_request:
+
+
+# permissions:                    # Global permissions configuration starts here
+#   contents: read                # 'read' access to repository contents
+#   pull-requests: read          # 'write' access to pull requests
+
+jobs:
+  codeql:
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+
+  test:
+    uses: ./.github/workflows/test-workflow.yml
+
+
+  bump_version:
+    needs: [codeql, test]
+    uses: ./.github/workflows/bump_version.yml
+
+  deploy_to_pypi:
+    needs: [bump_version]
+    uses: ./.github/workflows/deploy_to_pypi.yml
