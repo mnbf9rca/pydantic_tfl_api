@@ -10,25 +10,11 @@ on:
 #   pull-requests: read          # 'write' access to pull requests
 
 jobs:
-  codeql:
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    uses: ./.github/workflows/codeql.yml
 
-  test:
-    uses: ./.github/workflows/test-workflow.yml
-
-
-  publish:
-    needs: [test, codeql]
+  deploy_to_pypi:
     runs-on: ubuntu-latest
     environment: 
       name: 'published'
-    permissions:                # Job-level permissions configuration starts here
-      contents: write           # 'write' access to repository contents
-      pull-requests: write      # 'write' access to pull requests    
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,14 +34,6 @@ jobs:
           . venv/bin/activate
           poetry install --with dev --no-interaction --sync
           python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
-      - name: Bump version
-        run: |
-          poetry version minor
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add pyproject.toml
-          git commit -m "bump version from workflow"
-          git push origin
       - name: Build
         run: poetry build
       - name: Use Pypi test

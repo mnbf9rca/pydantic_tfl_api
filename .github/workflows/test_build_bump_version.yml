@@ -1,0 +1,29 @@
+name: Publish the completed package to Pypi
+
+on:
+  push:
+    branches:
+      - main
+
+# permissions:                    # Global permissions configuration starts here
+#   contents: read                # 'read' access to repository contents
+#   pull-requests: read          # 'write' access to pull requests
+
+jobs:
+  codeql:
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+
+  test:
+    uses: ./.github/workflows/test-workflow.yml
+
+
+  bump_version:
+    needs: [codeql, test]
+    environment: 
+      name: 'published'
+    uses: ./.github/workflows/bump_version.yml
+    
