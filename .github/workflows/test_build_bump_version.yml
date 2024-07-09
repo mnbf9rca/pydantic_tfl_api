@@ -1,8 +1,8 @@
-name: Publish the completed package to Pypi
+name: run tests then bump verison
 
 on:
-  push:
-    branches:
+  pull_request:
+    branches-ignore:
       - main
 
 # permissions:                    # Global permissions configuration starts here
