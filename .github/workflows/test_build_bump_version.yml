@@ -1,4 +1,4 @@
-name: run tests then bump verison
+name: run tests then bump version
 
 on:
   pull_request:
@@ -22,7 +22,4 @@ jobs:
 
   bump_version:
     needs: [codeql, test]
-    environment: 
-      name: 'published'
     uses: ./.github/workflows/bump_version.yml
-    
