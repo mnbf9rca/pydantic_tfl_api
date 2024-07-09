@@ -55,7 +55,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add pyproject.toml
           git commit -m "bump version from workflow"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin
       - name: Build
         run: poetry build
       - name: Use Pypi test
