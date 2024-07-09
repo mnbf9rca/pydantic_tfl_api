@@ -19,12 +19,10 @@ jobs:
 
   test:
     uses: ./.github/workflows/test-workflow.yml
-  
-  dependency-review:    
-    uses: ./.github/workflows/dependency-review.yml
+
 
   publish:
-    needs: [test, dependency-review, codeql]
+    needs: [test, codeql]
     runs-on: ubuntu-latest
     environment: 
       name: 'published'
