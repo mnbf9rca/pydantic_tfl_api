@@ -13,9 +13,9 @@ name: CodeQL
 
 on:
   workflow_call:
-  push:
-    branches-ignore:
-      - main
+  # push:
+  #   branches-ignore:
+  #     - main
   schedule:
     - cron: "43 4 * * 3"
 

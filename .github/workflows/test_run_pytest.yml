@@ -2,9 +2,9 @@ name: test package
 
 on:
   workflow_call:
-  push:
-      branches-ignore:
-          - main
+  # push:
+  #     branches-ignore:
+  #         - main
 
 
 permissions:                    # Global permissions configuration starts here
