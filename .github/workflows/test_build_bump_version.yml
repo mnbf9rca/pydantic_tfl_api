@@ -1,4 +1,4 @@
-name: run tests then bump version
+name: run tests
 
 on:
   pull_request:
@@ -20,10 +20,10 @@ jobs:
     uses: ./.github/workflows/test-workflow.yml
 
 
-  bump_version:
-    needs: [codeql, test]
-    uses: ./.github/workflows/bump_version.yml
+  # bump_version:
+  #   needs: [codeql, test]
+  #   uses: ./.github/workflows/bump_version.yml
 
-  deploy_to_pypi:
-    needs: [bump_version]
-    uses: ./.github/workflows/deploy_to_pypi.yml
+  # deploy_to_pypi:
+  #   needs: [bump_version]
+  #   uses: ./.github/workflows/deploy_to_pypi.yml
