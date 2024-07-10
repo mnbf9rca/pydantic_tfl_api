@@ -11,7 +11,7 @@ on:
 
 jobs:
   bump:
-    uses: ./.github/workflows/CD/bump_version.yml
+    uses: ./.github/workflows/deploy_bump_version.yml
     environment: 
       name: 'bump-version'
     runs-on: ubuntu-latest

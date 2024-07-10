@@ -14,10 +14,13 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    uses: ./.github/workflows/codeql.yml
+    uses: ./.github/workflows/test_codeql.yml
 
   test:
-    uses: ./.github/workflows/test-workflow.yml
+    uses: ./.github/workflows/test_run_pytest.yml
+
+  dependencies:
+    uses: ./.github/workflows/test_dependency_review.yml
 
 
   # bump_version:
