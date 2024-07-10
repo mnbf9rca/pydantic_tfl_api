@@ -1,6 +1,7 @@
 name: bump version, build artifact, and save to main
 on: 
-  # whenever a PR is closed against main
+  # whenever a PR is closed against main, or allow manual runs
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -12,9 +13,7 @@ on:
 jobs:
   bump:
     uses: ./.github/workflows/deploy_bump_version.yml
-    environment: 
-      name: 'bump-version'
-    runs-on: ubuntu-latest
+
 
   # deploy_to_pypi:
   #   uses: ./.github/workflows/CD/deploy_to_pypi.yml
