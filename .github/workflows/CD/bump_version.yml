@@ -18,7 +18,7 @@ jobs:
       actions: 'read'
     steps:
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1
         # Create GitHub App Token to let us push changes to main
         id: app-token
         with:
@@ -58,7 +58,7 @@ jobs:
           poetry build
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
         with:
           name: dist-${{ env.VERSION }}
           path: dist/
