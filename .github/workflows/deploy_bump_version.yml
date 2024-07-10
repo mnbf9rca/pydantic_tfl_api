@@ -1,15 +1,16 @@
 name: bump version, build artifact, and save to main
 on: 
-  workflow_call:
+  # workflow_call:
   # whenever a PR is closed against main
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
 
 jobs:
-  bump_package_version_and_build_artifact:
+  bump_package_version:
     environment: 
       name: 'bump-version'
       
@@ -56,16 +57,6 @@ jobs:
           poetry version minor
           version=$(poetry version | awk '{print $2}')
           echo "VERSION=$version" >> $GITHUB_ENV
-          poetry build
-
-      - name: Upload build artifact
-        id: upload-artifact
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4
-        with:
-          compression-level: 0 # no compression
-          if-no-files-found: error
-          name: dist-${{ env.VERSION }}
-          path: dist/
 
       - name: commit updated version number
         run: |
@@ -79,8 +70,8 @@ jobs:
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           branch: main
+          
+          
     outputs:
       package-version: ${{ env.VERSION }}
-      artifact-url: ${{ steps.upload-artifact.artifact-url }}
-      artifact-id: ${{ steps.upload-artifact.artifact-id }}
-      run-id: ${{ github.run_id }}
+

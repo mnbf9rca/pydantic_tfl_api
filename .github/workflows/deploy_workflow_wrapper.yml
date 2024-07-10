@@ -2,40 +2,35 @@ name: bump version, build artifact, and save to main
 on: 
   # whenever a PR is closed against main, or allow manual runs
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
+  workflow_run: 
+    workflows: ["deploy_bump_version.yml"]
     types:
-      - closed
+      - completed
+
 
 
 
 jobs:
-  bump:
-    uses: ./.github/workflows/deploy_bump_version.yml
-    secrets: inherit
+  build_artefacts:
+    uses: ./.github/workflows/deploy_build_artifact.yaml
     # output:
     #   package-version: ${{ env.VERSION }}
     #   artifact-url: ${{ steps.upload-artifact.artifact-url }}
     #   artifact-id: ${{ steps.upload-artifact.artifact-id }}
+    #   build-run-id: ${{ github.run_id }}
 
 
-  # deploy_to_pypi:
-  #   uses: ./.github/workflows/CD/deploy_to_pypi.yml
-  #   needs: [bump]
-  #   environment: 
-  #     name: 'published'
-  #   runs-on: ubuntu-latest
+
   deploy_to_pypi_test:
-    needs: [bump]
+    needs: [build_artefacts]
     runs-on: ubuntu-latest
     environment: 
-      name: 'published'
+      name: 'pypi-test'
     steps:
       - name: download artefact from build run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-          run-id: ${{ needs.bump.outputs.run-id }}
+          run-id: ${{ job.build_artefacts.outputs.build-run-id }}
           # run-id: ${{ github.event.inputs.workflow_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: extract artefact
