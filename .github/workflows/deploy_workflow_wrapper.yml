@@ -1,4 +1,4 @@
-name: bump version, build artifact, and save to main
+name: build artifact and publish to pypi test
 on: 
   # whenever a PR is closed against main, or allow manual runs
   workflow_dispatch:

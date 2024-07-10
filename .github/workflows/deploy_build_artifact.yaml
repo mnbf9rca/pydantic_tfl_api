@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:                # Job-level permissions configuration starts here
       contents: read           # 'write' access to repository contents
-      artifacts: write
       actions: read
     steps:
 

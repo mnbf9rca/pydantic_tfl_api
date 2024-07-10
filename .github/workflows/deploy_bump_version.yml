@@ -1,4 +1,4 @@
-name: bump version, build artifact, and save to main
+name: bump version
 on: 
   # workflow_call:
   # whenever a PR is closed against main
