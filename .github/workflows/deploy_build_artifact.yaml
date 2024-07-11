@@ -69,9 +69,10 @@ jobs:
         with:
           subject-path: 'dist/*'
 
-      - name: copy attestation to dist dir
-        run: |
-          cp ${{ steps.attest-artifacts.outputs.bundle-path }} $GITHUB_WORKSPACE/dist/attestation.jsonl
+      # dont do this yet - PEP 740 support just isnt ready
+      # - name: copy attestation to dist dir
+      #   run: |
+      #     cp ${{ steps.attest-artifacts.outputs.bundle-path }} $GITHUB_WORKSPACE/dist/attestation.jsonl
 
       - name: Upload build artifact
         id: upload-artifact
