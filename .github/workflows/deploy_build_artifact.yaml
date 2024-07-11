@@ -71,7 +71,7 @@ jobs:
 
       - name: copy attestation to dist dir
         run: |
-          cp${{ steps.attest-artifacts.outputs.bundle-path }}n $GITHUB_WORKSPACE/dist/attestation.jsonl
+          cp ${{ steps.attest-artifacts.outputs.bundle-path }} $GITHUB_WORKSPACE/dist/attestation.jsonl
 
       - name: Upload build artifact
         id: upload-artifact
