@@ -3,7 +3,7 @@ on:
   workflow_call:
 
 jobs:
-  build_artefacts:
+  build_artifacts:
     runs-on: ubuntu-latest
     permissions:                # Job-level permissions configuration starts here
       contents: read           # 'write' access to repository contents
@@ -41,8 +41,8 @@ jobs:
           echo "version is $version"
           echo "VERSION=$version" >> "$GITHUB_ENV"
           echo "VERSION=$version" >> "$GITHUB_OUTPUT"
-          echo "ARTEFACT-NAME=dist-$version" >> "$GITHUB_OUTPUT"
-          echo "ARTEFACT-NAME is $ARTEFACT-NAME"
+          echo "ARTIFACT_NAME=dist-$version" >> "$GITHUB_OUTPUT"
+          echo "ARTIFACT_NAME is $ARTIFACT_NAME"
           poetry build
 
       - name: Upload build artifact
@@ -51,11 +51,11 @@ jobs:
         with:
           compression-level: 0 # no compression
           if-no-files-found: error
-          name: ${{ steps.Build.outputs.ARTEFACT-NAME }}
+          name: ${{ steps.Build.outputs.ARTIFACT_NAME }}
           path: dist/
 
     outputs:
       artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
       package-version: ${{ steps.Build.outputs.VERSION }}
-      artifact-name: ${{ steps.Build.outputs.ARTEFACT-NAME }}
+      artifact-name: ${{ steps.Build.outputs.ARTIFACT_NAME }}
