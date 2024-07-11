@@ -21,9 +21,9 @@ jobs:
     needs: [build_artifacts]
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
-      workflow_run_id: ${{ needs.build_artifacts.outputs.artifact-id }}
-      artefact-version: ${{ needs.build_artifacts.outputs.package-version }}
+      package-version: ${{ needs.build_artifacts.outputs.package-version }}
       target-environment: 'pypi-test'
+      artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
     
     # runs-on: ubuntu-latest
     # permissions:
