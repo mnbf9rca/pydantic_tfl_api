@@ -1,9 +1,11 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "schedule:automergeDaily"
   ],
   "rangeStrategy": "widen",
+  
   "packageRules": [
       {
           "depTypeList": ["dependencies"],
@@ -16,8 +18,8 @@
       },
       {
           "vulnerabilityAlerts": true,
-          "automerge": true,
-          "schedule": ["automergeDaily"]
+          "matchUpdateTypes": ["patch", "minor", "major"],
+          "automerge": true
       }
   ],
   "lockFileMaintenance": {
@@ -25,4 +27,5 @@
   },
   "rebaseWhen": "behind-base-branch",
   "updateNotScheduled": true
+  
 }
