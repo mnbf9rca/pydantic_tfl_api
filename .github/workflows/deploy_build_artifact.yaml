@@ -38,9 +38,11 @@ jobs:
         id: Build
         run: |
           version=$(poetry version | awk '{print $2}')
-          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version is $version"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
           echo "VERSION=$version" >> "$GITHUB_OUTPUT"
-          echo "ARTEFACT-NAME=dist-$version" >> "$GITHUB_OUTPUT
+          echo "ARTEFACT-NAME=dist-$version" >> "$GITHUB_OUTPUT"
+          echo "ARTEFACT-NAME is $ARTEFACT-NAME"
           poetry build
 
       - name: Upload build artifact
