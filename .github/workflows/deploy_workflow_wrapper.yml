@@ -30,13 +30,18 @@ jobs:
     environment: 
       name: 'pypi-test'
     steps:
+      - name: get workspacedir
+        # see https://github.com/actions/runner/issues/2058#issuecomment-1308554566
+        shell: bash
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
       - name: download artefact from previous run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
-          path: $GITHUB_WORKSPACE/dist
+          path: ${{ env.GITHUB_WORKSPACE }}/dist
       - name: show files
         run: |
-          ls $GITHUB_WORKSPACE/dist
+          ls ${{ env.GITHUB_WORKSPACE }}/dist
       - name: extract version from pyproject.toml
         run: |
           version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
@@ -46,6 +51,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          packages-dir: $GITHUB_WORKSPACE/dist
+          packages-dir: ${{ env.GITHUB_WORKSPACE }}/dist
           verbose: true
           print-hash: true
