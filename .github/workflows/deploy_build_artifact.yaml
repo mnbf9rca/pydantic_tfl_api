@@ -1,6 +1,19 @@
 name: build artifact
 on: 
   workflow_call:
+    outputs:
+      artifact-url:
+        description: "URL to the uploaded artifact"
+        value: ${{ jobs.build_artifacts.outputs.artifact-url }}
+      artifact-id:
+        description: "ID of the uploaded artifact"
+        value: ${{ jobs.build_artifacts.outputs.artifact-id }}
+      package-version:
+        description: "Version of the package"
+        value: ${{ jobs.build_artifacts.outputs.package-version }}
+      artifact-name:
+        description: "Name of the artifact"
+        value: ${{ jobs.build_artifacts.outputs.artifact-name }}
 
 jobs:
   build_artifacts:
@@ -39,10 +52,12 @@ jobs:
         run: |
           version=$(poetry version | awk '{print $2}')
           echo "version is $version"
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
-          echo "ARTIFACT_NAME=dist-$version" >> "$GITHUB_OUTPUT"
-          echo "ARTIFACT_NAME is $ARTIFACT_NAME"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          artifact_name="dist-$version"
+          echo "artifact_name is $artifact_name"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
           poetry build
 
       - name: Upload build artifact
@@ -51,11 +66,11 @@ jobs:
         with:
           compression-level: 0 # no compression
           if-no-files-found: error
-          name: ${{ steps.Build.outputs.ARTIFACT_NAME }}
+          name: ${{ steps.Build.outputs.artifact_name }}
           path: dist/
 
     outputs:
       artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
-      package-version: ${{ steps.Build.outputs.VERSION }}
-      artifact-name: ${{ steps.Build.outputs.ARTIFACT_NAME }}
+      package-version: ${{ steps.Build.outputs.version }}
+      artifact-name: ${{ steps.Build.outputs.artifact_name }}
