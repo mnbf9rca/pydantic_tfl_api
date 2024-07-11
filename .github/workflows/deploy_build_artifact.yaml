@@ -59,3 +59,4 @@ jobs:
       artifact-id: ${{ steps.upload-artifact.artifact-id }}
       package-version: ${{ env.VERSION }}
       build-run-id: ${{ github.run_id }}
+      artifact-name: dist-${{ env.VERSION }}
