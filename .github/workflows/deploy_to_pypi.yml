@@ -18,24 +18,29 @@ jobs:
   deploy_to_pypi_test:
     runs-on: ubuntu-latest
     environment: 
-      name: 'published'
+      name: 'pypi-test'
     steps:
       - name: download artefact from previous run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
         with:
           run-id: ${{ github.event.inputs.workflow_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: extract artefact
+          path: $GITHUB_WORKSPACE/dist
+      - name: show files
         run: |
-          tar -xvf *.tar.gz
+          ls $GITHUB_WORKSPACE/dist
       - name: extract version from pyproject.toml
         run: |
           version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
           echo "VERSION=$version" >> $GITHUB_ENV
+          echo "extracted version '{{ $env.VERSION }}' from pyproject.toml"
       - name: Publish package distributions to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          packages-dir: $GITHUB_WORKSPACE/dist
+          verbose: true
+          print-hash: true
 
 
     
