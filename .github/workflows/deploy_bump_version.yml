@@ -3,11 +3,18 @@ on:
   # workflow_call:
   # whenever a PR is closed against main
   workflow_dispatch:
+    inputs:
+      bump_type:
+        type: choice
+        options: ['minor', 'major', 'patch']
+        description: 'Bump major version'
+        required: true
+        default: 'patch'
   pull_request:
     branches:
       - main
     types:
-      - closed
+      - closed  
 
 jobs:
   bump_package_version:
@@ -19,6 +26,15 @@ jobs:
       contents: write           # 'write' access to repository contents
       actions: 'read'
     steps:
+      - name: set bump type
+        id: set_bump_type
+        # if workflow_dispatch, use the 'inputs' context, otherwise set the bump type to 'patch'
+        run: |
+          if [ -n "${{ github.event.inputs.bump_type }}" ]; then
+            echo "BUMP_TYPE=${{ github.event.inputs.bump_type }}" >> "$GITHUB_ENV"
+          else
+            echo "BUMP_TYPE=patch" >> "$GITHUB_ENV"
+          fi
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@31c86eb3b33c9b601a1f60f98dcbfd1d70f379b4 # v1
         # Create GitHub App Token to let us push changes to main
@@ -54,7 +70,7 @@ jobs:
 
       - name: Bump version and build
         run: |
-          poetry version minor
+          poetry version ${{ env.BUMP_TYPE }}
           version=$(poetry version | awk '{print $2}')
           echo "VERSION=$version" >> $GITHUB_ENV
 
