@@ -1,12 +1,6 @@
 name: build artifact
 on: 
   workflow_call:
-  # whenever a PR is closed against main
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed
 
 jobs:
   build_artefacts:
@@ -41,9 +35,12 @@ jobs:
           python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
 
       - name: Build
+        id: Build
         run: |
           version=$(poetry version | awk '{print $2}')
           echo "VERSION=$version" >> $GITHUB_ENV
+          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
+          echo "ARTEFACT-NAME=dist-$version" >> "$GITHUB_OUTPUT
           poetry build
 
       - name: Upload build artifact
@@ -52,11 +49,11 @@ jobs:
         with:
           compression-level: 0 # no compression
           if-no-files-found: error
-          name: dist-${{ env.VERSION }}
+          name: ${{ steps.Build.outputs.ARTEFACT-NAME }}
           path: dist/
+
     outputs:
-      artifact-url: ${{ steps.upload-artifact.artifact-url }}
-      artifact-id: ${{ steps.upload-artifact.artifact-id }}
-      package-version: ${{ env.VERSION }}
-      build-run-id: ${{ github.run_id }}
-      artifact-name: dist-${{ env.VERSION }}
+      artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
+      artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
+      package-version: ${{ steps.Build.outputs.VERSION }}
+      artifact-name: ${{ steps.Build.outputs.ARTEFACT-NAME }}

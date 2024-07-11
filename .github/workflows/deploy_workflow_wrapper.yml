@@ -14,11 +14,10 @@ jobs:
   build_artefacts:
     uses: ./.github/workflows/deploy_build_artifact.yaml
     # output:
-    #   package-version: ${{ env.VERSION }}
-    #   artifact-url: ${{ steps.upload-artifact.artifact-url }}
-    #   artifact-id: ${{ steps.upload-artifact.artifact-id }}
-    #   build-run-id: ${{ github.run_id }}
-    #   artifact-name: dist-${{ env.VERSION }}
+      # artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
+      # artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
+      # package-version: ${{ steps.Build.outputs.VERSION }}
+      # artifact-name: ${{ steps.Build.outputs.ARTEFACT-NAME }}
 
 
   # test this here, then move to deploy_to_pypi.yml
@@ -42,7 +41,7 @@ jobs:
           path: ${{ env.GITHUB_WORKSPACE }}/dist
       - name: show files
         run: |
-          ls ${{ env.GITHUB_WORKSPACE }}/dist/${{ needs.build_artefacts.outputs.artifact-name }}
+          find ${{ env.GITHUB_WORKSPACE }}/dist -type f
       - name: extract version from pyproject.toml
         run: |
           version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
