@@ -7,6 +7,8 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"
 repository = "https://github.com/mnbf9rca/pydantic_tfl_api"
+keywords = ["pydantic", "tfl", "tfl-api", "transport-for-london", "unified-api"]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
