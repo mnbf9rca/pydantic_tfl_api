@@ -25,34 +25,10 @@ jobs:
       target-environment: 'pypi-test'
       artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
     
-    # runs-on: ubuntu-latest
-    # permissions:
-    #   # IMPORTANT: this permission is mandatory for trusted publishing
-    #   id-token: write
-    # environment: 
-    #   name: 'pypi-test'
-    # steps:
-    #   - name: get workspacedir
-    #     # see https://github.com/actions/runner/issues/2058#issuecomment-1308554566
-    #     shell: bash
-    #     run: |
-    #       echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-    #   - name: download artifact from previous run
-    #     uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
-    #     with:
-    #       path: ${{ env.GITHUB_WORKSPACE }}/dist
-    #   - name: show files
-    #     run: |
-    #       find ${{ env.GITHUB_WORKSPACE }}/dist -type f
-    #   # - name: extract version from pyproject.toml
-    #   #   run: |
-    #   #     version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
-    #   #     echo "VERSION=$version" >> $GITHUB_ENV
-    #   #     echo "extracted version '{{ $env.VERSION }}' from pyproject.toml"
-    #   - name: Publish package distributions to TestPyPI
-    #     uses: pypa/gh-action-pypi-publish@release/v1
-    #     with:
-    #       repository-url: https://test.pypi.org/legacy/
-    #       packages-dir: ${{ env.GITHUB_WORKSPACE }}/dist/${{ needs.build_artifacts.outputs.artifact-name  }}
-    #       verbose: true
-    #       print-hash: true
+  deploy_to_pypi_prod:
+    needs: [build_artifacts, deploy_to_pypi_test]
+    uses: ./.github/workflows/deploy_to_pypi.yml
+    with:
+      package-version: ${{ needs.build_artifacts.outputs.package-version }}
+      target-environment: 'pypi-prod'
+      artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
