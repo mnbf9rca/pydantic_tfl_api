@@ -15,6 +15,11 @@ from pydantic_tfl_api.api_token import ApiToken
 from pydantic_tfl_api.rest_client import RestClient
 
 
+# Mock models module
+class MockModel(BaseModel):
+    pass
+
+
 class PydanticTestModel(BaseModel):
     name: str
     age: int
@@ -123,11 +128,6 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
         assert client.models == expected_models
         MockRestClient.assert_called_once_with(api_token)
         MockLoadModels.assert_called_once()
-
-
-# Mock models module
-class MockModel(BaseModel):
-    pass
 
 
 @pytest.mark.parametrize(
@@ -311,6 +311,7 @@ def test_get_result_expiry(s_maxage, date_header, expected_result):
     # Assert
     assert result == expected_result
 
+
 @pytest.mark.parametrize(
     "model_name, models_dict, expected_result, exception",
     [
@@ -330,11 +331,11 @@ def test_get_result_expiry(s_maxage, date_header, expected_result):
     ids=[
         "model_exists",
         "model_does_not_exist",
-    ]
+    ],
 )
 def test_get_model(model_name, models_dict, expected_result, exception):
     # Create a simple Client object
-    class SimpleClient():
+    class SimpleClient:
         def __init__(self, models_to_set):
             self.models = models_to_set
 
@@ -347,3 +348,52 @@ def test_get_model(model_name, models_dict, expected_result, exception):
     else:
         result = Client._get_model(client, model_name)
         assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "Model, response_json, result_expiry, create_model_mock_return, expected_return",
+    [
+        (
+            MockModel,
+            {"name": "Alice", "age": 30},
+            datetime(2023, 12, 31),
+            "TestReturn1",
+            "TestReturn1",
+        ),
+        (
+            MockModel,
+            [{"name": "Bob", "age": 30}, {"name": "Charlie", "age": 25}],
+            datetime(2023, 12, 31),
+            "TestReturn2",
+            ["TestReturn2", "TestReturn2"],
+        ),
+    ],
+    ids=[
+        "single_model",
+        "list_of_models",
+    ],
+)
+def test_create_model_instance(
+    Model, response_json, result_expiry, create_model_mock_return, expected_return
+):
+    # Mock Client
+    client = Client()
+
+    # Mock _create_model_with_expiry
+    with patch.object(
+        client, "_create_model_with_expiry", return_value=create_model_mock_return
+    ) as mock_create_model_with_expiry:
+
+        # Act
+        result = client._create_model_instance(Model, response_json, result_expiry)
+
+        # Assert
+        assert result == expected_return
+        if isinstance(response_json, dict):
+            mock_create_model_with_expiry.assert_called_with(
+                Model, response_json, result_expiry
+            )
+        else:
+            for item in response_json:
+                mock_create_model_with_expiry.assert_any_call(Model, item, result_expiry)
+
