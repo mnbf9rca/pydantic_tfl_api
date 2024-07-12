@@ -31,6 +31,8 @@ from requests import Response
 import pkgutil
 from pydantic import BaseModel
 from . import models
+from datetime import datetime, timedelta
+from email.utils import parsedate_to_datetime
 
 
 class Client:
@@ -54,15 +56,56 @@ class Client:
         # print(models_dict)
         return models_dict
 
+    def _get_s_maxage_from_cache_control_header(self, response: Response) -> int | None:
+        cache_control = response.headers.get("cache-control")
+        # e.g. 'public, must-revalidate, max-age=43200, s-maxage=86400'
+        if cache_control is None:
+            return None
+        directives = cache_control.split(" ")
+        # e.g. ['public,', 'must-revalidate,', 'max-age=43200,', 's-maxage=86400']
+        directives = {d.split("=")[0]: d.split("=")[1] for d in directives if "=" in d}
+        if "s-maxage" not in directives:
+            return None
+        return int(directives["s-maxage"])
+
+    def _get_result_expiry(self, response: Response) -> datetime | None:
+        s_maxage = self._get_s_maxage_from_cache_control_header(response)
+        if s_maxage:
+            request_datetime = parsedate_to_datetime(response.headers.get("date"))
+            return request_datetime + timedelta(seconds=s_maxage)
+
     def _deserialize(self, model_name: str, response: Response) -> Any:
+        result_expiry = self._get_result_expiry(response)
+        Model = self._get_model(model_name)
+        data = response.json()
+
+        result = self._create_model_instance(Model, data, result_expiry)
+
+        return result
+
+    def _get_model(self, model_name: str) -> BaseModel:
         Model = self.models.get(model_name)
         if Model is None:
             raise ValueError(f"No model found with name {model_name}")
-        data = response.json()
-        if isinstance(data, list):
-            return [Model(**item) for item in data]
+        return Model
+
+    def _create_model_instance(
+        self, Model: BaseModel, response_json: Any, result_expiry: datetime
+    ):
+        if isinstance(response_json, dict):
+            return self._create_model_with_expiry(Model, response_json, result_expiry)
         else:
-            return Model(**data)
+            return [
+                self._create_model_with_expiry(Model, item, result_expiry)
+                for item in response_json
+            ]
+
+    def _create_model_with_expiry(
+        self, Model: BaseModel, response_json: Any, result_expiry: datetime
+    ):
+        instance = Model(**response_json)
+        instance.content_expires = result_expiry
+        return instance
 
     def _deserialize_error(self, response: Response) -> models.ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
