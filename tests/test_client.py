@@ -1,4 +1,5 @@
 import pytest
+import json
 from unittest.mock import Mock, patch, MagicMock
 from requests.models import Response
 
@@ -197,8 +198,8 @@ def test_load_models(models_dict, expected_result):
         "s-maxage_present",
         "s-maxage_absent",
         "no_cache_control_header",
-        "negative_s-maxage_value"
-    ]
+        "negative_s-maxage_value",
+    ],
 )
 def test_get_s_maxage_from_cache_control_header(cache_control_header, expected_result):
     # Mock Response
@@ -212,3 +213,50 @@ def test_get_s_maxage_from_cache_control_header(cache_control_header, expected_r
 
     # Assert
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "model_name, response_content, expected_result",
+    [
+        (
+            "MockModel",
+            {"key": "value"},
+            MockModel(key="value"),
+        ),
+        (
+            "MockModel",
+            [{"key": "value"}, {"key": "value2"}],
+            [MockModel(key="value"), MockModel(key="value2")],
+        ),
+    ],
+    ids=[
+        "single_model",
+        "list_of_models",
+    ],
+)
+def test_deserialize(model_name, response_content, expected_result):
+    # Mock Response
+    Response_Object = MagicMock(Response)
+    Response_Object.json.return_value = json.dumps(response_content)
+    
+    # Act
+
+    client = Client()
+    return_datetime = datetime(2024, 7, 12, 13, 00, 00)
+
+    with patch.object(
+        client, "_get_result_expiry", return_value=return_datetime
+    ), patch.object(
+        client, "_get_model", return_value=MockModel
+    ) as mock_get_model, patch.object(
+        client, "_create_model_instance", return_value=expected_result
+    ) as mock_create_model_instance:
+
+        result = client._deserialize(model_name, Response_Object)
+
+    # Assert
+    assert result == expected_result
+    mock_get_model.assert_called_with(model_name)
+    mock_create_model_instance.assert_called_with(
+        MockModel, Response_Object.json.return_value, return_datetime
+    )
