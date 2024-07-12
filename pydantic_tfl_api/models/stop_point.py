@@ -17,7 +17,7 @@ class StopPoint(BaseModel):
     modes: List[str] = Field(alias="modes")
     ics_code: Optional[str] = Field(None, alias="icsCode")
     sms_code: Optional[str] = Field(None, alias="smsCode")
-    stop_type: str = Field(None, alias="stopType")
+    stop_type: Optional[str] = Field(None, alias="stopType")
     station_naptan: str = Field(alias="stationNaptan")
     accessibility_summary: Optional[str] = Field(None, alias="accessibilitySummary")
     hub_naptan_code: Optional[str] = Field(None, alias="hubNaptanCode")
