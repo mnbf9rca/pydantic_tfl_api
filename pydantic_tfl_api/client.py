@@ -68,7 +68,7 @@ class Client:
 
     def _get_result_expiry(self, response: Response) -> datetime | None:
         s_maxage = self._get_s_maxage_from_cache_control_header(response)
-        request_datetime = parsedate_to_datetime(response.headers.get("date"))
+        request_datetime = parsedate_to_datetime(response.headers.get("date")) if "date" in response.headers else None
         if s_maxage and request_datetime:
             return request_datetime + timedelta(seconds=s_maxage)
         return None
@@ -90,7 +90,7 @@ class Client:
 
     def _create_model_instance(
         self, Model: BaseModel, response_json: Any, result_expiry: datetime | None
-    ):
+    ) -> BaseModel | List[BaseModel]:
         if isinstance(response_json, dict):
             return self._create_model_with_expiry(Model, response_json, result_expiry)
         else:

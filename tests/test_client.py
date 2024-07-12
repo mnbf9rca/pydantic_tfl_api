@@ -2,6 +2,7 @@ import pytest
 import json
 from unittest.mock import Mock, patch, MagicMock
 from requests.models import Response
+from email.utils import parsedate_to_datetime
 
 # from importlib import import_module
 # import pkgutil
@@ -238,7 +239,7 @@ def test_deserialize(model_name, response_content, expected_result):
     # Mock Response
     Response_Object = MagicMock(Response)
     Response_Object.json.return_value = json.dumps(response_content)
-    
+
     # Act
 
     client = Client()
@@ -260,3 +261,52 @@ def test_deserialize(model_name, response_content, expected_result):
     mock_create_model_instance.assert_called_with(
         MockModel, Response_Object.json.return_value, return_datetime
     )
+
+
+@pytest.mark.parametrize(
+    "s_maxage, date_header, expected_result",
+    [
+        (
+            86400,
+            {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
+            parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
+            + timedelta(seconds=86400),
+        ),
+        (
+            None,
+            {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
+            None,
+        ),
+        (
+            86400,
+            {},
+            None,
+        ),
+        (
+            None,
+            {},
+            None,
+        ),
+    ],
+    ids=[
+        "s_maxage_and_date_present",
+        "s_maxage_absent",
+        "date_absent",
+        "s_maxage_and_date_absent",
+    ],
+)
+def test_get_result_expiry(s_maxage, date_header, expected_result):
+    # Mock Response
+    response = Response()
+    response.headers.update(date_header)
+
+    # Act
+    client = Client()
+
+    with patch.object(
+        client, "_get_s_maxage_from_cache_control_header", return_value=s_maxage
+    ):
+        result = client._get_result_expiry(response)
+
+    # Assert
+    assert result == expected_result
