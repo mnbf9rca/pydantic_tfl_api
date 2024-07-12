@@ -1,5 +1,8 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
+
+# from importlib import import_module
+# import pkgutil
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, timedelta
@@ -9,7 +12,7 @@ from pydantic_tfl_api.api_token import ApiToken
 from pydantic_tfl_api.rest_client import RestClient
 
 
-class TestModel(BaseModel):
+class PydanticTestModel(BaseModel):
     name: str
     age: int
     content_expires: datetime | None = None
@@ -20,27 +23,27 @@ class TestModel(BaseModel):
     [
         # Happy path tests
         (
-            TestModel,
+            PydanticTestModel,
             {"name": "Alice", "age": 30},
             datetime(2023, 12, 31),
             "Alice",
             30,
             datetime(2023, 12, 31),
         ),
-        (TestModel, {"name": "Bob", "age": 25}, None, "Bob", 25, None),
+        (PydanticTestModel, {"name": "Bob", "age": 25}, None, "Bob", 25, None),
         # Edge cases
         (
-            TestModel,
+            PydanticTestModel,
             {"name": "", "age": 0},
             datetime(2023, 12, 31),
             "",
             0,
             datetime(2023, 12, 31),
         ),
-        (TestModel, {"name": "Charlie", "age": -1}, None, "Charlie", -1, None),
+        (PydanticTestModel, {"name": "Charlie", "age": -1}, None, "Charlie", -1, None),
         # Error cases
         (
-            TestModel,
+            PydanticTestModel,
             {"name": "Alice"},
             datetime(2023, 12, 31),
             None,
@@ -48,7 +51,7 @@ class TestModel(BaseModel):
             None,
         ),  # Missing age
         (
-            TestModel,
+            PydanticTestModel,
             {"age": 30},
             datetime(2023, 12, 31),
             None,
@@ -56,7 +59,7 @@ class TestModel(BaseModel):
             None,
         ),  # Missing name
         (
-            TestModel,
+            PydanticTestModel,
             {"name": "Alice", "age": "thirty"},
             datetime(2023, 12, 31),
             None,
@@ -104,8 +107,9 @@ def test_create_model_with_expiry(
 def test_client_initialization(api_token, expected_client_type, expected_models):
 
     # Arrange
-    with patch("pydantic_tfl_api.client.RestClient") as MockRestClient, \
-         patch("pydantic_tfl_api.client.Client._load_models", return_value=expected_models) as MockLoadModels:
+    with patch("pydantic_tfl_api.client.RestClient") as MockRestClient, patch(
+        "pydantic_tfl_api.client.Client._load_models", return_value=expected_models
+    ) as MockLoadModels:
         MockRestClient.return_value = Mock(spec=RestClient)
 
         # Act
@@ -116,3 +120,53 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
         assert client.models == expected_models
         MockRestClient.assert_called_once_with(api_token)
         MockLoadModels.assert_called_once()
+
+
+# Mock models module
+class MockModel(BaseModel):
+    pass
+
+
+@pytest.mark.parametrize(
+    "models_dict, expected_result",
+    [
+        (
+            {"MockModel": MockModel},
+            {"MockModel": MockModel},
+        ),
+        (
+            {"MockModel1": MockModel, "MockModel2": MockModel},
+            {"MockModel1": MockModel, "MockModel2": MockModel},
+        ),
+        (
+            {"NotAModel": object},
+            {},
+        ),
+        (
+            {},
+            {},
+        ),
+    ],
+    ids=["single_model", "multiple_models", "no_pydantic_model", "no_models"],
+)
+def test_load_models(models_dict, expected_result):
+    # Mock import_module
+    with patch("pydantic_tfl_api.client.import_module") as mock_import_module:
+        mock_module = MagicMock()
+        mock_module.__dict__.update(models_dict)
+        mock_import_module.return_value = mock_module
+
+        # Mock pkgutil.iter_modules
+        with patch("pydantic_tfl_api.client.pkgutil.iter_modules") as mock_iter_modules:
+            mock_iter_modules.return_value = [
+                (None, name, None) for name in models_dict.keys()
+            ]
+
+            # Act
+            from pydantic_tfl_api.client import Client
+
+            client = Client()
+            result = client._load_models()
+
+            # Assert
+            assert result == expected_result
