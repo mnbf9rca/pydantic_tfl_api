@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
+from requests.models import Response
 
 # from importlib import import_module
 # import pkgutil
@@ -170,3 +171,44 @@ def test_load_models(models_dict, expected_result):
 
             # Assert
             assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "cache_control_header, expected_result",
+    [
+        (
+            "public, must-revalidate, max-age=43200, s-maxage=86400",
+            86400,
+        ),
+        (
+            "public, must-revalidate, max-age=43200",
+            None,
+        ),
+        (
+            None,
+            None,
+        ),
+        (
+            "public, must-revalidate, max-age=43200, s-maxage=-1",
+            -1,
+        ),
+    ],
+    ids=[
+        "s-maxage_present",
+        "s-maxage_absent",
+        "no_cache_control_header",
+        "negative_s-maxage_value"
+    ]
+)
+def test_get_s_maxage_from_cache_control_header(cache_control_header, expected_result):
+    # Mock Response
+    response = Response()
+    response.headers = {"cache-control": cache_control_header}
+
+    # Act
+    from pydantic_tfl_api.client import Client
+
+    result = Client._get_s_maxage_from_cache_control_header(None, response)
+
+    # Assert
+    assert result == expected_result
