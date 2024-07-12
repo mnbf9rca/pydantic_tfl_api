@@ -32,7 +32,21 @@ print (client.get_route_by_line_id_with_direction(line_id="northern", direction=
 
 The Pydantic classes are in the `tfl.models` module. The `tfl.client` module contains the `Client` class, which is the main class you will use to interact with the API.
 
-Pydantic models are used to represent the data returned by the TfL API. There is a circular reference in the TfL API, so I handled this in the `StopPoint` model to load the `Line` model only after `StopPoint` is fully loaded. Here's a visualisation of the Pydantic models:
+Pydantic models are used to represent the data returned by the TfL API. There is a circular reference in the TfL API, so I handled this in the `StopPoint` model to load the `Line` model only after `StopPoint` is fully loaded.
+
+The following objects represent responses from the TfL API, and are therefore returned by the `Client` class methods - either individually or as an array of objects:
+
+- `StopPoint`
+- `Mode`
+- `Line`
+- `RouteSequence`
+- `Disruption`
+- `StopPointsResponse`
+- `Prediction`
+
+These objects contains a property `content_expires` which is a `. This is calculated from the headers of the response. You can use these to calculate the time to live of the object, and to determine if the object is still valid - for example if implementing caching.
+
+Here's a Mermaid visualisation of the Pydantic models:
 
 ```mermaid
 classDiagram
