@@ -8,11 +8,12 @@ from email.utils import parsedate_to_datetime
 # import pkgutil
 
 from pydantic import BaseModel, ValidationError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pydantic_tfl_api.client import Client
 from pydantic_tfl_api.api_token import ApiToken
 from pydantic_tfl_api.rest_client import RestClient
+from pydantic_tfl_api.models.api_error import ApiError
 
 
 # Mock models module
@@ -397,3 +398,42 @@ def test_create_model_instance(
             for item in response_json:
                 mock_create_model_with_expiry.assert_any_call(Model, item, result_expiry)
 
+datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+
+@pytest.mark.parametrize(
+    "content_type, response_content, expected_result",
+    [
+        (
+            "application/json",
+            {"timestampUtc": "date", "exceptionType": "type", "httpStatusCode": 404, "httpStatus": "Not Found", "relativeUri": "/uri", "message": "message"},
+            "_deserialize return value",
+        ),
+        (
+            "text/html",
+            "Error message",
+            ApiError(timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"), exceptionType="Unknown", httpStatusCode=404, httpStatus="Not Found", relativeUri="/uri", message='"Error message"'),
+        ),
+    ],
+    ids=[
+        "json_content",
+        "non_json_content",
+    ]
+)
+def test_deserialize_error(content_type, response_content, expected_result):
+    # Mock Response
+    response = Response()
+    response._content = bytes(json.dumps(response_content), 'utf-8')
+    response.headers = {"content-type": content_type, "date": "Tue, 15 Nov 1994 12:45:26 GMT"}
+    response.status_code = 404
+    response.reason = "Not Found"
+    response.url = "/uri"
+
+    client = Client()
+    with patch.object(
+        client, "_deserialize", return_value=expected_result
+    ):
+    # Act
+        result = client._deserialize_error(response)
+
+    # Assert
+    assert result == expected_result

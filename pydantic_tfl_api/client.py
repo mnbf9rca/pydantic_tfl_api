@@ -111,7 +111,7 @@ class Client:
         if response.headers.get("content-type") == "application/json":
             return self._deserialize("ApiError", response)
         return models.ApiError(
-            timestampUtc=response.headers.get("date"),
+            timestampUtc=parsedate_to_datetime(response.headers.get("date")),
             exceptionType="Unknown",
             httpStatusCode=response.status_code,
             httpStatus=response.reason,

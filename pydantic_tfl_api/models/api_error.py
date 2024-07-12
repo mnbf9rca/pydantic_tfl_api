@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 
 class ApiError(BaseModel):
     timestamp_utc: datetime = Field(alias='timestampUtc')
@@ -11,6 +12,7 @@ class ApiError(BaseModel):
 
     @field_validator('timestamp_utc', mode='before')
     def parse_timestamp(cls, v):
-        return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
+        return v if isinstance(v, datetime) else parsedate_to_datetime(v)
+        # return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
 
     model_config = {'populate_by_name': True}
