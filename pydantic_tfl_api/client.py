@@ -64,15 +64,14 @@ class Client:
         directives = cache_control.split(" ")
         # e.g. ['public,', 'must-revalidate,', 'max-age=43200,', 's-maxage=86400']
         directives = {d.split("=")[0]: d.split("=")[1] for d in directives if "=" in d}
-        if "s-maxage" not in directives:
-            return None
-        return int(directives["s-maxage"])
+        return None if "s-maxage" not in directives else int(directives["s-maxage"])  
 
     def _get_result_expiry(self, response: Response) -> datetime | None:
         s_maxage = self._get_s_maxage_from_cache_control_header(response)
-        if s_maxage:
-            request_datetime = parsedate_to_datetime(response.headers.get("date"))
+        request_datetime = parsedate_to_datetime(response.headers.get("date"))
+        if s_maxage and request_datetime:
             return request_datetime + timedelta(seconds=s_maxage)
+        return None
 
     def _deserialize(self, model_name: str, response: Response) -> Any:
         result_expiry = self._get_result_expiry(response)
@@ -90,7 +89,7 @@ class Client:
         return Model
 
     def _create_model_instance(
-        self, Model: BaseModel, response_json: Any, result_expiry: datetime
+        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None
     ):
         if isinstance(response_json, dict):
             return self._create_model_with_expiry(Model, response_json, result_expiry)
@@ -101,7 +100,7 @@ class Client:
             ]
 
     def _create_model_with_expiry(
-        self, Model: BaseModel, response_json: Any, result_expiry: datetime
+        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None
     ):
         instance = Model(**response_json)
         instance.content_expires = result_expiry
@@ -119,7 +118,7 @@ class Client:
             relativeUri=response.url,
             message=response.text,
         )
-
+    
     def get_stop_points_by_line_id(
         self, line_id: str
     ) -> models.StopPoint | List[models.StopPoint] | models.ApiError:
