@@ -310,3 +310,40 @@ def test_get_result_expiry(s_maxage, date_header, expected_result):
 
     # Assert
     assert result == expected_result
+
+@pytest.mark.parametrize(
+    "model_name, models_dict, expected_result, exception",
+    [
+        (
+            "MockModel",
+            {"MockModel": MockModel},
+            MockModel,
+            None,
+        ),
+        (
+            "NonExistentModel",
+            {"MockModel": MockModel},
+            None,
+            ValueError,
+        ),
+    ],
+    ids=[
+        "model_exists",
+        "model_does_not_exist",
+    ]
+)
+def test_get_model(model_name, models_dict, expected_result, exception):
+    # Create a simple Client object
+    class SimpleClient():
+        def __init__(self, models_to_set):
+            self.models = models_to_set
+
+    client = SimpleClient(models_dict)
+
+    # Act and Assert
+    if exception:
+        with pytest.raises(exception):
+            Client._get_model(client, model_name)
+    else:
+        result = Client._get_model(client, model_name)
+        assert result == expected_result
