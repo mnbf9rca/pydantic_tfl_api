@@ -25,5 +25,6 @@ class Prediction(BaseModel):
     time_to_live: datetime = Field(alias='timeToLive')
     mode_name: str = Field(alias='modeName')
     timing: PredictionTiming = Field(alias='timing')
+    content_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}

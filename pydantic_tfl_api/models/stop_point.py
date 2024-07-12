@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from datetime import datetime
 
 
 from .line_group import LineGroup
@@ -16,7 +17,7 @@ class StopPoint(BaseModel):
     modes: List[str] = Field(alias="modes")
     ics_code: Optional[str] = Field(None, alias="icsCode")
     sms_code: Optional[str] = Field(None, alias="smsCode")
-    stop_type: str = Field(alias="stopType")
+    stop_type: str = Field(None, alias="stopType")
     station_naptan: str = Field(alias="stationNaptan")
     accessibility_summary: Optional[str] = Field(None, alias="accessibilitySummary")
     hub_naptan_code: Optional[str] = Field(None, alias="hubNaptanCode")
@@ -36,12 +37,15 @@ class StopPoint(BaseModel):
     )
     children: Optional[List["StopPoint"]] = Field(None, alias="children")
     children_urls: Optional[List[str]] = Field([], alias="childrenUrls")
-    lat: int = Field(alias="lat")
-    lon: int = Field(alias="lon")
+    lat: float = Field(alias="lat")
+    lon: float = Field(alias="lon")
+    content_expires: Optional[datetime] = Field(None)
 
     model_config = {"populate_by_name": True}
 
 
-from .line import Line
+# we have to import Line after StopPoint is defined or we get a circular reference
+from .line import Line  # noqa: E402
 
+# Rebuild the model to reference Line
 StopPoint.model_rebuild()

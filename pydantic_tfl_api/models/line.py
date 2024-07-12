@@ -19,5 +19,6 @@ class Line(BaseModel):
     route_sections: List[RouteSection] = Field(None, alias='routeSections')
     service_types: List[ServiceType] = Field(None, alias='serviceTypes')
     crowding: Optional[Crowding] = Field(None, alias='crowding')
+    content_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}
