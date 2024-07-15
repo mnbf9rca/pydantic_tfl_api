@@ -7,7 +7,7 @@ from pydantic_tfl_api.models import ApiError, LineStatus, Line
 
 def test_create_client_with_api_token():
     # checks that the API key is being passed to the RestClient
-    api_token = 'your_app_key'
+    api_key = 'your_app_key'
     client = Client(api_token)
     assert client.client.app_key['app_key'] == api_token
 
