@@ -26,7 +26,7 @@ from .config import endpoints
 from .api_token import ApiToken
 from .rest_client import RestClient
 from importlib import import_module
-from typing import Any, Literal, List
+from typing import Any, Literal, List, Optional
 from requests import Response
 import pkgutil
 from pydantic import BaseModel
@@ -160,6 +160,9 @@ class Client:
     def get_line_status_severity(
         self, severity: str
     ) -> models.Line | List[models.Line] | models.ApiError:
+        """
+        severity: The level of severity (eg: a number from 0 to 14)
+        """
         return self._send_request_and_deserialize(
             endpoints["lineStatusBySeverity"].format(severity), "Line"
         )
@@ -179,10 +182,10 @@ class Client:
         )
 
     def get_route_by_mode(
-        self, mode: str
+        self, mode: str, service_types: Optional[List[Literal["regular", "night"]]] = None
     ) -> models.Line | List[models.Line] | models.ApiError:
         return self._send_request_and_deserialize(
-            endpoints["routeByMode"].format(mode), "Line"
+            endpoints["routeByMode"].format(mode), "Line", {"serviceTypes": service_types}
         )
 
     def get_route_by_line_id_with_direction(
