@@ -31,7 +31,7 @@ from .config import base_url
 class RestClient():
     """RestClient.
 
-    :param str app_key: API token to access TfL unified API
+    :param str app_key: App key to access TfL unified API
     """
 
     def __init__(self, app_key: str = None):
