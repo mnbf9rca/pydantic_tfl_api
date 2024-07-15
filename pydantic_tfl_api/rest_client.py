@@ -39,11 +39,21 @@ class RestClient():
         self.api_token = {"app_id": api_token.app_id, "app_key": api_token.app_key} if api_token else None
 
     def send_request(self, location, params=None):
-        return requests.get(base_url + location + "?" + self._get_query_strings(params))
+        request_headers = self._get_request_headers()
+        return requests.get(base_url + location + "?" + self._get_query_strings(params), headers=request_headers)
+
+    def _get_request_headers(self):
+        request_headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        if self.api_token is not None:
+            request_headers.update(self.api_token)
+        return request_headers
 
     def _get_query_strings(self, params):
         if params is None:
             params = {}
-        if self.api_token is not None:
-            params.update(self.api_token)
+        # if self.api_token is not None:
+        #     params.update(self.api_token)
         return urlencode(params)
