@@ -13,7 +13,7 @@ class Prediction(BaseModel):
     line_id: str = Field(alias='lineId')
     line_name: str = Field(alias='lineName')
     platform_name: Optional[str] = Field(None, alias='platformName')
-    direction: str = Field(alias='direction')
+    direction: Optional[str] = Field(None, alias='direction')
     bearing: str = Field(alias='bearing')
     destination_naptan_id: str = Field(alias='destinationNaptanId')
     destination_name: str = Field(alias='destinationName')

@@ -10,8 +10,8 @@ from .crowding import Crowding
 
 
 class Line(BaseModel):
-    id: str = Field(alias='id')
-    name: str = Field(alias='name')
+    id: Optional[str] = Field(None, alias='id')
+    name: Optional[str] = Field(None, alias='name')
     mode_name: Optional[str] = Field(None, alias='modeName')
     disruptions: Optional[List[Disruption]] = Field([], alias='disruptions')
     created: Optional[datetime] = Field(None, alias='created')
