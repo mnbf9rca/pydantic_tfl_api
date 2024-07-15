@@ -1,9 +1,8 @@
-from pydantic_tfl_api.client import Client, ApiToken
+from pydantic_tfl_api.client import Client
 
 app_id = 'APPLICATION ID'
 app_key = 'APPLICATION KEY'
 
-# token = ApiToken(app_id, app_key)
 token = None # only need a token if > 1 request per second
 
 client = Client(token)

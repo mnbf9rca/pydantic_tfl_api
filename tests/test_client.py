@@ -11,7 +11,6 @@ from pydantic import BaseModel, ValidationError
 from datetime import datetime, timedelta, timezone
 
 from pydantic_tfl_api.client import Client
-from pydantic_tfl_api.api_token import ApiToken
 from pydantic_tfl_api.rest_client import RestClient
 from pydantic_tfl_api.models.api_error import ApiError
 
@@ -109,7 +108,7 @@ def test_create_model_with_expiry(
     "api_token, expected_client_type, expected_models",
     [
         (None, RestClient, {"test_model"}),
-        (ApiToken("valid_token", "valid_key"), RestClient, {"test_model"}),
+        ( "valid_key", RestClient, {"test_model"}),
     ],
     ids=["no_api_token", "valid_api_token"],
 )

@@ -15,12 +15,12 @@ pip install pydantic-tfl-api
 Uses Pydantic so you can use the `model_dump_json()` method to fully expand all the objects in the result. See [Pydantic documentation](https://docs.pydantic.dev/latest/) for more help.
 
 ```python
-from pydantic_tfl_api.client import Client, ApiToken
+from pydantic_tfl_api.client import Client
 
 app_id = 'APPLICATION ID'
 app_key = 'APPLICATION KEY'
 
-token = ApiToken(app_id, app_key)
+token = "your_secret_token"
 
 client = Client(token)
 print (client.get_line_meta_modes())

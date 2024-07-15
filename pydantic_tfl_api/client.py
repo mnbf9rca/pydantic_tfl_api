@@ -23,7 +23,6 @@
 # SOFTWARE.
 
 from .config import endpoints
-from .api_token import ApiToken
 from .rest_client import RestClient
 from importlib import import_module
 from typing import Any, Literal, List, Optional
@@ -38,10 +37,10 @@ from email.utils import parsedate_to_datetime
 class Client:
     """Client
 
-    :param ApiToken api_token: API token to access TfL unified API
+    :param str api_token: API token to access TfL unified API
     """
 
-    def __init__(self, api_token: ApiToken = None):
+    def __init__(self, api_token: str = None):
         self.client = RestClient(api_token)
         self.models = self._load_models()
 
