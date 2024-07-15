@@ -1,8 +1,11 @@
 # this suite tests that the pydantic models can deserialise the JSON responses from the TFL API
 # it uses snapshot responses from the API on a day that there was some disruption etc.
 
-from config_for_tests import response_to_request_mapping
+from .config_for_tests import response_to_request_mapping
 from requests.models import Response
+import json
+from pydantic import BaseModel
+from typing import List
 
 from pydantic_tfl_api import Client
 
@@ -25,20 +28,23 @@ from pydantic_tfl_api import Client
 
 def create_response_from_json(json_file) -> Response:
     with open(json_file, 'r') as f:
-        serialised_response = f.read()
+        serialised_response = json.load(f)
     response = Response()
-    response.__setstate__(serialised_response)
+    response.headers = serialised_response['headers']
+    response.status_code = serialised_response['status_code']
+    response.url = serialised_response['url']
+    response._content = serialised_response['content'].encode("utf-8")
     return response
 
 for resp in response_to_request_mapping:
-    # def test_deserialise_response(resp=resp):
-    response = create_response_from_json(f"tests/tfl_responses/{resp}.json")
-    endpoint = response_to_request_mapping[resp]["endpoint"]
-    endpoint_args = response_to_request_mapping[resp]["endpoint_args"]
-    endpoint_params = response_to_request_mapping[resp]["endpoint_params"]
-    model = response_to_request_mapping[resp]["model"]
-    client = Client()
-    result = client._deserialize(model, response)
-    assert result
-    assert isinstance(result, client.models[model])
-    # globals()[f"test_deserialise_response_{resp}"] = test_deserialise_response
+    def test_deserialise_response(resp=resp):
+        response = create_response_from_json(f"tests/tfl_responses/{resp}.json")
+        expect_empty_response: bool = response_to_request_mapping[resp]["result_is_empty"]
+        model = response_to_request_mapping[resp]["model"]
+        client = Client()
+
+        result = client._deserialize(model, response)
+        # assert that result is not empty only if we expect it not to be
+        assert (not expect_empty_response and result) or (expect_empty_response and not result)
+
+    globals()[f"test_deserialise_response_{resp}"] = test_deserialise_response
