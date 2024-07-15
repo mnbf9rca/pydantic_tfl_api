@@ -14,13 +14,12 @@ pip install pydantic-tfl-api
 
 Uses Pydantic so you can use the `model_dump_json()` method to fully expand all the objects in the result. See [Pydantic documentation](https://docs.pydantic.dev/latest/) for more help.
 
+You can obtain an API key from [your profile page on the API portal](https://api-portal.tfl.gov.uk/profile) although you only need this if doing more than a dozen or so requests per minute.
+
 ```python
 from pydantic_tfl_api.client import Client
 
-app_id = 'APPLICATION ID'
-app_key = 'APPLICATION KEY'
-
-token = "your_secret_token"
+token = "your_secret_token from https://api-portal.tfl.gov.uk/profile"
 
 client = Client(token)
 print (client.get_line_meta_modes())

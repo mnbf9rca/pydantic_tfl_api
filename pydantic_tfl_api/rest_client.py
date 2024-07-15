@@ -53,6 +53,4 @@ class RestClient():
     def _get_query_strings(self, params):
         if params is None:
             params = {}
-        # if self.api_token is not None:
-        #     params.update(self.api_token)
         return urlencode(params)
