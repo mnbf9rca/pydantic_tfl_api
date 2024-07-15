@@ -4,7 +4,6 @@ from pydantic_tfl_api.models import ApiError, LineStatus, Line
 # basically, we just want to do a minimal set of tests
 # to make sure that the pydantic models load
 # and that the TFL API connectivity is ok - although we'll have 
-
 def test_create_client_with_api_token():
     # checks that the API key is being passed to the RestClient
     api_token = 'your_app_key'
