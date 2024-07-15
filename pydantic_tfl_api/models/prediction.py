@@ -7,7 +7,7 @@ from .prediction_timing import PredictionTiming
 class Prediction(BaseModel):
     id: int = Field(alias='id')
     operation_type: int = Field(alias='operationType')
-    vehicle_id: int = Field(alias='vehicleId')
+    vehicle_id: str = Field(alias='vehicleId')
     naptan_id: str = Field(alias='naptanId')
     station_name: str = Field(alias='stationName')
     line_id: str = Field(alias='lineId')
