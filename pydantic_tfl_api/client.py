@@ -25,7 +25,7 @@
 from .config import endpoints
 from .rest_client import RestClient
 from importlib import import_module
-from typing import Any, Literal, List, Optional
+from typing import Any, Literal, List, Optional, Tuple
 from requests import Response
 import pkgutil
 from pydantic import BaseModel
@@ -55,29 +55,51 @@ class Client:
         # print(models_dict)
         return models_dict
 
-    def _get_s_maxage_from_cache_control_header(self, response: Response) -> int | None:
+    @staticmethod
+    def _parse_int_or_none(value: str) -> int | None:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _get_maxage_headers_from_cache_control_header(response: Response) -> Tuple[Optional[int], Optional[int]]:
         cache_control = response.headers.get("cache-control")
         # e.g. 'public, must-revalidate, max-age=43200, s-maxage=86400'
         if cache_control is None:
-            return None
-        directives = cache_control.split(" ")
-        # e.g. ['public,', 'must-revalidate,', 'max-age=43200,', 's-maxage=86400']
+            return None, None
+        directives = cache_control.split(", ")
+        # e.g. ['public', 'must-revalidate', 'max-age=43200', 's-maxage=86400']
         directives = {d.split("=")[0]: d.split("=")[1] for d in directives if "=" in d}
-        return None if "s-maxage" not in directives else int(directives["s-maxage"])
+        smaxage = Client._parse_int_or_none(directives.get("s-maxage", ""))
+        maxage = Client._parse_int_or_none(directives.get("max-age", ""))
+        return smaxage, maxage
 
-    def _get_result_expiry(self, response: Response) -> datetime | None:
-        s_maxage = self._get_s_maxage_from_cache_control_header(response)
+
+    
+    @staticmethod
+    def _parse_timedelta(value: Optional[int], base_time: Optional[datetime]) -> Optional[datetime]:
+        try:
+            return base_time + timedelta(seconds=value) if value is not None and base_time is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _get_result_expiry(response: Response) -> Tuple[ datetime | None, datetime | None]:
+        s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(response)
         request_datetime = parsedate_to_datetime(response.headers.get("date")) if "date" in response.headers else None
-        if s_maxage and request_datetime:
-            return request_datetime + timedelta(seconds=s_maxage)
-        return None
+
+        s_maxage_expiry = Client._parse_timedelta(s_maxage, request_datetime)
+        maxage_expiry = Client._parse_timedelta(maxage, request_datetime)
+
+        return s_maxage_expiry, maxage_expiry
 
     def _deserialize(self, model_name: str, response: Response) -> Any:
-        result_expiry = self._get_result_expiry(response)
+        shared_expiry, result_expiry = self._get_result_expiry(response)
         Model = self._get_model(model_name)
         data = response.json()
 
-        result = self._create_model_instance(Model, data, result_expiry)
+        result = self._create_model_instance(Model, data, result_expiry, shared_expiry)
 
         return result
 
@@ -88,21 +110,25 @@ class Client:
         return Model
 
     def _create_model_instance(
-        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None
+        self, Model: BaseModel, 
+        response_json: Any, 
+        result_expiry: datetime | None, 
+        shared_expiry: datetime | None
     ) -> BaseModel | List[BaseModel]:
         if isinstance(response_json, dict):
-            return self._create_model_with_expiry(Model, response_json, result_expiry)
+            return self._create_model_with_expiry(Model, response_json, result_expiry, shared_expiry)
         else:
             return [
-                self._create_model_with_expiry(Model, item, result_expiry)
+                self._create_model_with_expiry(Model, item, result_expiry, shared_expiry)
                 for item in response_json
             ]
 
     def _create_model_with_expiry(
-        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None
+        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None, shared_expiry: datetime | None
     ):
         instance = Model(**response_json)
         instance.content_expires = result_expiry
+        instance.shared_expires = shared_expiry
         return instance
 
     def _deserialize_error(self, response: Response) -> models.ApiError:

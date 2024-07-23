@@ -21,5 +21,6 @@ class Line(BaseModel):
     service_types: Optional[List[ServiceType]] = Field(None, alias='serviceTypes')
     crowding: Optional[Crowding] = Field(None, alias='crowding')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}

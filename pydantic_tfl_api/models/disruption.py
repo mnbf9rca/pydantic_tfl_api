@@ -19,6 +19,7 @@ class Disruption(BaseModel):
     affected_stops: List[StopPoint] = Field(alias='affectedStops')
     closure_text: str = Field(alias='closureText')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}
 

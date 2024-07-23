@@ -26,5 +26,6 @@ class Prediction(BaseModel):
     mode_name: str = Field(alias='modeName')
     timing: PredictionTiming = Field(alias='timing')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}

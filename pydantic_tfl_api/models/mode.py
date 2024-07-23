@@ -8,5 +8,6 @@ class Mode(BaseModel):
     is_scheduled_service: bool = Field(alias='isScheduledService')
     mode_name: str = Field(alias='modeName')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}

@@ -10,5 +10,6 @@ class StopPointsResponse(BaseModel):
     total: int = Field(alias='total')
     page: int = Field(alias='page')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {'populate_by_name': True}

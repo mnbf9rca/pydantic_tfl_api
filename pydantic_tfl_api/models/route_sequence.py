@@ -16,5 +16,6 @@ class RouteSequence(BaseModel):
     service_type: Optional[str] = Field(None, alias='serviceType')
     ordered_line_routes: list[OrderedRoute] = Field(alias='orderedLineRoutes')
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
     
     model_config = {'populate_by_name': True}

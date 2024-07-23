@@ -40,6 +40,7 @@ class StopPoint(BaseModel):
     lat: float = Field(alias="lat")
     lon: float = Field(alias="lon")
     content_expires: Optional[datetime] = Field(None)
+    shared_expires: Optional[datetime] = Field(None)
 
     model_config = {"populate_by_name": True}
 
