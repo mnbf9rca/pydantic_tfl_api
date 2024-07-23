@@ -124,7 +124,7 @@ class Client:
             ]
 
     def _create_model_with_expiry(
-        self, Model: BaseModel, response_json: Any, result_expiry: datetime | None, shared_expiry: datetime | None
+        self, Model: BaseModel, response_json: Any, result_expiry: Optional[datetime], shared_expiry: Optional[datetime]
     ):
         instance = Model(**response_json)
         instance.content_expires = result_expiry
