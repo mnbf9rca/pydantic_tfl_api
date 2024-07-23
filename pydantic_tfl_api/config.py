@@ -28,7 +28,7 @@ endpoints = {
     'lineMetaModes': {"uri": 'Line/Meta/Modes', "model" : "Mode"},
     'linesByLineId': {"uri": 'Line/{0}', "model" : "Line"},
     'linesByMode': {"uri": 'Line/Mode/{0}', "model" : "Line"},
-    'lineStatus': {"uri": 'Line/{0}/Status', "model" : ""},
+    'lineStatus': {"uri": 'Line/{0}/Status', "model" : "Line"},
     'lineStatusBySeverity': {"uri": 'Line/Status/{0}', "model" : "Line"},
     'lineStatusByMode': {"uri": 'Line/Mode/{0}/Status', "model" : "Line"},
     'routeByLineId': {"uri": 'Line/{0}/Route', "model" : "Line"},
