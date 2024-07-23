@@ -9,7 +9,7 @@ class MatchedStop(BaseModel):
     top_most_parent_id: Optional[str] = Field(None, alias='topMostParentId')
     modes: list[str]
     stop_type: str = Field(alias='stopType')
-    zone: str = Field(alias='zone')
+    zone: Optional[str] = Field(None, alias='zone')
     lines: Optional[list[Identifier]] = Field([], alias='lines')
     status: bool = Field(alias='status')
     id: str = Field(alias='id')
