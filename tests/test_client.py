@@ -121,7 +121,8 @@ def test_create_model_with_expiry(
     # Act
     if expected_name is None:
         with pytest.raises(ValidationError):
-            Client._create_model_with_expiry(None, Model, response_json, result_expiry, shared_expiry)
+            Client._create_model_with_expiry(
+                None, Model, response_json, result_expiry, shared_expiry)
     else:
         instance = Client._create_model_with_expiry(
             None, Model, response_json, result_expiry, shared_expiry
@@ -138,7 +139,7 @@ def test_create_model_with_expiry(
     "api_token, expected_client_type, expected_models",
     [
         (None, RestClient, {"test_model"}),
-        ( "valid_key", RestClient, {"test_model"}),
+        ("valid_key", RestClient, {"test_model"}),
     ],
     ids=["no_api_token", "valid_api_token"],
 )
@@ -327,7 +328,8 @@ def test_get_maxage_headers_from_cache_control_header(cache_control_header, expe
 def test_deserialize(model_name, response_content, expected_result):
     # Mock Response
     Response_Object = MagicMock(Response)
-    Response_Object.json.return_value = response_content # json.dumps(response_content)
+    # json.dumps(response_content)
+    Response_Object.json.return_value = response_content
 
     # Act
 
@@ -351,6 +353,7 @@ def test_deserialize(model_name, response_content, expected_result):
     mock_create_model_instance.assert_called_with(
         MockModel, Response_Object.json.return_value, return_datetime, return_datetime_2
     )
+
 
 @pytest.mark.parametrize(
     "value, base_time, expected_result",
@@ -417,8 +420,10 @@ def test_parse_timedelta(value, base_time, expected_result):
             43200,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+                parsedate_to_datetime(
+                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
+                parsedate_to_datetime(
+                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
             ),
         ),
         (
@@ -427,7 +432,8 @@ def test_parse_timedelta(value, base_time, expected_result):
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
                 None,
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+                parsedate_to_datetime(
+                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
             ),
         ),
         (
@@ -435,7 +441,8 @@ def test_parse_timedelta(value, base_time, expected_result):
             None,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
+                parsedate_to_datetime(
+                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
                 None
             ),
         ),
@@ -491,7 +498,7 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
 
     # Act
     with patch('pydantic_tfl_api.client.Client._get_maxage_headers_from_cache_control_header', return_value=(s_maxage, maxage)), \
-         patch('pydantic_tfl_api.client.Client._parse_timedelta', side_effect=[expected_result[0], expected_result[1]]):
+            patch('pydantic_tfl_api.client.Client._parse_timedelta', side_effect=[expected_result[0], expected_result[1]]):
         result = Client._get_result_expiry(response)
 
     # Assert
@@ -576,7 +583,8 @@ def test_create_model_instance(
     ) as mock_create_model_with_expiry:
 
         # Act
-        result = client._create_model_instance(Model, response_json, result_expiry, shared_expiry)
+        result = client._create_model_instance(
+            Model, response_json, result_expiry, shared_expiry)
 
         # Assert
         assert result == expected_return
@@ -586,22 +594,28 @@ def test_create_model_instance(
             )
         else:
             for item in response_json:
-                mock_create_model_with_expiry.assert_any_call(Model, item, result_expiry, shared_expiry)
+                mock_create_model_with_expiry.assert_any_call(
+                    Model, item, result_expiry, shared_expiry)
 
-datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+
+datetime_object_with_time_and_tz_utc = datetime(
+    2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+
 
 @pytest.mark.parametrize(
     "content_type, response_content, expected_result",
     [
         (
             "application/json",
-            {"timestampUtc": "Date", "exceptionType": "type", "httpStatusCode": 404, "httpStatus": "Not Found", "relativeUri": "/uri", "message": "message"},
+            {"timestampUtc": "Date", "exceptionType": "type", "httpStatusCode": 404,
+                "httpStatus": "Not Found", "relativeUri": "/uri", "message": "message"},
             "_deserialize return value",
         ),
         (
             "text/html",
             "Error message",
-            ApiError(timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"), exceptionType="Unknown", httpStatusCode=404, httpStatus="Not Found", relativeUri="/uri", message='"Error message"'),
+            ApiError(timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"), exceptionType="Unknown",
+                     httpStatusCode=404, httpStatus="Not Found", relativeUri="/uri", message='"Error message"'),
         ),
     ],
     ids=[
@@ -613,7 +627,8 @@ def test_deserialize_error(content_type, response_content, expected_result):
     # Mock Response
     response = Response()
     response._content = bytes(json.dumps(response_content), 'utf-8')
-    response.headers = {"Content-Type": content_type, "Date": "Tue, 15 Nov 1994 12:45:26 GMT"}
+    response.headers = {"Content-Type": content_type,
+                        "Date": "Tue, 15 Nov 1994 12:45:26 GMT"}
     response.status_code = 404
     response.reason = "Not Found"
     response.url = "/uri"
@@ -622,7 +637,7 @@ def test_deserialize_error(content_type, response_content, expected_result):
     with patch.object(
         client, "_deserialize", return_value=expected_result
     ):
-    # Act
+        # Act
         result = client._deserialize_error(response)
 
     # Assert

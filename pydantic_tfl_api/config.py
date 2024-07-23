@@ -24,22 +24,20 @@
 base_url = "https://api.tfl.gov.uk/"
 
 endpoints = {
-    'stopPointsByLineId': 'Line/{0}/StopPoints',
-    'lineMetaModes': 'Line/Meta/Modes',
-    'linesByLineId': 'Line/{0}',
-    'linesByMode': 'Line/Mode/{0}',
-    'lineStatus': 'Line/{0}/Status',
-    'lineStatusBySeverity': 'Line/Status/{0}',
-    'lineStatusByMode': 'Line/Mode/{0}/Status',
-    'routeByLineId': 'Line/{0}/Route',
-    'routeByLineIdWithDirection': 'Line/{0}/Route/Sequence/{1}',
-    'routeByMode': 'Line/Mode/{0}/Route',
-    'lineDisruptionsByLineId': 'Line/{0}/Disruption',
-    'lineDisruptionsByMode': 'Line/Mode/{0}/Disruption',
-    
-    'stopPointMetaModes': 'StopPoint/Meta/Modes',
-    'stopPointById': 'StopPoint/{0}',
-    'stopPointByMode': 'StopPoint/Mode/{0}',
-
-    'arrivalsByLineId': 'Line/{0}/Arrivals'
+    'stopPointsByLineId': {"uri": 'Line/{0}/StopPoints', "model" : "StopPoint"},
+    'lineMetaModes': {"uri": 'Line/Meta/Modes', "model" : "Mode"},
+    'linesByLineId': {"uri": 'Line/{0}', "model" : "Line"},
+    'linesByMode': {"uri": 'Line/Mode/{0}', "model" : "Line"},
+    'lineStatus': {"uri": 'Line/{0}/Status', "model" : ""},
+    'lineStatusBySeverity': {"uri": 'Line/Status/{0}', "model" : "Line"},
+    'lineStatusByMode': {"uri": 'Line/Mode/{0}/Status', "model" : "Line"},
+    'routeByLineId': {"uri": 'Line/{0}/Route', "model" : "Line"},
+    'routeByLineIdWithDirection': {"uri": 'Line/{0}/Route/Sequence/{1}', "model" : "RouteSequence"},
+    'routeByMode': {"uri": 'Line/Mode/{0}/Route', "model" : "Line"},
+    'lineDisruptionsByLineId': {"uri": 'Line/{0}/Disruption', "model" : "Disruption"},
+    'lineDisruptionsByMode': {"uri": 'Line/Mode/{0}/Disruption', "model" : "Disruption"},
+    'stopPointMetaModes': {"uri": 'StopPoint/Meta/Modes', "model" : "Mode"},
+    'stopPointById': {"uri":  'StopPoint/{0}', "model" : "StopPoint"},
+    'stopPointByMode':  {"uri": 'StopPoint/Mode/{0}', "model" : "StopPointsResponse"},
+    'arrivalsByLineId': {"uri": 'Line/{0}/Arrivals', "model" : "Prediction"}
 }
