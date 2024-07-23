@@ -16,3 +16,5 @@ class MatchedStop(BaseModel):
     name: str = Field(alias='name')
     lat: float = Field(alias='lat')
     lon: float = Field(alias='lon')
+
+    model_config = {'populate_by_name': True}
