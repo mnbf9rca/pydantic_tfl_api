@@ -149,9 +149,11 @@ class Client:
 
     def _send_request_and_deserialize(
         self, endpoint_and_model: dict[str, str],
-        params: str | int | List[str | int] = [], endpoint_args: dict = None
+        params: str | int | List[str | int] = None, endpoint_args: dict = None
     ) -> BaseModel | List[BaseModel] | models.ApiError:
-        if not isinstance(params, List):
+        if params is None:
+            params = []
+        if not isinstance(params, list):
             params = [params]
 
         endpoint = endpoint_and_model["uri"].format(*params)
