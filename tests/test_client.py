@@ -24,36 +24,61 @@ class PydanticTestModel(BaseModel):
     name: str
     age: int
     content_expires: datetime | None = None
+    shared_expires: datetime | None = None
 
 
 @pytest.mark.parametrize(
-    "Model, response_json, result_expiry, expected_name, expected_age, expected_expiry",
+    "Model, response_json, result_expiry, shared_expiry, expected_name, expected_age, expected_expiry, expected_shared_expiry",
     [
         # Happy path tests
         (
             PydanticTestModel,
             {"name": "Alice", "age": 30},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
             "Alice",
             30,
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
         ),
-        (PydanticTestModel, {"name": "Bob", "age": 25}, None, "Bob", 25, None),
+        (
+            PydanticTestModel,
+            {"name": "Bob", "age": 25},
+            None,
+            None,
+            "Bob",
+            25,
+            None,
+            None,
+        ),
         # Edge cases
         (
             PydanticTestModel,
             {"name": "", "age": 0},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
             "",
             0,
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
         ),
-        (PydanticTestModel, {"name": "Charlie", "age": -1}, None, "Charlie", -1, None),
+        (
+            PydanticTestModel,
+            {"name": "Charlie", "age": -1},
+            None,
+            None,
+            "Charlie",
+            -1,
+            None,
+            None,
+        ),
         # Error cases
         (
             PydanticTestModel,
             {"name": "Alice"},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+            None,
             None,
             None,
             None,
@@ -62,6 +87,8 @@ class PydanticTestModel(BaseModel):
             PydanticTestModel,
             {"age": 30},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+            None,
             None,
             None,
             None,
@@ -70,6 +97,8 @@ class PydanticTestModel(BaseModel):
             PydanticTestModel,
             {"name": "Alice", "age": "thirty"},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+            None,
             None,
             None,
             None,
@@ -86,22 +115,23 @@ class PydanticTestModel(BaseModel):
     ],
 )
 def test_create_model_with_expiry(
-    Model, response_json, result_expiry, expected_name, expected_age, expected_expiry
+    Model, response_json, result_expiry, shared_expiry, expected_name, expected_age, expected_expiry, expected_shared_expiry
 ):
 
     # Act
     if expected_name is None:
         with pytest.raises(ValidationError):
-            Client._create_model_with_expiry(None, Model, response_json, result_expiry)
+            Client._create_model_with_expiry(None, Model, response_json, result_expiry, shared_expiry)
     else:
         instance = Client._create_model_with_expiry(
-            None, Model, response_json, result_expiry
+            None, Model, response_json, result_expiry, shared_expiry
         )
 
         # Assert
         assert instance.name == expected_name
         assert instance.age == expected_age
         assert instance.content_expires == expected_expiry
+        assert instance.shared_expires == expected_shared_expiry
 
 
 @pytest.mark.parametrize(
@@ -178,21 +208,70 @@ def test_load_models(models_dict, expected_result):
 @pytest.mark.parametrize(
     "cache_control_header, expected_result",
     [
+        # s-maxage present and valid
         (
             "public, must-revalidate, max-age=43200, s-maxage=86400",
-            86400,
+            (86400, 43200),
         ),
+        # s-maxage absent, only max-age present
         (
             "public, must-revalidate, max-age=43200",
-            None,
+            (None, 43200),
         ),
+        # No cache-control header
         (
             None,
-            None,
+            (None, None),
         ),
+        # Negative s-maxage value
         (
             "public, must-revalidate, max-age=43200, s-maxage=-1",
-            -1,
+            (-1, 43200),
+        ),
+        # No max-age or s-maxage present
+        (
+            "public, must-revalidate",
+            (None, None),
+        ),
+        # Only s-maxage present
+        (
+            "public, s-maxage=86400",
+            (86400, None),
+        ),
+        # Both max-age and s-maxage zero
+        (
+            "public, max-age=0, s-maxage=0",
+            (0, 0),
+        ),
+        # Malformed max-age directive
+        (
+            "public, must-revalidate, max-age=foo, s-maxage=86400",
+            (86400, None),
+        ),
+        # Malformed s-maxage directive
+        (
+            "public, must-revalidate, max-age=43200, s-maxage=bar",
+            (None, 43200),
+        ),
+        # Only s-maxage without a value
+        (
+            "public, must-revalidate, s-maxage=",
+            (None, None),
+        ),
+        # Only max-age without a value
+        (
+            "public, must-revalidate, max-age=",
+            (None, None),
+        ),
+        # max-age and s-maxage with additional spaces
+        (
+            "public, max-age= 3600 , s-maxage= 7200 ",
+            (7200, 3600),
+        ),
+        # Complex header with multiple spaces and ordering
+        (
+            "must-revalidate, public, s-maxage=7200, max-age=3600",
+            (7200, 3600),
         ),
     ],
     ids=[
@@ -200,17 +279,27 @@ def test_load_models(models_dict, expected_result):
         "s-maxage_absent",
         "no_cache_control_header",
         "negative_s-maxage_value",
+        "no_max-age_or_s-maxage",
+        "only_s-maxage_present",
+        "both_max-age_and_s-maxage_zero",
+        "malformed_max-age",
+        "malformed_s-maxage",
+        "s-maxage_no_value",
+        "max-age_no_value",
+        "max-age_and_s-maxage_with_spaces",
+        "complex_header",
     ],
 )
-def test_get_s_maxage_from_cache_control_header(cache_control_header, expected_result):
+def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result):
     # Mock Response
     response = Response()
-    response.headers = {"cache-control": cache_control_header}
+    if cache_control_header is not None:
+        response.headers = {"cache-control": cache_control_header}
+    else:
+        response.headers = {}
 
     # Act
-    from pydantic_tfl_api.client import Client
-
-    result = Client._get_s_maxage_from_cache_control_header(None, response)
+    result = Client._get_maxage_headers_from_cache_control_header(response)
 
     # Assert
     assert result == expected_result
@@ -238,15 +327,16 @@ def test_get_s_maxage_from_cache_control_header(cache_control_header, expected_r
 def test_deserialize(model_name, response_content, expected_result):
     # Mock Response
     Response_Object = MagicMock(Response)
-    Response_Object.json.return_value = json.dumps(response_content)
+    Response_Object.json.return_value = response_content # json.dumps(response_content)
 
     # Act
 
     client = Client()
     return_datetime = datetime(2024, 7, 12, 13, 00, 00)
+    return_datetime_2 = datetime(2025, 7, 12, 13, 00, 00)
 
     with patch.object(
-        client, "_get_result_expiry", return_value=return_datetime
+        client, "_get_result_expiry", return_value=(return_datetime_2, return_datetime)
     ), patch.object(
         client, "_get_model", return_value=MockModel
     ) as mock_get_model, patch.object(
@@ -259,33 +349,125 @@ def test_deserialize(model_name, response_content, expected_result):
     assert result == expected_result
     mock_get_model.assert_called_with(model_name)
     mock_create_model_instance.assert_called_with(
-        MockModel, Response_Object.json.return_value, return_datetime
+        MockModel, Response_Object.json.return_value, return_datetime, return_datetime_2
     )
+
+@pytest.mark.parametrize(
+    "value, base_time, expected_result",
+    [
+        # Valid timedelta
+        (
+            86400,
+            datetime(2023, 11, 15, 12, 45, 26),
+            datetime(2023, 11, 16, 12, 45, 26),
+        ),
+        # None value for timedelta
+        (
+            None,
+            datetime(2023, 11, 15, 12, 45, 26),
+            None,
+        ),
+        # None value for base_time
+        (
+            86400,
+            None,
+            None,
+        ),
+        # Both value and base_time are None
+        (
+            None,
+            None,
+            None,
+        ),
+        # Edge case: zero timedelta
+        (
+            0,
+            datetime(2023, 11, 15, 12, 45, 26),
+            datetime(2023, 11, 15, 12, 45, 26),
+        ),
+        # Negative timedelta
+        (
+            -86400,
+            datetime(2023, 11, 15, 12, 45, 26),
+            datetime(2023, 11, 14, 12, 45, 26),
+        ),
+    ],
+    ids=[
+        "valid_timedelta",
+        "none_value",
+        "none_base_time",
+        "both_none",
+        "zero_timedelta",
+        "negative_timedelta",
+    ],
+)
+def test_parse_timedelta(value, base_time, expected_result):
+    # Act
+    result = Client._parse_timedelta(value, base_time)
+
+    # Assert
+    assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "s_maxage, date_header, expected_result",
+    "s_maxage, maxage, date_header, expected_result",
     [
         (
             86400,
+            43200,
             {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
-            parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
-            + timedelta(seconds=86400),
+            (
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+            ),
         ),
         (
             None,
+            43200,
             {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
-            None,
+            (
+                None,
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+            ),
         ),
         (
             86400,
-            {},
             None,
+            {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
+            (
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
+                None
+            ),
         ),
         (
             None,
-            {},
             None,
+            {"date": "Tue, 15 Nov 1994 12:45:26 GMT"},
+            (None, None),
+        ),
+        (
+            86400,
+            43200,
+            {},
+            (None, None),
+        ),
+        (
+            None,
+            43200,
+            {},
+            (None, None),
+        ),
+        (
+            86400,
+            None,
+            {},
+            (None, None),
+        ),
+        (
+            None,
+            None,
+            {},
+            (None, None),
         ),
     ],
     ids=[
@@ -293,9 +475,13 @@ def test_deserialize(model_name, response_content, expected_result):
         "s_maxage_absent",
         "date_absent",
         "s_maxage_and_date_absent",
+        "both_present_no_date",
+        "maxage_present_no_date",
+        "smaxage_present_no_date",
+        "neither_present_no_date",
     ],
 )
-def test_get_result_expiry(s_maxage, date_header, expected_result):
+def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
     # Mock Response
     response = Response()
     response.headers.update(date_header)
@@ -303,10 +489,13 @@ def test_get_result_expiry(s_maxage, date_header, expected_result):
     # Act
     client = Client()
 
-    with patch.object(
-        client, "_get_s_maxage_from_cache_control_header", return_value=s_maxage
-    ):
-        result = client._get_result_expiry(response)
+    # Act
+    with patch('pydantic_tfl_api.client.Client._get_maxage_headers_from_cache_control_header', return_value=(s_maxage, maxage)), \
+         patch('pydantic_tfl_api.client.Client._parse_timedelta', side_effect=[expected_result[0], expected_result[1]]):
+        result = Client._get_result_expiry(response)
+
+    # Assert
+    assert result == expected_result
 
     # Assert
     assert result == expected_result
@@ -351,12 +540,13 @@ def test_get_model(model_name, models_dict, expected_result, exception):
 
 
 @pytest.mark.parametrize(
-    "Model, response_json, result_expiry, create_model_mock_return, expected_return",
+    "Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return",
     [
         (
             MockModel,
             {"name": "Alice", "age": 30},
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31),
             "TestReturn1",
             "TestReturn1",
         ),
@@ -364,6 +554,7 @@ def test_get_model(model_name, models_dict, expected_result, exception):
             MockModel,
             [{"name": "Bob", "age": 30}, {"name": "Charlie", "age": 25}],
             datetime(2023, 12, 31),
+            datetime(2024, 12, 31),
             "TestReturn2",
             ["TestReturn2", "TestReturn2"],
         ),
@@ -374,7 +565,7 @@ def test_get_model(model_name, models_dict, expected_result, exception):
     ],
 )
 def test_create_model_instance(
-    Model, response_json, result_expiry, create_model_mock_return, expected_return
+    Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return
 ):
     # Mock Client
     client = Client()
@@ -385,17 +576,17 @@ def test_create_model_instance(
     ) as mock_create_model_with_expiry:
 
         # Act
-        result = client._create_model_instance(Model, response_json, result_expiry)
+        result = client._create_model_instance(Model, response_json, result_expiry, shared_expiry)
 
         # Assert
         assert result == expected_return
         if isinstance(response_json, dict):
             mock_create_model_with_expiry.assert_called_with(
-                Model, response_json, result_expiry
+                Model, response_json, result_expiry, shared_expiry
             )
         else:
             for item in response_json:
-                mock_create_model_with_expiry.assert_any_call(Model, item, result_expiry)
+                mock_create_model_with_expiry.assert_any_call(Model, item, result_expiry, shared_expiry)
 
 datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
 
