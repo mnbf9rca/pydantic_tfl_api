@@ -203,10 +203,26 @@ class Client:
         )
 
     def get_line_status_by_mode(
-        self, mode: str
+        self, mode: str, detail: bool = False, severity_level: int = None
     ) -> models.Line | List[models.Line] | models.ApiError:
+        '''
+        Get the line status for all lines for the given modes.
+
+        TfL API operation: Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel
+
+        Args:
+            mode (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+            detail (bool): Include details of the disruptions that are causing the line status, including the affected stops and routes. Default is False.
+            severity_level (int, optional): If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level. Default is None.
+
+        Returns:
+            models.Line | List[models.Line] | models.ApiError: The line status or an error.
+        '''
+        endpoint_args =  {"detail": detail}
+        if severity_level is not None:
+            endpoint_args["severity"] = severity_level
         return self._send_request_and_deserialize(
-            endpoints["lineStatusByMode"], mode
+            endpoints["lineStatusByMode"], mode, endpoint_args
         )
 
     def get_route_by_line_id(
