@@ -1,4 +1,4 @@
-name: Publish the completed package to Pypi
+name: Publish the completed package to PyPi
 
 on:
   workflow_call:
@@ -45,7 +45,7 @@ jobs:
       #     version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
       #     echo "VERSION=$version" >> $GITHUB_ENV
       #     echo "extracted version '{{ $env.VERSION }}' from pyproject.toml"
-      - name: Publish package distributions to TestPyPI
+      - name: Publish package distributions to ${{ inputs.target-environment }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: ${{ vars.PYPI_URL }}
