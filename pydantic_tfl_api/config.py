@@ -23,21 +23,38 @@
 
 base_url = "https://api.tfl.gov.uk/"
 
+# missing:
+# Line_RouteByQueryServiceTypes /Line/Route[?serviceTypes]
+# Line_LineRoutesByIdsByPathIdsQueryServiceTypes /Line/{ids}/Route[?serviceTypes]
+# Line_ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina /Line/{ids}/Arrivals/{stopPointId}[?direction][&destinationStationId]
+# Line_StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly /Line/{id}/StopPoints[?tflOperatedNationalRailStationsOnly]
+# Line_MetaDisruptionCategories /Line/Meta/DisruptionCategories
+# Line_MetaServiceTypes /Line/Meta/ServiceTypes
+# Line_MetaSeverity /Line/Meta/Severity
+# Line_StatusByPathIdsPathStartDatePathEndDateQueryDetail /Line/{ids}/Status/{startDate}/to/{endDate}[?detail]
+# Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel /Line/Mode/{modes}/Status[?detail][&severityLevel]
+# Line_TimetableByPathFromStopPointIdPathId /Line/{id}/Timetable/{fromStopPointId}
+# Line_TimetableToByPathFromStopPointIdPathIdPathToStopPointId /Line/{id}/Timetable/{fromStopPointId}/to/{toStopPointId}
+
+
+
+
 endpoints = {
     'stopPointsByLineId': {"uri": 'Line/{0}/StopPoints', "model" : "StopPoint"},
-    'lineMetaModes': {"uri": 'Line/Meta/Modes', "model" : "Mode"},
-    'linesByLineId': {"uri": 'Line/{0}', "model" : "Line"},
-    'linesByMode': {"uri": 'Line/Mode/{0}', "model" : "Line"},
-    'lineStatus': {"uri": 'Line/{0}/Status', "model" : "Line"},
-    'lineStatusBySeverity': {"uri": 'Line/Status/{0}', "model" : "Line"},
-    'lineStatusByMode': {"uri": 'Line/Mode/{0}/Status', "model" : "Line"},
-    'routeByLineId': {"uri": 'Line/{0}/Route', "model" : "Line"},
-    'routeByLineIdWithDirection': {"uri": 'Line/{0}/Route/Sequence/{1}', "model" : "RouteSequence"},
-    'routeByMode': {"uri": 'Line/Mode/{0}/Route', "model" : "Line"},
-    'lineDisruptionsByLineId': {"uri": 'Line/{0}/Disruption', "model" : "Disruption"},
-    'lineDisruptionsByMode': {"uri": 'Line/Mode/{0}/Disruption', "model" : "Disruption"},
+    'Line_MetaModes': {"uri": 'Line/Meta/Modes', "model" : "Mode"},
+    'Line_GetByPathIds': {"uri": 'Line/{0}', "model" : "Line"},
+    'Line_GetByModeByPathModes': {"uri": 'Line/Mode/{0}', "model" : "Line"},
+    'Line_StatusByIdsByPathIdsQueryDetail': {"uri": 'Line/{0}/Status', "model" : "Line"},
+    'Line_StatusBySeverityByPathSeverity': {"uri": 'Line/Status/{0}', "model" : "Line"},
+    'Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel': {"uri": 'Line/Mode/{0}/Status', "model" : "Line"},
+    'Line_LineRoutesByIdsByPathIdsQueryServiceTypes': {"uri": 'Line/{0}/Route', "model" : "Line"},
+    'Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding': {"uri": 'Line/{0}/Route/Sequence/{1}', "model" : "RouteSequence"},
+    'Line_RouteByModeByPathModesQueryServiceTypes': {"uri": 'Line/Mode/{0}/Route', "model" : "Line"},
+    'Line_DisruptionByPathIds': {"uri": 'Line/{0}/Disruption', "model" : "Disruption"},
+    'Line_DisruptionByModeByPathModes': {"uri": 'Line/Mode/{0}/Disruption', "model" : "Disruption"},
+
     'stopPointMetaModes': {"uri": 'StopPoint/Meta/Modes', "model" : "Mode"},
     'stopPointById': {"uri":  'StopPoint/{0}', "model" : "StopPoint"},
     'stopPointByMode':  {"uri": 'StopPoint/Mode/{0}', "model" : "StopPointsResponse"},
-    'arrivalsByLineId': {"uri": 'Line/{0}/Arrivals', "model" : "Prediction"}
+    'Line_ArrivalsByPathIds': {"uri": 'Line/{0}/Arrivals', "model" : "Prediction"}
 }

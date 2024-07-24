@@ -171,41 +171,91 @@ class Client:
         return self._send_request_and_deserialize(
             endpoints["stopPointsByLineId"], line_id)
 
-    def get_line_meta_modes(self) -> models.Mode | models.ApiError:
-        return self._send_request_and_deserialize(endpoints["lineMetaModes"])
+    def get_line_meta_modes(self) -> List[models.Mode] | models.ApiError:
+        """
+        Gets a list of valid modes.
 
-    def get_lines(
-        self, line_id: str | None = None, mode: str | None = None
+        TfL API operation: Line_MetaModes
+
+        Returns:
+            List[models.Mode] | models.ApiError: A list of modes or an error.
+        """
+        return self._send_request_and_deserialize(endpoints["Line_MetaModes"])
+
+    def get_lines_by_id(
+        self, line_id: str 
+    ) -> List[models.Line] | models.ApiError:
+        """
+        Gets lines that match the specified line ids.
+
+        TfL API operation: Line_GetByPathIds
+
+        Args:
+            line_id (str): A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.
+
+        Returns:
+            List[models.Line] | models.ApiError: The line status or an error.
+        """
+        return self._send_request_and_deserialize(endpoints["Line_GetByPathIds"], line_id)
+
+    def get_lines_by_mode(
+        self, modes: str
     ) -> models.Line | List[models.Line] | models.ApiError:
-        if line_id is None and mode is None:
-            raise ValueError(
-                "Either the --line_id argument or the --mode argument needs to be specified."
-            )
-        if line_id is not None:
-            return self._send_request_and_deserialize(endpoints["linesByLineId"], line_id)
-        return self._send_request_and_deserialize(endpoints["linesByMode"], mode)
+        """
+        Gets lines that serve the given modes.
+
+        TfL API operation: Line_GetByModeByPathModes
+
+        Args:
+            modes (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+        
+        Returns:
+            List[models.Line] | models.ApiError: The line status or an error.
+        """
+        return self._send_request_and_deserialize(endpoints["Line_GetByModeByPathModes"], modes)
+
 
     def get_line_status(
-        self, line: str, include_details: bool = None
+        self, line_ids: str, include_details: bool = None
     ) -> models.Line | List[models.Line] | models.ApiError:
+        """
+        Gets the line status of for given line ids e.g Minor Delays.
+
+        TfL API operation: Line_StatusByIdsByPathIdsQueryDetail
+
+        Args:
+            line_ids (str): A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.
+            include_details (bool, optional): Include details of the disruptions that are causing the line status, including the affected stops and routes. Default is None.
+
+        Returns:
+            List[models.Line] | models.ApiError: The line status or an error.
+        """
         return self._send_request_and_deserialize(
-            endpoints["lineStatus"], line, {"detail": include_details}
+            endpoints["Line_StatusByIdsByPathIdsQueryDetail"], line_ids, {"detail": include_details}
         )
 
     def get_line_status_severity(
         self, severity: str
-    ) -> models.Line | List[models.Line] | models.ApiError:
+    ) -> List[models.Line] | models.ApiError:
         """
-        severity: The level of severity (eg: a number from 0 to 14)
+        Gets the line status for all lines with a given severity A list of valid severity codes can be obtained from a call to Line/Meta/Severity.
+
+        TfL API operation: Line_StatusBySeverityByPathSeverity
+
+        Args:
+            severity (int): Format - int32. The level of severity (eg: a number from 0 to 14)
+
+        Returns:
+            List[models.Line] | models.ApiError: The line status or an error.
         """
         return self._send_request_and_deserialize(
-            endpoints["lineStatusBySeverity"], severity
+            endpoints["Line_StatusBySeverityByPathSeverity"], severity
         )
 
     def get_line_status_by_mode(
         self, mode: str, detail: bool = False, severity_level: int = None
     ) -> models.Line | List[models.Line] | models.ApiError:
-        '''
+        """
         Get the line status for all lines for the given modes.
 
         TfL API operation: Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel
@@ -217,47 +267,116 @@ class Client:
 
         Returns:
             models.Line | List[models.Line] | models.ApiError: The line status or an error.
-        '''
+        """
         endpoint_args =  {"detail": detail}
         if severity_level is not None:
             endpoint_args["severity"] = severity_level
         return self._send_request_and_deserialize(
-            endpoints["lineStatusByMode"], mode, endpoint_args
+            endpoints["Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel"], mode, endpoint_args
         )
 
     def get_route_by_line_id(
-        self, line_id: str
+        self, line_ids: str,
+        service_types: Optional[List[Literal["regular", "night"]]] = None
     ) -> models.Line | List[models.Line] | models.ApiError:
+        """
+        Get all valid routes for given line ids, including the name and id of the originating and terminating stops for each route.
+
+        TfL API operation: Line_LineRoutesByIdsByPathIdsQueryServiceTypes
+
+        Args:
+            mode (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+            service_types (List[Literal["regular", "night"]], optional): A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
+
+        Returns:
+            List[models.Line] | models.ApiError: The line disruptions or an error.
+
+        """
         return self._send_request_and_deserialize(
-            endpoints["routeByLineId"], line_id
+            endpoints["Line_LineRoutesByIdsByPathIdsQueryServiceTypes"], line_ids, {"serviceTypes": service_types}
         )
 
     def get_route_by_mode(
         self, mode: str, service_types: Optional[List[Literal["regular", "night"]]] = None
-    ) -> models.Line | List[models.Line] | models.ApiError:
+    ) -> List[models.Line] | models.ApiError:
+        """
+        Gets all lines and their valid routes for given modes, including the name and id of the originating and terminating stops for each route.
+
+        TfL API operation: Line_DisruptionByPathIds
+
+        Args:
+            mode (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+            service_types (List[Literal["regular", "night"]], optional): A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
+
+        Returns:
+            List[models.Line] | models.ApiError: The line disruptions or an error.
+
+        """
         return self._send_request_and_deserialize(
-            endpoints["routeByMode"], mode, {"serviceTypes": service_types}
+            endpoints["Line_RouteByModeByPathModesQueryServiceTypes"], mode, {"serviceTypes": service_types}
         )
 
     def get_route_by_line_id_with_direction(
-        self, line_id: str, direction: Literal["inbound", "outbound", "all"]
+        self, line_id: str, direction: Literal["inbound", "outbound", "all"],
+        service_types: Optional[List[Literal["regular", "night"]]] = None,
+        exclude_crowding: Optional[bool] = None
     ) -> models.RouteSequence | List[models.RouteSequence] | models.ApiError:
+        """
+        Gets all valid routes for given line id, including the sequence of stops on each route.
+
+        TfL API operation: Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding
+
+        Args:
+            line_id (str): A single line id e.g. victoria
+            direction: The direction of travel. Can be inbound or outbound [or all].
+            service_types (List[Literal["regular", "night"]], optional): A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
+            exclude_crowding (bool, optional): That excludes crowding from line disruptions. Can be true or false.
+
+        Returns:
+            models.Disruption | List[models.Disruption] | models.ApiError: The line disruptions or an error.
+
+        """
+        # TODO test this works
+        endpoint_args = {"serviceTypes": service_types, "excludeCrowding": exclude_crowding}
         return self._send_request_and_deserialize(
-            endpoints["routeByLineIdWithDirection"], [line_id, direction]
+            endpoints["Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding"], [line_id, direction], endpoint_args
         )
 
     def get_line_disruptions_by_line_id(
         self, line_id: str
     ) -> models.Disruption | List[models.Disruption] | models.ApiError:
+        """
+        Get disruptions for the given line ids.
+
+        TfL API operation: Line_DisruptionByPathIds
+
+        Args:
+            line_id (str): A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.
+
+        Returns:
+            models.Disruption | List[models.Disruption] | models.ApiError: The line disruptions or an error.
+
+        """
         return self._send_request_and_deserialize(
-            endpoints["lineDisruptionsByLineId"], line_id
+            endpoints["Line_DisruptionByPathIds"], line_id
         )
 
     def get_line_disruptions_by_mode(
         self, mode: str
     ) -> models.Disruption | List[models.Disruption] | models.ApiError:
+        """
+        Get disruptions for all lines of the given modes.
+
+        TfL API operation: Line_DisruptionByModeByPathModes
+
+        Args:
+            mode (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+    
+        Returns:
+            models.Disruption | List[models.Disruption] | models.ApiError: The line disruptions or an error.
+        """
         return self._send_request_and_deserialize(
-            endpoints["lineDisruptionsByMode"], mode
+            endpoints["Line_DisruptionByModeByPathModes"], mode
         )
 
     def get_stop_points_by_id(
@@ -284,6 +403,17 @@ class Client:
     def get_arrivals_by_line_id(
         self, line_id: str
     ) -> models.Prediction | List[models.Prediction] | models.ApiError:
+        """
+        Get the list of arrival predictions for given line ids based at the given stop.
+
+        TfL API operation: Line_ArrivalsByPathIds
+
+        Args:
+            mode (str): A comma-separated list of modes to filter by. e.g., 'tube,dlr'
+    
+        Returns:
+            models.Prediction | List[models.Prediction] | models.ApiError: A list of predictions.
+        """
         return self._send_request_and_deserialize(
-            endpoints["arrivalsByLineId"], line_id
+            endpoints["Line_ArrivalsByPathIds"], line_id
         )
