@@ -1,6 +1,6 @@
-name: build artifact and publish to pypi
+name: build artifact and publish to PyPi
 on: 
-  # whenever a PR is closed against main, or allow manual runs
+  # whenever version is bumped, or allow manual runs
   workflow_dispatch:
     inputs:
       deploy_to_test:
@@ -30,7 +30,7 @@ jobs:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
       target-environment: 'pypi-test'
       artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
-    
+
   deploy_to_pypi_prod:
     needs: [build_artifacts]
     uses: ./.github/workflows/deploy_to_pypi.yml
