@@ -2,6 +2,12 @@ name: build artifact and publish to pypi
 on: 
   # whenever a PR is closed against main, or allow manual runs
   workflow_dispatch:
+    inputs:
+      deploy_to_test:
+        type: boolean
+        description: 'Deploy to PyPi test'
+        required: false
+        default: false
   workflow_run: 
     workflows: ["bump version"]
     types:
@@ -16,9 +22,9 @@ jobs:
       # package-version:
       # artifact-name:
 
-  # test this here, then move to deploy_to_pypi.yml
   deploy_to_pypi_test:
     needs: [build_artifacts]
+    if: ${{ github.event.inputs.deploy_to_test == true }}
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
