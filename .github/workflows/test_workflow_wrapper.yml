@@ -22,6 +22,12 @@ jobs:
   dependencies:
     uses: ./.github/workflows/test_dependency_review.yml
 
+  # close PR if tests pass and label exists
+  close_pr:
+    needs: [test]
+    uses: ./.github/workflows/test_close_pr.yaml
+    with:
+      pull_requests: ${{ github.event.pull_request }}
 
   # bump_version:
   #   needs: [codeql, test]
