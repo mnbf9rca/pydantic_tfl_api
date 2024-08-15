@@ -33,7 +33,7 @@ jobs:
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
       - name: download artifact from previous run
         id: download-artifact
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        uses: actions/download-artifact@v4 # v4
         with:
           name: ${{ inputs.artifact-name }}
           path: ${{ env.GITHUB_WORKSPACE }}/dist
