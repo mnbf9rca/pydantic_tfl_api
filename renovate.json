@@ -20,6 +20,20 @@
           "vulnerabilityAlerts": true,
           "matchUpdateTypes": ["patch", "minor", "major"],
           "automerge": true
+      },
+      {
+          "matchManagers": ["dockerfile", "github-actions"],
+          "pinDigests": false
+      },
+      {
+          "matchPackageNames": ["pydantic", "requests"],
+          "rangeStrategy": "bump",
+          "automerge": false,
+          "separateMinorPatch": true,
+          "labels": ["renovate-pydantic-requests"],
+          "commitMessageAction": "Test update",
+          "commitMessageTopic": "{{depName}}",
+          "commitMessageExtra": "to {{newVersion}}"
       }
   ],
   "lockFileMaintenance": {
@@ -27,5 +41,4 @@
   },
   "rebaseWhen": "behind-base-branch",
   "updateNotScheduled": true
-  
 }
