@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Delete existing model files",
+      "type": "shell",
+      "command": "rm",
+      "args": [
+        "-rf",
+        "${workspaceFolder}/pydantic_tfl_api/",        
+
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "copy model files to code folder",
+      "dependsOn": ["make sure the pydantic_tfl_api folder exists", "Delete existing model files"],
+      "type": "shell",
+      "command": "cp",
+      "args": [
+        "-r",
+        "${workspaceFolder}/src/*",
+        "${workspaceFolder}/pydantic_tfl_api/"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {"label": "make sure the pydantic_tfl_api folder exists",
+      "dependsOn": ["Delete existing model files"],
+      "type": "shell",
+      "command": "mkdir",
+      "args": [
+        "-p",
+        "${workspaceFolder}/pydantic_tfl_api/"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+
+  ]
+}

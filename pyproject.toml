@@ -43,6 +43,11 @@ relative_files = true
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-branch --cov-report term-missing -vv --strict-markers -rfE"
+markers = [
+    "src_only: Tests that should run only on the 'src' package",
+    "pydantic_tfl_api_only: Tests that should run only on the 'pydantic_tfl_api' package"
+]
+
 
 [tool.flake8]
 max-line-length = 120
