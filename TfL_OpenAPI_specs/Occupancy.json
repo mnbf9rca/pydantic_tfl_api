@@ -1,0 +1,375 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Occupancy",
+        "description": "API's relating to Occupancy and similar services",
+        "license": {
+            "name": "Transport Data Service",
+            "url": "https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service"
+        },
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "https://api.tfl.gov.uk/Occupancy"
+        }
+    ],
+    "paths": {
+        "/ChargeConnector": {
+            "get": {
+                "tags": [
+                    "Occupancy"
+                ],
+                "summary": "Gets the occupancy for all charge connectors",
+                "description": "Gets the occupancy for all charge connectors",
+                "operationId": "Occupancy_GetAllChargeConnectorStatus",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 0,
+                                        "sourceSystemPlaceId": "string",
+                                        "status": "string"
+                                    }
+                                ]
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 0,
+                                        "sourceSystemPlaceId": "string",
+                                        "status": "string"
+                                    }
+                                ]
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": "<ChargeConnectorGet200ApplicationXmlResponse> <id>0</id> <sourceSystemPlaceId>string</sourceSystemPlaceId> <status>string</status> </ChargeConnectorGet200ApplicationXmlResponse>"
+                            },
+                            "text/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": "<ChargeConnectorGet200TextXmlResponse> <id>0</id> <sourceSystemPlaceId>string</sourceSystemPlaceId> <status>string</status> </ChargeConnectorGet200TextXmlResponse>"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ChargeConnector/{ids}": {
+            "get": {
+                "tags": [
+                    "Occupancy"
+                ],
+                "summary": "Gets the occupancy for a charge connectors with a given id (sourceSystemPlaceId)",
+                "description": "Gets the occupancy for a charge connectors with a given id (sourceSystemPlaceId)",
+                "operationId": "Occupancy_GetChargeConnectorStatusByPathIds",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "ChargePointCM-24473-67148"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 0,
+                                        "sourceSystemPlaceId": "string",
+                                        "status": "string"
+                                    }
+                                ]
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": 0,
+                                        "sourceSystemPlaceId": "string",
+                                        "status": "string"
+                                    }
+                                ]
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": "<ChargeConnector-ids-Get200ApplicationXmlResponse> <id>0</id> <sourceSystemPlaceId>string</sourceSystemPlaceId> <status>string</status> </ChargeConnector-ids-Get200ApplicationXmlResponse>"
+                            },
+                            "text/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy"
+                                    }
+                                },
+                                "example": "<ChargeConnector-ids-Get200TextXmlResponse> <id>0</id> <sourceSystemPlaceId>string</sourceSystemPlaceId> <status>string</status> </ChargeConnector-ids-Get200TextXmlResponse>"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/BikePoints/{ids}": {
+            "get": {
+                "tags": [
+                    "Occupancy"
+                ],
+                "summary": "Get the occupancy for bike points.",
+                "description": "Get the occupancy for bike points.",
+                "operationId": "Occupancy_GetBikePointsOccupanciesByPathIds",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BikePoints_805"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.BikePointOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": "string",
+                                        "name": "string",
+                                        "bikesCount": 0,
+                                        "emptyDocks": 0,
+                                        "totalDocks": 0
+                                    }
+                                ]
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.BikePointOccupancy"
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "id": "string",
+                                        "name": "string",
+                                        "bikesCount": 0,
+                                        "emptyDocks": 0,
+                                        "totalDocks": 0
+                                    }
+                                ]
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.BikePointOccupancy"
+                                    }
+                                },
+                                "example": "<BikePoints-ids-Get200ApplicationXmlResponse> <id>string</id> <name>string</name> <bikesCount>0</bikesCount> <emptyDocks>0</emptyDocks> <totalDocks>0</totalDocks> </BikePoints-ids-Get200ApplicationXmlResponse>"
+                            },
+                            "text/xml": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.BikePointOccupancy"
+                                    }
+                                },
+                                "example": "<BikePoints-ids-Get200TextXmlResponse> <id>string</id> <name>string</name> <bikesCount>0</bikesCount> <emptyDocks>0</emptyDocks> <totalDocks>0</totalDocks> </BikePoints-ids-Get200TextXmlResponse>"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/*": {
+            "get": {
+                "tags": [
+                    "StopPoint"
+                ],
+                "summary": "Forwards any remaining requests to the back-end",
+                "description": "Forwards any remaining requests to the back-end",
+                "operationId": "Forward_Proxy",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Tfl.Api.Presentation.Entities.Bay": {
+                "type": "object",
+                "properties": {
+                    "bayType": {
+                        "type": "string"
+                    },
+                    "bayCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "free": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "occupied": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "Tfl.Api.Presentation.Entities.CarParkOccupancy": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "bays": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tfl.Api.Presentation.Entities.Bay"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "carParkDetailsUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "",
+                        "format": "int32"
+                    },
+                    "sourceSystemPlaceId": {
+                        "type": "string",
+                        "description": ""
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": ""
+                    }
+                },
+                "description": ""
+            },
+            "Tfl.Api.Presentation.Entities.BikePointOccupancy": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Id of the bike point such as BikePoints_1"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Name / Common name of the bike point"
+                    },
+                    "bikesCount": {
+                        "type": "integer",
+                        "description": "Total bike counts",
+                        "format": "int32"
+                    },
+                    "emptyDocks": {
+                        "type": "integer",
+                        "description": "Empty docks",
+                        "format": "int32"
+                    },
+                    "totalDocks": {
+                        "type": "integer",
+                        "description": "Total docks available",
+                        "format": "int32"
+                    }
+                },
+                "description": "Bike point occupancy"
+            }
+        },
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "app_key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "app_key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}
