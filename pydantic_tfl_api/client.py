@@ -22,17 +22,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .config import endpoints
-from .rest_client import RestClient
+import os
+
 from importlib import import_module
-from typing import Any, Literal, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from requests import Response
 import pkgutil
-from pydantic import BaseModel
-from . import models
+from pydantic import BaseModel, RootModel
+
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
+# from models import ResponseModel, ApiError
 
+import models
+from rest_client import RestClient
+
+# test_target = os.getenv('PYTHON_TEST_TARGET', 'src')
+
+# if test_target == 'pydantic_tfl_api':
+#     from pydantic_tfl_api import models
+# else:
+#     from src import models
 
 class Client:
     """Client
@@ -47,7 +57,7 @@ class Client:
     def _load_models(self):
         models_dict = {}
         for importer, modname, ispkg in pkgutil.iter_modules(models.__path__):
-            module = import_module(f".models.{modname}", __package__)
+            module = import_module(f"models.{modname}", __package__)
             for model_name in dir(module):
                 attr = getattr(module, model_name)
                 if isinstance(attr, type) and issubclass(attr, BaseModel):
@@ -112,27 +122,19 @@ class Client:
         return Model
 
     def _create_model_instance(
-        self, Model: BaseModel,
-        response_json: Any,
-        result_expiry: datetime | None,
-        shared_expiry: datetime | None
-    ) -> BaseModel | List[BaseModel]:
-        if isinstance(response_json, dict):
-            return self._create_model_with_expiry(Model, response_json, result_expiry, shared_expiry)
-        else:
-            return [
-                self._create_model_with_expiry(
-                    Model, item, result_expiry, shared_expiry)
-                for item in response_json
-            ]
-
-    def _create_model_with_expiry(
         self, Model: BaseModel, response_json: Any, result_expiry: Optional[datetime], shared_expiry: Optional[datetime]
-    ):
-        instance = Model(**response_json)
-        instance.content_expires = result_expiry
-        instance.shared_expires = shared_expiry
-        return instance
+    ) -> models.ResponseModel:
+        is_root_model = isinstance(Model, type) and issubclass(Model, RootModel)
+        # if it's a root model but respons_json is not a list, wrap it in a list
+        if is_root_model and not isinstance(response_json, list):
+            response_json = [response_json]
+
+        # if response_json is a dict, expand it into keyword arguments
+        if isinstance(response_json, dict):
+            content = Model(**response_json)
+        else:
+            content = Model(response_json)
+        return models.ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content)  
 
     def _deserialize_error(self, response: Response) -> models.ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
@@ -165,109 +167,3 @@ class Client:
             return self._deserialize_error(response)
         return self._deserialize(model_name, response)
 
-    def get_stop_points_by_line_id(
-        self, line_id: str
-    ) -> models.StopPoint | List[models.StopPoint] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["stopPointsByLineId"], line_id)
-
-    def get_line_meta_modes(self) -> models.Mode | models.ApiError:
-        return self._send_request_and_deserialize(endpoints["lineMetaModes"])
-
-    def get_lines(
-        self, line_id: str | None = None, mode: str | None = None
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        if line_id is None and mode is None:
-            raise ValueError(
-                "Either the --line_id argument or the --mode argument needs to be specified."
-            )
-        if line_id is not None:
-            return self._send_request_and_deserialize(endpoints["linesByLineId"], line_id)
-        return self._send_request_and_deserialize(endpoints["linesByMode"], mode)
-
-    def get_line_status(
-        self, line: str, include_details: bool = None
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["lineStatus"], line, {"detail": include_details}
-        )
-
-    def get_line_status_severity(
-        self, severity: str
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        """
-        severity: The level of severity (eg: a number from 0 to 14)
-        """
-        return self._send_request_and_deserialize(
-            endpoints["lineStatusBySeverity"], severity
-        )
-
-    def get_line_status_by_mode(
-        self, mode: str
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["lineStatusByMode"], mode
-        )
-
-    def get_route_by_line_id(
-        self, line_id: str
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["routeByLineId"], line_id
-        )
-
-    def get_route_by_mode(
-        self, mode: str, service_types: Optional[List[Literal["regular", "night"]]] = None
-    ) -> models.Line | List[models.Line] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["routeByMode"], mode, {"serviceTypes": service_types}
-        )
-
-    def get_route_by_line_id_with_direction(
-        self, line_id: str, direction: Literal["inbound", "outbound", "all"]
-    ) -> models.RouteSequence | List[models.RouteSequence] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["routeByLineIdWithDirection"], [line_id, direction]
-        )
-
-    def get_line_disruptions_by_line_id(
-        self, line_id: str
-    ) -> models.Disruption | List[models.Disruption] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["lineDisruptionsByLineId"], line_id
-        )
-
-    def get_line_disruptions_by_mode(
-        self, mode: str
-    ) -> models.Disruption | List[models.Disruption] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["lineDisruptionsByMode"], mode
-        )
-
-    def get_stop_points_by_id(
-        self, id: str
-    ) -> models.StopPoint | List[models.StopPoint] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["stopPointById"], id
-        )
-
-    def get_stop_points_by_mode(
-        self, mode: str
-    ) -> models.StopPointsResponse | List[models.StopPointsResponse] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["stopPointByMode"], mode
-        )
-
-    def get_stop_point_meta_modes(
-        self,
-    ) -> models.Mode | List[models.Mode] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["stopPointMetaModes"]
-        )
-
-    def get_arrivals_by_line_id(
-        self, line_id: str
-    ) -> models.Prediction | List[models.Prediction] | models.ApiError:
-        return self._send_request_and_deserialize(
-            endpoints["arrivalsByLineId"], line_id
-        )

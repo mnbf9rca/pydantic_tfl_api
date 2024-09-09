@@ -22,11 +22,11 @@
 # SOFTWARE.
 
 import requests
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
-from .config import base_url
+# try:
+from urllib.parse import urlencode, urljoin
+# except ImportError:
+#     from urllib import urlencode
+from config import base_url
 
 class RestClient():
     """RestClient.
@@ -39,7 +39,9 @@ class RestClient():
 
     def send_request(self, location, params=None):
         request_headers = self._get_request_headers()
-        return requests.get(base_url + location + "?" + self._get_query_strings(params), headers=request_headers)
+        request_path = urljoin(base_url, location)
+
+        return requests.get(request_path + "?" + self._get_query_strings(params), headers=request_headers)
 
     def _get_request_headers(self):
         request_headers = {
@@ -53,4 +55,6 @@ class RestClient():
     def _get_query_strings(self, params):
         if params is None:
             params = {}
-        return urlencode(params)
+        # drop params that are None
+        return urlencode({k: v for k, v in params.items() if v is not None})
+    
