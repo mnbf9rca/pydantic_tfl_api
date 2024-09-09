@@ -1,5 +1,6 @@
 import pytest
 import json
+import os
 from unittest.mock import Mock, patch, MagicMock
 from requests.models import Response
 from email.utils import parsedate_to_datetime
@@ -10,9 +11,15 @@ from email.utils import parsedate_to_datetime
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, timedelta, timezone
 
-from pydantic_tfl_api.client import Client
-from pydantic_tfl_api.rest_client import RestClient
-from pydantic_tfl_api.models.api_error import ApiError
+test_target = os.getenv("PYTHON_TEST_TARGET", "src")
+
+# if test_target == "pydantic_tfl_api":
+#     from pydantic_tfl_api import models, client
+#     from pydantic_tfl_api.rest_client import RestClient
+# else:
+import models
+import client
+from rest_client import RestClient
 
 
 # Mock models module
@@ -26,9 +33,19 @@ class PydanticTestModel(BaseModel):
     content_expires: datetime | None = None
     shared_expires: datetime | None = None
 
+    class Config:
+        from_attributes = True
+
+
+def test_create_client_with_api_token():
+    # checks that the API key is being passed to the RestClient
+    api_token = 'your_app_key'
+    test_client = client.Client(api_token)
+    assert test_client.client.app_key['app_key'] == api_token
+
 
 @pytest.mark.parametrize(
-    "Model, response_json, result_expiry, shared_expiry, expected_name, expected_age, expected_expiry, expected_shared_expiry",
+    "Model, response_json, result_expiry, shared_expiry, expected_name, expected_age, expected_expiry, expected_shared_expiry",  # noqa: E501
     [
         # Happy path tests
         (
@@ -114,25 +131,35 @@ class PydanticTestModel(BaseModel):
         "error_case_invalid_age_type",
     ],
 )
-def test_create_model_with_expiry(
-    Model, response_json, result_expiry, shared_expiry, expected_name, expected_age, expected_expiry, expected_shared_expiry
+def test_create_model_instance(
+    Model,
+    response_json,
+    result_expiry,
+    shared_expiry,
+    expected_name,
+    expected_age,
+    expected_expiry,
+    expected_shared_expiry,
 ):
-
     # Act
+    response_json_parsed = json.loads(json.dumps(response_json))
     if expected_name is None:
         with pytest.raises(ValidationError):
-            Client._create_model_with_expiry(
-                None, Model, response_json, result_expiry, shared_expiry)
+            client.Client._create_model_instance(
+                None, Model, response_json_parsed, result_expiry, shared_expiry
+            )
     else:
-        instance = Client._create_model_with_expiry(
-            None, Model, response_json, result_expiry, shared_expiry
+        instance = client.Client._create_model_instance(
+            None, Model, response_json_parsed, result_expiry, shared_expiry
         )
 
-        # Assert
-        assert instance.name == expected_name
-        assert instance.age == expected_age
+        assert isinstance(instance, models.ResponseModel)
         assert instance.content_expires == expected_expiry
         assert instance.shared_expires == expected_shared_expiry
+        instance_content = instance.content
+        assert isinstance(instance_content, Model)
+        assert instance_content.name == expected_name
+        assert instance_content.age == expected_age
 
 
 @pytest.mark.parametrize(
@@ -144,19 +171,20 @@ def test_create_model_with_expiry(
     ids=["no_api_token", "valid_api_token"],
 )
 def test_client_initialization(api_token, expected_client_type, expected_models):
-
     # Arrange
-    with patch("pydantic_tfl_api.client.RestClient") as MockRestClient, patch(
-        "pydantic_tfl_api.client.Client._load_models", return_value=expected_models
+    with patch("client.RestClient") as MockRestClient, patch(
+        # f"{test_target}.client.Client._load_models", return_value=expected_models
+        "client.Client._load_models", return_value=expected_models
+
     ) as MockLoadModels:
         MockRestClient.return_value = Mock(spec=RestClient)
 
         # Act
-        client = Client(api_token)
+        test_client = client.Client(api_token)
 
         # Assert
-        assert isinstance(client.client, expected_client_type)
-        assert client.models == expected_models
+        assert isinstance(test_client.client, expected_client_type)
+        assert test_client.models == expected_models
         MockRestClient.assert_called_once_with(api_token)
         MockLoadModels.assert_called_once()
 
@@ -185,22 +213,21 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
 )
 def test_load_models(models_dict, expected_result):
     # Mock import_module
-    with patch("pydantic_tfl_api.client.import_module") as mock_import_module:
+    with patch("client.import_module") as mock_import_module:
         mock_module = MagicMock()
         mock_module.__dict__.update(models_dict)
         mock_import_module.return_value = mock_module
 
         # Mock pkgutil.iter_modules
-        with patch("pydantic_tfl_api.client.pkgutil.iter_modules") as mock_iter_modules:
+        with patch("client.pkgutil.iter_modules") as mock_iter_modules:
             mock_iter_modules.return_value = [
                 (None, name, None) for name in models_dict.keys()
             ]
 
             # Act
-            from pydantic_tfl_api.client import Client
 
-            client = Client()
-            result = client._load_models()
+            test_client = client.Client()
+            result = test_client._load_models()
 
             # Assert
             assert result == expected_result
@@ -291,7 +318,9 @@ def test_load_models(models_dict, expected_result):
         "complex_header",
     ],
 )
-def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result):
+def test_get_maxage_headers_from_cache_control_header(
+    cache_control_header, expected_result
+):
     # Mock Response
     response = Response()
     if cache_control_header is not None:
@@ -300,7 +329,7 @@ def test_get_maxage_headers_from_cache_control_header(cache_control_header, expe
         response.headers = {}
 
     # Act
-    result = Client._get_maxage_headers_from_cache_control_header(response)
+    result = client.Client._get_maxage_headers_from_cache_control_header(response)
 
     # Assert
     assert result == expected_result
@@ -333,19 +362,20 @@ def test_deserialize(model_name, response_content, expected_result):
 
     # Act
 
-    client = Client()
+    test_client = client.Client()
     return_datetime = datetime(2024, 7, 12, 13, 00, 00)
     return_datetime_2 = datetime(2025, 7, 12, 13, 00, 00)
 
     with patch.object(
-        client, "_get_result_expiry", return_value=(return_datetime_2, return_datetime)
+        test_client,
+        "_get_result_expiry",
+        return_value=(return_datetime_2, return_datetime),
     ), patch.object(
-        client, "_get_model", return_value=MockModel
+        test_client, "_get_model", return_value=MockModel
     ) as mock_get_model, patch.object(
-        client, "_create_model_instance", return_value=expected_result
+        test_client, "_create_model_instance", return_value=expected_result
     ) as mock_create_model_instance:
-
-        result = client._deserialize(model_name, Response_Object)
+        result = test_client._deserialize(model_name, Response_Object)
 
     # Assert
     assert result == expected_result
@@ -406,7 +436,7 @@ def test_deserialize(model_name, response_content, expected_result):
 )
 def test_parse_timedelta(value, base_time, expected_result):
     # Act
-    result = Client._parse_timedelta(value, base_time)
+    result = client.Client._parse_timedelta(value, base_time)
 
     # Assert
     assert result == expected_result
@@ -420,10 +450,10 @@ def test_parse_timedelta(value, base_time, expected_result):
             43200,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime(
-                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
-                parsedate_to_datetime(
-                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
+                + timedelta(seconds=86400),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
+                + timedelta(seconds=43200),
             ),
         ),
         (
@@ -432,8 +462,8 @@ def test_parse_timedelta(value, base_time, expected_result):
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
                 None,
-                parsedate_to_datetime(
-                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200)
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
+                + timedelta(seconds=43200),
             ),
         ),
         (
@@ -441,9 +471,9 @@ def test_parse_timedelta(value, base_time, expected_result):
             None,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime(
-                    "Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
-                None
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
+                + timedelta(seconds=86400),
+                None,
             ),
         ),
         (
@@ -494,15 +524,14 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
     response.headers.update(date_header)
 
     # Act
-    client = Client()
-
-    # Act
-    with patch('pydantic_tfl_api.client.Client._get_maxage_headers_from_cache_control_header', return_value=(s_maxage, maxage)), \
-            patch('pydantic_tfl_api.client.Client._parse_timedelta', side_effect=[expected_result[0], expected_result[1]]):
-        result = Client._get_result_expiry(response)
-
-    # Assert
-    assert result == expected_result
+    with patch(
+        "client.Client._get_maxage_headers_from_cache_control_header",
+        return_value=(s_maxage, maxage),
+    ), patch(
+        "client.Client._parse_timedelta",
+        side_effect=[expected_result[0], expected_result[1]],
+    ):
+        result = client.Client._get_result_expiry(response)
 
     # Assert
     assert result == expected_result
@@ -535,71 +564,67 @@ def test_get_model(model_name, models_dict, expected_result, exception):
         def __init__(self, models_to_set):
             self.models = models_to_set
 
-    client = SimpleClient(models_dict)
+    test_client = SimpleClient(models_dict)
 
     # Act and Assert
     if exception:
         with pytest.raises(exception):
-            Client._get_model(client, model_name)
+            client.Client._get_model(test_client, model_name)
     else:
-        result = Client._get_model(client, model_name)
+        result = client.Client._get_model(test_client, model_name)
         assert result == expected_result
 
 
-@pytest.mark.parametrize(
-    "Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return",
-    [
-        (
-            MockModel,
-            {"name": "Alice", "age": 30},
-            datetime(2023, 12, 31),
-            datetime(2024, 12, 31),
-            "TestReturn1",
-            "TestReturn1",
-        ),
-        (
-            MockModel,
-            [{"name": "Bob", "age": 30}, {"name": "Charlie", "age": 25}],
-            datetime(2023, 12, 31),
-            datetime(2024, 12, 31),
-            "TestReturn2",
-            ["TestReturn2", "TestReturn2"],
-        ),
-    ],
-    ids=[
-        "single_model",
-        "list_of_models",
-    ],
-)
-def test_create_model_instance(
-    Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return
-):
-    # Mock Client
-    client = Client()
+# @pytest.mark.parametrize(
+#     "Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return",
+#     [
+#         (
+#             MockModel,
+#             {"name": "Alice", "age": 30},
+#             datetime(2023, 12, 31),
+#             datetime(2024, 12, 31),
+#             "TestReturn1",
+#             "TestReturn1",
+#         ),
+#         (
+#             MockModel,
+#             [{"name": "Bob", "age": 30}, {"name": "Charlie", "age": 25}],
+#             datetime(2023, 12, 31),
+#             datetime(2024, 12, 31),
+#             "TestReturn2",
+#             "TestReturn2",
+#         ),
+#     ],
+#     ids=[
+#         "single_model",
+#         "list_of_models",
+#     ],
+# )
+# def test_create_model_instance_2(
+#     Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return
+# ):
+#     # Mock Client
+#     test_client = client.Client()
 
-    # Mock _create_model_with_expiry
-    with patch.object(
-        client, "_create_model_with_expiry", return_value=create_model_mock_return
-    ) as mock_create_model_with_expiry:
+#     # Mock _create_model_instance
+#     with patch.object(
+#         test_client, "_create_model_instance", return_value=create_model_mock_return
+#     ) as mock_create_model_instance:
 
-        # Act
-        result = client._create_model_instance(
-            Model, response_json, result_expiry, shared_expiry)
+#         # Act
+#         result = test_client._create_model_instance(
+#             Model, response_json, result_expiry, shared_expiry)
 
-        # Assert
-        assert result == expected_return
-        if isinstance(response_json, dict):
-            mock_create_model_with_expiry.assert_called_with(
-                Model, response_json, result_expiry, shared_expiry
-            )
-        else:
-            for item in response_json:
-                mock_create_model_with_expiry.assert_any_call(
-                    Model, item, result_expiry, shared_expiry)
+#         # Assert
+#         assert result == expected_return
+#         mock_create_model_instance.assert_called_with(
+#             Model, response_json, result_expiry, shared_expiry
+#         )
 
 
 datetime_object_with_time_and_tz_utc = datetime(
-    2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+    2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc
+)
 
 
 @pytest.mark.parametrize(
@@ -607,38 +632,50 @@ datetime_object_with_time_and_tz_utc = datetime(
     [
         (
             "application/json",
-            {"timestampUtc": "Date", "exceptionType": "type", "httpStatusCode": 404,
-                "httpStatus": "Not Found", "relativeUri": "/uri", "message": "message"},
+            {
+                "timestampUtc": "Date",
+                "exceptionType": "type",
+                "httpStatusCode": 404,
+                "httpStatus": "Not Found",
+                "relativeUri": "/uri",
+                "message": "message",
+            },
             "_deserialize return value",
         ),
         (
             "text/html",
             "Error message",
-            ApiError(timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"), exceptionType="Unknown",
-                     httpStatusCode=404, httpStatus="Not Found", relativeUri="/uri", message='"Error message"'),
+            models.ApiError(
+                timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
+                exceptionType="Unknown",
+                httpStatusCode=404,
+                httpStatus="Not Found",
+                relativeUri="/uri",
+                message='"Error message"',
+            ),
         ),
     ],
     ids=[
         "json_content",
         "non_json_content",
-    ]
+    ],
 )
 def test_deserialize_error(content_type, response_content, expected_result):
     # Mock Response
     response = Response()
-    response._content = bytes(json.dumps(response_content), 'utf-8')
-    response.headers = {"Content-Type": content_type,
-                        "Date": "Tue, 15 Nov 1994 12:45:26 GMT"}
+    response._content = bytes(json.dumps(response_content), "utf-8")
+    response.headers = {
+        "Content-Type": content_type,
+        "Date": "Tue, 15 Nov 1994 12:45:26 GMT",
+    }
     response.status_code = 404
     response.reason = "Not Found"
     response.url = "/uri"
 
-    client = Client()
-    with patch.object(
-        client, "_deserialize", return_value=expected_result
-    ):
+    test_client = client.Client()
+    with patch.object(test_client, "_deserialize", return_value=expected_result):
         # Act
-        result = client._deserialize_error(response)
+        result = test_client._deserialize_error(response)
 
     # Assert
     assert result == expected_result

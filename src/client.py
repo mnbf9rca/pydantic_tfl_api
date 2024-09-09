@@ -28,7 +28,7 @@ from importlib import import_module
 from typing import Any, List, Optional, Tuple
 from requests import Response
 import pkgutil
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -124,6 +124,11 @@ class Client:
     def _create_model_instance(
         self, Model: BaseModel, response_json: Any, result_expiry: Optional[datetime], shared_expiry: Optional[datetime]
     ) -> models.ResponseModel:
+        is_root_model = isinstance(Model, type) and issubclass(Model, RootModel)
+        # if it's a root model but respons_json is not a list, wrap it in a list
+        if is_root_model and not isinstance(response_json, list):
+            response_json = [response_json]
+
         # if response_json is a dict, expand it into keyword arguments
         if isinstance(response_json, dict):
             content = Model(**response_json)
