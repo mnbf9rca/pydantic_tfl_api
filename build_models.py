@@ -559,6 +559,31 @@ def find_enum_imports(model: BaseModel) -> Set[str]:
     return import_set
 
 
+def resolve_forward_refs_in_annotation(annotation: Any, models: Dict[str, Type[BaseModel]], circular_models: Set[str]) -> str:
+    """
+    Recursively resolve ForwardRef in an annotation to a string representation, 
+    handling Optional, List, and other generics, and quoting forward references.
+    """
+    origin = get_origin(annotation)
+    args = get_args(annotation)
+
+    # Handle Optional as Union[T, NoneType] and convert it to Optional[T]
+    if origin is Union and len(args) == 2 and type(None) in args:
+        non_none_arg = args[0] if args[0] is not type(None) else args[1]
+        resolved_inner = resolve_forward_refs_in_annotation(non_none_arg, models, circular_models)
+        return f"Optional[{resolved_inner}]"
+
+    if origin is None:
+        # Base case: if it's a ForwardRef, return it quoted
+        if isinstance(annotation, ForwardRef):
+            return f"'{annotation.__forward_arg__}'" if annotation.__forward_arg__ in circular_models else annotation.__forward_arg__
+        return annotation.__name__ if hasattr(annotation, "__name__") else str(annotation)
+
+    # For generics like List, Dict, etc., resolve the inner types
+    resolved_args = ", ".join(resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args)
+    return f"{origin.__name__}[{resolved_args}]"
+
+
 def write_model_fields(
     model_file: TextIOWrapper,
     model: BaseModel,
@@ -569,36 +594,12 @@ def write_model_fields(
     for field_name, field in model.model_fields.items():
         sanitized_field_name = sanitize_field_name(field_name)
 
-        # Extract the inner types (handles Optional, List, and Union)
-        inner_types = extract_inner_types(field.annotation)
+        # Resolve the field's annotation to get the type string, including handling ForwardRefs
+        field_type = resolve_forward_refs_in_annotation(field.annotation, models, circular_models)
 
-        # Check if any inner type is a circular reference
-        circular_reference = any(
-            (
-                isinstance(inner_type, ForwardRef)
-                and inner_type.__forward_arg__ in circular_models
-            )
-            or (isinstance(inner_type, str) and inner_type in circular_models)
-            or (
-                hasattr(inner_type, "__name__")
-                and inner_type.__name__ in circular_models
-            )
-            for inner_type in inner_types
+        model_file.write(
+            f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
         )
-
-        # Get the type string for the field
-        field_type = get_type_str(field.annotation, models)
-
-        # Handle circular dependencies: if circular, use forward reference
-        if circular_reference:
-            model_file.write(
-                f"    {sanitized_field_name}: '{field_type}' = Field(None, alias='{field.alias}')\n"
-            )
-        else:
-            model_file.write(
-                f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
-            )
-
 
 def write_enum_files(models: Dict[str, Type[BaseModel]], models_dir: str):
     """Write enum files directly from the model's fields."""
@@ -688,23 +689,34 @@ def create_mermaid_class_diagram(
 
 # Dependency handling and circular references
 def extract_inner_types(annotation: Any) -> List[Any]:
-    """Recursively extract inner types from nested generics (e.g., Optional[List[ForwardRef]])"""
-    inner_types = []
+    """Recursively extract and preserve inner types from nested generics, returning actual type objects."""
     origin = get_origin(annotation)
 
-    # If it's a Union (i.e., Optional), extract the non-None type
+    # If it's a Union (e.g., Optional), check for NoneType and return Optional
     if origin is Union:
-        for arg in get_args(annotation):
-            if arg is not type(None):  # Ignore NoneType in Optional
-                inner_types.extend(extract_inner_types(arg))
-    # If it's a List or another generic type, extract its arguments
-    elif origin in {list, List, Optional}:
-        inner_types.extend(extract_inner_types(get_args(annotation)[0]))
-    # Base case: return the annotation itself
-    else:
-        inner_types.append(annotation)
+        args = get_args(annotation)
+        non_none_args = []
+        contains_none = False
+        for arg in args:
+            if arg is type(None):
+                contains_none = True
+            else:
+                non_none_args.extend(extract_inner_types(arg))  # Accumulate all inner types
+        if contains_none:  # If NoneType was present, it's Optional
+            return [Optional] + non_none_args
+        else:
+            return [Union] + non_none_args
 
-    return inner_types
+    # If it's a generic type (e.g., List, Dict), recurse into its arguments
+    elif origin:
+        inner_types = []
+        for arg in get_args(annotation):
+            inner_types.extend(extract_inner_types(arg))  # Accumulate inner types recursively
+        return [origin] + inner_types  # Return the actual origin (e.g., List, Dict) instead of its name
+    
+    # Base case: return the actual class/type
+    return [annotation]
+
 
 
 def build_dependency_graph(
@@ -842,45 +854,56 @@ def detect_circular_dependencies(graph: Dict[str, Set[str]]) -> Set[str]:
 
     return circular_models
 
+def replace_circular_references(annotation: Any, circular_models: Set[str]) -> Any:
+    """Recursively replace circular model references in annotations with ForwardRef."""
+    origin = get_origin(annotation)
+    args = get_args(annotation)
 
-def rebuild_annotation_with_inner_types(
-    original_annotation: Any, inner_types: List[Any]
-) -> Any:
-    origin = get_origin(original_annotation)
-    if origin is Union:
-        # Rebuild Union (e.g., Optional) with the new inner types
-        return Union[tuple(inner_types)]
-    elif origin in {list, List}:
-        # Rebuild List with the new inner types
-        return List[inner_types[0]]
-    elif origin in {dict, Dict}:
-        # Rebuild Dict with the new key-value types
-        return Dict[inner_types[0], inner_types[1]]
-    # If it's not a generic, just return the updated type
-    return inner_types[0]
+    if not args:
+        # Base case: simple type, check if it's circular
+        if isinstance(annotation, type) and annotation.__name__ in circular_models:
+            return ForwardRef(annotation.__name__)
+        return annotation
 
+    # Recurse into generic types
+    new_args = tuple(replace_circular_references(arg, circular_models) for arg in args)
+    return origin[new_args] if origin else annotation
 
 def break_circular_dependencies(
     models: Dict[str, Type[BaseModel]], circular_models: Set[str]
 ):
+    """Replace circular references in models with ForwardRef."""
     for model_name in circular_models:
-        for field_name, field in models[model_name].model_fields.items():
-            # Extract the inner types (e.g., the actual model or type) from the field annotation
-            inner_types = extract_inner_types(field.annotation)
+        model = models[model_name]
+        for field_name, field in model.model_fields.items():
+            # Modify field.annotation directly
+            field.annotation = replace_circular_references(field.annotation, circular_models)
 
-            # Check for circular dependencies in the extracted inner types
-            for i, inner_type in enumerate(inner_types):
-                if (
-                    isinstance(inner_type, type)
-                    and inner_type.__name__ in circular_models
-                ):
-                    # Replace the circular dependency with ForwardRef while keeping the surrounding structure
-                    inner_types[i] = ForwardRef(inner_type.__name__)
+# def break_circular_dependencies(
+#     models: Dict[str, Type[BaseModel]], circular_models: Set[str]
+# ):
+#     for model_name in circular_models:
+#         for field_name, field in models[model_name].model_fields.items():
+#             # Extract the inner types (e.g., the actual model or type) from the field annotation
+#             inner_types = extract_inner_types(field.annotation)
 
-            # Rebuild the field annotation using the updated inner types, preserving any Optional/List structure
-            field.annotation = rebuild_annotation_with_inner_types(
-                field.annotation, inner_types
-            )
+#             changed = False  # Track if any circular dependency was detected
+
+#             # Check for circular dependencies in the extracted inner types
+#             for i, inner_type in enumerate(inner_types):
+#                 if (
+#                     isinstance(inner_type, type)
+#                     and inner_type.__name__ in circular_models
+#                 ):
+#                     # Replace the circular dependency with ForwardRef
+#                     inner_types[i] = ForwardRef(inner_type.__name__)
+#                     changed = True  # Mark as changed since we replaced a circular dependency
+
+#             # Only rebuild the field annotation if a change was made
+#             if changed:
+#                 field.annotation = rebuild_annotation_with_inner_types(
+#                     field.annotation, inner_types
+#                 )
 
 
 # Load OpenAPI specs
