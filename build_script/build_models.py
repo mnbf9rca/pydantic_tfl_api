@@ -4,6 +4,8 @@ from io import TextIOWrapper
 import sys
 import logging
 import inspect
+import ast
+import importlib.util
 import re
 import keyword
 import builtins
@@ -33,6 +35,9 @@ from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
 from mappings import tfl_mappings
+
+src_path = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, src_path)
 
 # Configure logging
 logging.basicConfig(
@@ -302,9 +307,13 @@ def determine_typing_imports(
 def write_import_statements(
     init_f: TextIOWrapper, models: Dict[str, Type[BaseModel]], models_dir: str
 ):
-    # Group models by their module
+    # Group models by their module, excluding standard Python and typing modules
     module_to_classes = {}
     for model_name, model in models.items():
+        # Skip models that are Dict or List or other typing models
+        if isinstance(model, (Dict, List)) or model.__module__ in ['builtins', 'typing', '__main__']:
+            continue
+
         module_name = model.__module__.split(".")[-1]
         if module_name not in module_to_classes:
             module_to_classes[module_name] = []
@@ -314,7 +323,6 @@ def write_import_statements(
     for module, class_names in module_to_classes.items():
         init_f.write(f"from .{module} import {', '.join(class_names)}\n")
 
-
 def save_models(
     models: Dict[str, Union[Type[BaseModel], Type[List]]],
     base_path: str,
@@ -323,14 +331,14 @@ def save_models(
 ):
     models_dir = os.path.join(base_path, "models")
     os.makedirs(models_dir, exist_ok=True)
-    existing_models = find_existing_models(models_dir)
+    # existing_models = find_existing_models(models_dir)
 
-    all_models_to_import = {**models, **existing_models}
+    # all_models_to_import = {**models, **existing_models}
 
     init_file = os.path.join(models_dir, "__init__.py")
     with open(init_file, "w") as init_f:
         # Write import statements for existing models
-        write_import_statements(init_f, existing_models, models_dir)
+        write_import_statements(init_f, models, models_dir)
 
         for model_name, model in models.items():
             save_model_file(
@@ -344,40 +352,39 @@ def save_models(
             )
 
         init_f.write(
-            f"\n__all__ = [\n    {',\n    '.join(f'\"{key}\"' for key in all_models_to_import.keys())}\n]\n"
+            f"\n__all__ = [\n    {',\n    '.join(f'\"{key}\"' for key in models.keys())}\n]\n"
         )
 
     # Write enums after saving the models
     write_enum_files(models, models_dir)
 
 
-def find_existing_models(models_dir: str) -> Dict[str, Type[BaseModel]]:
-    model_folder_name = os.path.basename(models_dir)
-    package_name = os.path.basename(os.path.dirname(models_dir))
-    existing_models = {}
+# def find_existing_models(models_dir: str) -> Dict[str, Type[BaseModel]]:
+#     model_folder_name = os.path.basename(models_dir)
+#     package_name = os.path.basename(os.path.dirname(models_dir))
+#     existing_models = {}
 
-    for file in os.listdir(models_dir):
-        if file.endswith(".py") and file != "__init__.py":
-            model_name = file.split(".")[0]
-            # Dynamically import the module
-            module = __import__(
-                f"{package_name}.{model_folder_name}.{model_name}",
-                fromlist=[model_name],
-            )
+#     for file in os.listdir(models_dir):
+#         if file.endswith(".py") and file != "__init__.py":
+#             model_name = file.split(".")[0]
+#             # Dynamically import the module
+#             module = __import__(
+#                 f"{package_name}.{model_folder_name}.{model_name}",
+#                 fromlist=[model_name],
+#             )
 
-            # Iterate over all attributes in the module
-            for name, obj in inspect.getmembers(module):
-                # Check if the attribute is a class and is a subclass of pydantic BaseModel
-                if (
-                    inspect.isclass(obj)
-                    and issubclass(obj, BaseModel)
-                    and obj.__module__ == module.__name__
-                ):
-                    # Add the class to the existing_models dictionary
-                    existing_models[name] = obj
+#             # Iterate over all attributes in the module
+#             for name, obj in inspect.getmembers(module):
+#                 # Check if the attribute is a class and is a subclass of pydantic BaseModel
+#                 if (
+#                     inspect.isclass(obj)
+#                     and issubclass(obj, BaseModel)
+#                     and obj.__module__ == module.__name__
+#                 ):
+#                     # Add the class to the existing_models dictionary
+#                     existing_models[name] = obj
 
-    return existing_models
-
+#     return existing_models
 
 def save_model_file(
     model_name: str,
@@ -404,7 +411,7 @@ def save_model_file(
                 sanitized_model_name,
             )
         else:
-            mf.write("from pydantic import BaseModel, Field\n")
+            # mf.write("from pydantic import BaseModel, Field\n")
             handle_regular_model(
                 mf,
                 model,
@@ -1100,10 +1107,10 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
     class_name = f"{sanitize_name(get_api_name(spec))}Client"
 
     class_lines = []
-    class_lines.append("from ..client import Client\n")
-    class_lines.append(f"from .{class_name}_config import endpoints\n")
-    class_lines.append("from .. import models\n")
-    class_lines.append("from ..models import ApiError\n\n")
+    # class_lines.append("from ..core import Client\n")
+    class_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
+    # class_lines.append("from .. import models\n")
+    class_lines.append("from ..core import ApiError, ResponseModel, Client\n\n")
     path_lines = [f"class {class_name}(Client):\n"]
 
     all_types = set()
@@ -1125,10 +1132,11 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                 # Sanitize the operation_id to ensure it's a valid Python identifier
                 sanitized_operation_id = sanitize_name(operation_id)
                 path_lines.append(
-                    f"    def {sanitized_operation_id.lower()}(self, {param_str}) -> models.{model_name} | ApiError:\n"
+                    f"    def {sanitized_operation_id.lower()}(self, {param_str}) -> ResponseModel | ApiError:\n"
                 )
 
                 docstring = details.get("description", "No description available.")
+                docstring = docstring + f"\n\n        ResponseModel.content contains `models.{model_name}` type."
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
@@ -1161,11 +1169,11 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
 
                 if path_params:
                     path_lines.append(
-                        f"        return self._send_request_and_deserialize(endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
+                        f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
                     )
                 else:
                     path_lines.append(
-                        f"        return self._send_request_and_deserialize(endpoints['{operation_id}'], {query_params_dict})\n\n"
+                        f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
                     )
 
     valid_type_imports = all_types - get_builtin_types()
@@ -1245,13 +1253,15 @@ def save_classes(specs: List[Dict[str, Any]], base_path: str, base_url: str) -> 
             f"from .endpoints import (\n    {',\n    '.join(class_names)}\n)\n"
         )
         # init_file.write("\n".join([f"from .endpoints.{name} import {name}" for name in class_names]))
-        init_file.write("from .client import Client\n")
-        init_file.write("from .rest_client import RestClient\n")
-        init_file.write("from .models import ApiError\n")
+        # init_file.write("from ..core import Client\n")
+        # init_file.write("from ..core import RestClient\n")
+        init_file.write("from . import models\n")
+        # init_file.write("from .models import ApiError, GenericResponseModel, ResponseModel\n")
+        # other_classes = ["Client", "RestClient", "ApiError", "GenericResponseModel", "ResponseModel"]
         init_file.write("__all__ = [\n")
         init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
-        init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
-        init_file.write(",\n    'Client',\n    'RestClient',\n    'ApiError'\n]\n")
+        # init_file.write(",\n".join([f"    '{name}'" for name in other_classes]))
+        init_file.write(",\n    'models'\n]\n")
 
     endpoint_path = os.path.join(base_path, "endpoints")
     os.makedirs(endpoint_path, exist_ok=True)

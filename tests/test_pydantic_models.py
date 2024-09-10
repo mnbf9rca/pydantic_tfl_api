@@ -9,33 +9,11 @@ from pydantic import BaseModel, TypeAdapter, RootModel
 from typing import List
 import pytest
 
-test_target = os.getenv("PYTHON_TEST_TARGET", "src")
-print(f"{__file__} test_target: {test_target}")
-
-if test_target == "pydantic_tfl_api":
-    import models
-    from client import Client
-    from rest_client import RestClient
-else:
-    pass
+from pydantic_tfl_api import models
+from pydantic_tfl_api.core import Client, RestClient, ResponseModel
 
 
 
-# response_to_request_mapping contains a dict
-# response_to_request_mapping = {
-#     "stopPointsByLineId_victoria_None_StopPoint": {
-#         "endpoint": "stopPointsByLineId",
-#         "endpoint_args": ["victoria"],
-#         "endpoint_params": {},
-#         "model": "StopPoint",
-#     },
-#    ...
-
-# so we need to create a paramaterised test
-# for each key in response_to_request_mapping
-# the key is both the name of the test, and a json file containing a serialised requests.response object
-# the value is a dict containing the endpoint, endpoint_args, endpoint_params and model
-# so we can use this to call Client._deserialize(model, response) and check that the result is a valid pydantic model
 
 def create_response_from_json(json_file) -> Response:
     with open(json_file, 'r') as f:
@@ -75,8 +53,6 @@ def load_and_validate_expected_response(file_name: str, model: type[BaseModel]):
 
 
 for resp in response_to_request_mapping:
-    @pytest.mark.pydantic_tfl_api_only
-    @pytest.mark.skipif(test_target != "pydantic_tfl_api", reason="This test is only for pydantic_tfl_api")
     def test_deserialise_response(resp=resp):
         response = create_response_from_json(f"tests/tfl_responses/{resp}.json")
         expect_empty_response: bool = response_to_request_mapping[resp]["result_is_empty"]
@@ -86,7 +62,7 @@ for resp in response_to_request_mapping:
         model_object = test_client._get_model(model)
 
         result = test_client._deserialize(model, response)
-        assert isinstance(result, models.ResponseModel)
+        assert isinstance(result, ResponseModel)
         
         response_content = result.content
         expected_result = load_and_validate_expected_response(f"tests/tfl_responses/{resp}_expected.json", model_object)
@@ -103,6 +79,6 @@ for resp in response_to_request_mapping:
  
     globals()[f"test_deserialise_response_{resp}"] = test_deserialise_response
 
-def save_result(result: BaseModel, resp: str):
-    with open(f"tests/tfl_responses/{resp}_expected.json", "w") as file:
-        file.write(result.model_dump_json())
+# def save_result(result: BaseModel, resp: str):
+#     with open(f"tests/tfl_responses/{resp}_expected.json", "w") as file:
+#         file.write(result.model_dump_json(by_alias=True))

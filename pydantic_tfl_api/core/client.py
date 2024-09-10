@@ -23,6 +23,7 @@
 # SOFTWARE.
 
 import os
+import sys
 
 from importlib import import_module
 from typing import Any, List, Optional, Tuple
@@ -32,17 +33,11 @@ from pydantic import BaseModel, RootModel
 
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
-# from models import ResponseModel, ApiError
 
-import models
-from rest_client import RestClient
+from pydantic_tfl_api import models
+from pydantic_tfl_api.core import ApiError, ResponseModel
+from pydantic_tfl_api.core.rest_client import RestClient
 
-# test_target = os.getenv('PYTHON_TEST_TARGET', 'src')
-
-# if test_target == 'pydantic_tfl_api':
-#     from pydantic_tfl_api import models
-# else:
-#     from src import models
 
 class Client:
     """Client
@@ -57,7 +52,7 @@ class Client:
     def _load_models(self):
         models_dict = {}
         for importer, modname, ispkg in pkgutil.iter_modules(models.__path__):
-            module = import_module(f"models.{modname}", __package__)
+            module = import_module(f"..models.{modname}", __package__)
             for model_name in dir(module):
                 attr = getattr(module, model_name)
                 if isinstance(attr, type) and issubclass(attr, BaseModel):
@@ -123,24 +118,32 @@ class Client:
 
     def _create_model_instance(
         self, Model: BaseModel, response_json: Any, result_expiry: Optional[datetime], shared_expiry: Optional[datetime]
-    ) -> models.ResponseModel:
+    ) -> ResponseModel:
         is_root_model = isinstance(Model, type) and issubclass(Model, RootModel)
-        # if it's a root model but respons_json is not a list, wrap it in a list
-        if is_root_model and not isinstance(response_json, list):
-            response_json = [response_json]
+        
+        # Adjust for root models: RootModel expects one positional argument
+        if is_root_model:
+            # If it's a root model and response_json is not already a list, wrap it in a list
+            if not isinstance(response_json, (list)):
+                response_json = [response_json]  # Wrap the input in a list if necessary
 
-        # if response_json is a dict, expand it into keyword arguments
-        if isinstance(response_json, dict):
-            content = Model(**response_json)
-        else:
+            # Create the root model by passing the input directly
             content = Model(response_json)
-        return models.ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content)  
 
-    def _deserialize_error(self, response: Response) -> models.ApiError:
+        else:
+            # For non-root models: If it's a dict, expand it into keyword arguments
+            if isinstance(response_json, dict):
+                content = Model(**response_json)
+            else:
+                content = Model(response_json)
+
+        return ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content)
+
+    def _deserialize_error(self, response: Response) -> ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
         if response.headers.get("Content-Type") == "application/json":
             return self._deserialize("ApiError", response)
-        return models.ApiError(
+        return ApiError(
             timestampUtc=parsedate_to_datetime(response.headers.get("Date")),
             exceptionType="Unknown",
             httpStatusCode=response.status_code,
@@ -150,9 +153,10 @@ class Client:
         )
 
     def _send_request_and_deserialize(
-        self, endpoint_and_model: dict[str, str],
+        self, base_url: str,
+        endpoint_and_model: dict[str, str],
         params: str | int | List[str | int] = None, endpoint_args: dict = None
-    ) -> BaseModel | List[BaseModel] | models.ApiError:
+    ) -> BaseModel | List[BaseModel] | ApiError:
         if params is None:
             params = []
         if not isinstance(params, list):
@@ -161,7 +165,7 @@ class Client:
         endpoint = endpoint_and_model["uri"].format(*params)
         model_name = endpoint_and_model["model"]
 
-        response = self.client.send_request(endpoint, endpoint_args)
+        response = self.client.send_request(base_url, endpoint, endpoint_args)
 
         if response.status_code != 200:
             return self._deserialize_error(response)

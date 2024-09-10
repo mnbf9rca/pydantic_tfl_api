@@ -8,16 +8,17 @@
       "name": "Python Debugger: build_models.py",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/build_models.py",
+      "program": "${workspaceFolder}/build_script/build_models.py",
       "args": [
         "${workspaceFolder}/TfL_OpenAPI_specs",
         "${workspaceFolder}/pydantic_tfl_api"
       ],
       "console": "integratedTerminal",
-      "preLaunchTask": "copy model files to code folder"
+      "preLaunchTask": "clean up the pydantic_tfl_api folder"
     },
     {
       "name": "Python: Debug Tests - pydantic_tfl_api",
+      "cwd": "${workspaceFolder}",
       "type": "debugpy",
       "request": "launch",
       "program": "${file}",
@@ -27,7 +28,6 @@
       "console": "integratedTerminal",
       "justMyCode": true,
       "env": {
-        "PYTHON_TEST_TARGET": "pydantic_tfl_api",
         "PYTEST_ADDOPTS": "--no-cov",
         "PYTHONPATH": "${workspaceFolder}",
         "LOG_LEVEL": "DEBUG"

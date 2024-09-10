@@ -10,16 +10,8 @@ from email.utils import parsedate_to_datetime
 
 from pydantic import BaseModel, ValidationError
 from datetime import datetime, timedelta, timezone
-
-test_target = os.getenv("PYTHON_TEST_TARGET", "src")
-
-# if test_target == "pydantic_tfl_api":
-#     from pydantic_tfl_api import models, client
-#     from pydantic_tfl_api.rest_client import RestClient
-# else:
-import models
-import client
-from rest_client import RestClient
+from pydantic_tfl_api import models
+from pydantic_tfl_api.core import Client, RestClient, ApiError, ResponseModel
 
 
 # Mock models module
@@ -39,9 +31,9 @@ class PydanticTestModel(BaseModel):
 
 def test_create_client_with_api_token():
     # checks that the API key is being passed to the RestClient
-    api_token = 'your_app_key'
-    test_client = client.Client(api_token)
-    assert test_client.client.app_key['app_key'] == api_token
+    api_token = "your_app_key"
+    test_client = Client(api_token)
+    assert test_client.client.app_key["app_key"] == api_token
 
 
 @pytest.mark.parametrize(
@@ -145,15 +137,15 @@ def test_create_model_instance(
     response_json_parsed = json.loads(json.dumps(response_json))
     if expected_name is None:
         with pytest.raises(ValidationError):
-            client.Client._create_model_instance(
+            Client._create_model_instance(
                 None, Model, response_json_parsed, result_expiry, shared_expiry
             )
     else:
-        instance = client.Client._create_model_instance(
+        instance = Client._create_model_instance(
             None, Model, response_json_parsed, result_expiry, shared_expiry
         )
 
-        assert isinstance(instance, models.ResponseModel)
+        assert isinstance(instance, ResponseModel)
         assert instance.content_expires == expected_expiry
         assert instance.shared_expires == expected_shared_expiry
         instance_content = instance.content
@@ -172,15 +164,15 @@ def test_create_model_instance(
 )
 def test_client_initialization(api_token, expected_client_type, expected_models):
     # Arrange
-    with patch("client.RestClient") as MockRestClient, patch(
+    with patch("pydantic_tfl_api.core.client.RestClient") as MockRestClient, patch(
         # f"{test_target}.client.Client._load_models", return_value=expected_models
-        "client.Client._load_models", return_value=expected_models
+        "pydantic_tfl_api.core.client.Client._load_models", return_value=expected_models
 
     ) as MockLoadModels:
         MockRestClient.return_value = Mock(spec=RestClient)
 
         # Act
-        test_client = client.Client(api_token)
+        test_client = Client(api_token)
 
         # Assert
         assert isinstance(test_client.client, expected_client_type)
@@ -213,20 +205,20 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
 )
 def test_load_models(models_dict, expected_result):
     # Mock import_module
-    with patch("client.import_module") as mock_import_module:
+    with patch("pydantic_tfl_api.core.client.import_module") as mock_import_module:
         mock_module = MagicMock()
         mock_module.__dict__.update(models_dict)
         mock_import_module.return_value = mock_module
 
         # Mock pkgutil.iter_modules
-        with patch("client.pkgutil.iter_modules") as mock_iter_modules:
+        with patch("pydantic_tfl_api.core.client.pkgutil.iter_modules") as mock_iter_modules:
             mock_iter_modules.return_value = [
                 (None, name, None) for name in models_dict.keys()
             ]
 
             # Act
 
-            test_client = client.Client()
+            test_client = Client()
             result = test_client._load_models()
 
             # Assert
@@ -329,7 +321,7 @@ def test_get_maxage_headers_from_cache_control_header(
         response.headers = {}
 
     # Act
-    result = client.Client._get_maxage_headers_from_cache_control_header(response)
+    result = Client._get_maxage_headers_from_cache_control_header(response)
 
     # Assert
     assert result == expected_result
@@ -362,7 +354,7 @@ def test_deserialize(model_name, response_content, expected_result):
 
     # Act
 
-    test_client = client.Client()
+    test_client = Client()
     return_datetime = datetime(2024, 7, 12, 13, 00, 00)
     return_datetime_2 = datetime(2025, 7, 12, 13, 00, 00)
 
@@ -436,7 +428,7 @@ def test_deserialize(model_name, response_content, expected_result):
 )
 def test_parse_timedelta(value, base_time, expected_result):
     # Act
-    result = client.Client._parse_timedelta(value, base_time)
+    result = Client._parse_timedelta(value, base_time)
 
     # Assert
     assert result == expected_result
@@ -525,13 +517,13 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
 
     # Act
     with patch(
-        "client.Client._get_maxage_headers_from_cache_control_header",
+        "pydantic_tfl_api.core.client.Client._get_maxage_headers_from_cache_control_header",
         return_value=(s_maxage, maxage),
     ), patch(
-        "client.Client._parse_timedelta",
+        "pydantic_tfl_api.core.client.Client._parse_timedelta",
         side_effect=[expected_result[0], expected_result[1]],
     ):
-        result = client.Client._get_result_expiry(response)
+        result = Client._get_result_expiry(response)
 
     # Assert
     assert result == expected_result
@@ -569,9 +561,9 @@ def test_get_model(model_name, models_dict, expected_result, exception):
     # Act and Assert
     if exception:
         with pytest.raises(exception):
-            client.Client._get_model(test_client, model_name)
+            Client._get_model(test_client, model_name)
     else:
-        result = client.Client._get_model(test_client, model_name)
+        result = Client._get_model(test_client, model_name)
         assert result == expected_result
 
 
@@ -604,7 +596,7 @@ def test_get_model(model_name, models_dict, expected_result, exception):
 #     Model, response_json, result_expiry, shared_expiry, create_model_mock_return, expected_return
 # ):
 #     # Mock Client
-#     test_client = client.Client()
+#     test_client = Client()
 
 #     # Mock _create_model_instance
 #     with patch.object(
@@ -645,7 +637,7 @@ datetime_object_with_time_and_tz_utc = datetime(
         (
             "text/html",
             "Error message",
-            models.ApiError(
+            ApiError(
                 timestampUtc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
                 exceptionType="Unknown",
                 httpStatusCode=404,
@@ -672,10 +664,64 @@ def test_deserialize_error(content_type, response_content, expected_result):
     response.reason = "Not Found"
     response.url = "/uri"
 
-    test_client = client.Client()
+    test_client = Client()
     with patch.object(test_client, "_deserialize", return_value=expected_result):
         # Act
         result = test_client._deserialize_error(response)
 
     # Assert
     assert result == expected_result
+
+
+class SampleClient(Client):
+    def Line_test_endpoint(
+        self, modes: str, detail: bool | None = None, severityLevel: str | None = None
+    ):
+        """
+        A test query. Gets the line status of for all lines for the given modes
+
+        Parameters:
+        modes: str - A comma-separated list of modes to filter by. e.g. tube,dlr. Example: tube
+        detail: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. Example: None given
+        severityLevel: str - If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level.. Example: None given
+        """
+        base_url = "https://api.tfl.gov.uk"
+        endpoints = {
+            "Line_test_endpoint": {
+                "uri": "/Line/Mode/{0}/Status",
+                "model": "GenericResponseModel",
+            },
+        }
+        return self._send_request_and_deserialize(
+            base_url,
+            endpoints["Line_test_endpoint"],
+            params=[modes],
+            endpoint_args={"detail": detail, "severityLevel": severityLevel},
+        )
+
+class Test_TfL_connectivity:
+    def test_get_line_status_by_mode_rejected_with_invalid_api_key(self):
+        api_token = "your_app_key"
+        test_client = SampleClient(api_token)
+        assert test_client.client.app_key["app_key"] == api_token
+        # should get a 429 error inside an ApiError object
+        result = test_client.Line_test_endpoint(
+            "overground,tube"
+        )
+        assert isinstance(result, ApiError)
+        assert result.http_status_code == 429
+        assert result.http_status == "Invalid App Key"
+
+
+
+    def test_get_line_status_by_mode(self):
+        # this API doesnt need authentication so we can use it to test that the API is working
+        test_client = SampleClient()
+        # should get a list of Line objects
+        result = test_client.Line_test_endpoint(
+            "overground,tube"
+        )
+        assert isinstance(result, ResponseModel)
+        response_content = result.content
+        assert isinstance(response_content, models.GenericResponseModel)
+    

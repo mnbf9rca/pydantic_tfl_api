@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, RootModel, Field, field_validator
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 class ResponseModel(BaseModel):
     content_expires: Optional[datetime]
@@ -11,6 +11,10 @@ class ResponseModel(BaseModel):
     class Config:
         from_attributes = True
 
+
+class GenericResponseModel(RootModel[Any]):
+    class Config:
+        from_attributes = True
 
 
 

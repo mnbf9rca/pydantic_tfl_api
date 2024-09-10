@@ -6,6 +6,13 @@ response_to_request_mapping = {
         "model": "StopPointArray",
         "result_is_empty": False,
     },
+    "stopPointsByLineId_14_None_StopPoint": {
+        "endpoint": "stopPointsByLineId",
+        "endpoint_args": ["14"],
+        "endpoint_params": {},
+        "model": "StopPointArray",
+        "result_is_empty": False,
+    },
     "stopPointsByLineId_108_None_StopPoint": {
         "endpoint": "stopPointsByLineId",
         "endpoint_args": ["108"],

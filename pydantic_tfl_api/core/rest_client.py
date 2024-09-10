@@ -24,9 +24,10 @@
 import requests
 # try:
 from urllib.parse import urlencode, urljoin
+from requests import Response
 # except ImportError:
 #     from urllib import urlencode
-from config import base_url
+# from config import base_url
 
 class RestClient():
     """RestClient.
@@ -37,7 +38,7 @@ class RestClient():
     def __init__(self, app_key: str = None):
         self.app_key = {"app_key": app_key} if app_key else None
 
-    def send_request(self, location, params=None):
+    def send_request(self, base_url: str, location: str, params=None) -> Response:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 

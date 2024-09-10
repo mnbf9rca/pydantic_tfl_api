@@ -2,7 +2,7 @@ from requests import Response
 import json
 
 from pydantic_tfl_api import Client
-from pydantic_tfl_api.config import endpoints
+# from pydantic_tfl_api.config import endpoints
 from tests.config_for_tests import response_to_request_mapping
 
 
@@ -28,10 +28,10 @@ def persist_json(response: Response, filename):
         file.write(json.dumps(response_object))
 
 
-def get_and_save_response(endpoint, endpoint_args, endpoint_params, model, file_name):
-    ep = endpoints[endpoint].format(*endpoint_args)
-    response = client.client.send_request(ep, endpoint_params)
-    persist_json(response, f"tests/tfl_responses/{file_name}")
+# def get_and_save_response(endpoint, endpoint_args, endpoint_params, model, file_name):
+#     ep = endpoints[endpoint].format(*endpoint_args)
+#     response = client.client.send_request(ep, endpoint_params)
+#     persist_json(response, f"tests/tfl_responses/{file_name}")
 
 
 def create_request_name_from_args(request_args):
@@ -60,12 +60,12 @@ def create_request_name_from_args(request_args):
 #     request_name = create_request_name_from_args(request_args)
 #     print(f"'{request_name}': {request_args}")
 
-for request in response_to_request_mapping:
-    # a request looks liek this: 'stopPointsByLineId_victoria_None_StopPoint': {'endpoint': 'stopPointsByLineId', 'endpoint_args': ['victoria'], 'endpoint_params': {}, 'model': 'StopPoint'}
-    get_and_save_response(
-        **response_to_request_mapping[request], file_name=f"{request}.json"
-    )
-    # get_and_save_response(**request_args, file_name=f"{request_name}.json")
+# for request in response_to_request_mapping:
+#     # a request looks liek this: 'stopPointsByLineId_victoria_None_StopPoint': {'endpoint': 'stopPointsByLineId', 'endpoint_args': ['victoria'], 'endpoint_params': {}, 'model': 'StopPoint'}
+#     get_and_save_response(
+#         **response_to_request_mapping[request], file_name=f"{request}.json"
+#     )
+#     # get_and_save_response(**request_args, file_name=f"{request_name}.json")
 
 
 # print (client.get_line_meta_modes())
