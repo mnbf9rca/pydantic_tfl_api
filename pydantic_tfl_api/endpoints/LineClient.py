@@ -1,89 +1,90 @@
 from .LineClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import StatusSeveritiesArray, StopPointArray, RouteSequence, StringsArray, LineArray, RouteSearchResponse, TimetableResponse, DisruptionArray, ModeArray, ObjectResponse, PredictionArray
 
 class LineClient(Client):
-    def MetaModes(self, ) -> ResponseModel | ApiError:
+    def MetaModes(self, ) -> ResponseModel[ModeArray] | ApiError:
         '''
         Gets a list of valid modes
 
-        ResponseModel.content contains `models.ModeArray` type.
+        `ResponseModel.content` contains `models.ModeArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaModes'], endpoint_args=None)
 
-    def MetaSeverity(self, ) -> ResponseModel | ApiError:
+    def MetaSeverity(self, ) -> ResponseModel[StatusSeveritiesArray] | ApiError:
         '''
         Gets a list of valid severity codes
 
-        ResponseModel.content contains `models.StatusSeveritiesArray` type.
+        `ResponseModel.content` contains `models.StatusSeveritiesArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaSeverity'], endpoint_args=None)
 
-    def MetaDisruptionCategories(self, ) -> ResponseModel | ApiError:
+    def MetaDisruptionCategories(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets a list of valid disruption categories
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaDisruptionCategories'], endpoint_args=None)
 
-    def MetaServiceTypes(self, ) -> ResponseModel | ApiError:
+    def MetaServiceTypes(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets a list of valid ServiceTypes to filter on
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaServiceTypes'], endpoint_args=None)
 
-    def GetByPathIds(self, ids: str) -> ResponseModel | ApiError:
+    def GetByPathIds(self, ids: str) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets lines that match the specified line ids.
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByPathIds'], params=[ids], endpoint_args=None)
 
-    def GetByModeByPathModes(self, modes: str) -> ResponseModel | ApiError:
+    def GetByModeByPathModes(self, modes: str) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets lines that serve the given modes.
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByModeByPathModes'], params=[modes], endpoint_args=None)
 
-    def RouteByQueryServiceTypes(self, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def RouteByQueryServiceTypes(self, serviceTypes: str | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Get all valid routes for all lines, including the name and id of the originating and terminating stops for each route.
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByQueryServiceTypes'], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def LineRoutesByIdsByPathIdsQueryServiceTypes(self, ids: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def LineRoutesByIdsByPathIdsQueryServiceTypes(self, ids: str, serviceTypes: str | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Get all valid routes for given line ids, including the name and id of the originating and terminating stops for each route.
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
@@ -91,11 +92,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_LineRoutesByIdsByPathIdsQueryServiceTypes'], params=[ids], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def RouteByModeByPathModesQueryServiceTypes(self, modes: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def RouteByModeByPathModesQueryServiceTypes(self, modes: str, serviceTypes: str | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets all lines and their valid routes for given modes, including the name and id of the originating and terminating stops for each route
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
@@ -103,11 +104,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByModeByPathModesQueryServiceTypes'], params=[modes], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding(self, id: str, direction: str, serviceTypes: str | None = None, excludeCrowding: bool | None = None) -> ResponseModel | ApiError:
+    def RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding(self, id: str, direction: str, serviceTypes: str | None = None, excludeCrowding: bool | None = None) -> ResponseModel[RouteSequence] | ApiError:
         '''
         Gets all valid routes for given line id, including the sequence of stops on each route.
 
-        ResponseModel.content contains `models.RouteSequence` type.
+        `ResponseModel.content` contains `models.RouteSequence` type.
 
         Parameters:
         id: str - A single line id e.g. victoria. Example: victoria
@@ -117,11 +118,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding'], params=[id, direction], endpoint_args={ 'serviceTypes': serviceTypes, 'excludeCrowding': excludeCrowding })
 
-    def StatusByPathIdsPathStartDatePathEndDateQueryDetail(self, ids: str, startDate: str, endDate: str, detail: bool | None = None) -> ResponseModel | ApiError:
+    def StatusByPathIdsPathStartDatePathEndDateQueryDetail(self, ids: str, startDate: str, endDate: str, detail: bool | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets the line status for given line ids during the provided dates e.g Minor Delays
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
@@ -131,11 +132,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByPathIdsPathStartDatePathEndDateQueryDetail'], params=[ids, startDate, endDate], endpoint_args={ 'detail': detail })
 
-    def StatusByIdsByPathIdsQueryDetail(self, ids: str, detail: bool | None = None) -> ResponseModel | ApiError:
+    def StatusByIdsByPathIdsQueryDetail(self, ids: str, detail: bool | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets the line status of for given line ids e.g Minor Delays
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
@@ -143,11 +144,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByIdsByPathIdsQueryDetail'], params=[ids], endpoint_args={ 'detail': detail })
 
-    def SearchByPathQueryQueryModesQueryServiceTypes(self, query: str, modes: list | None = None, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def SearchByPathQueryQueryModesQueryServiceTypes(self, query: str, modes: list | None = None, serviceTypes: str | None = None) -> ResponseModel[RouteSearchResponse] | ApiError:
         '''
         Search for lines or routes matching the query string
 
-        ResponseModel.content contains `models.RouteSearchResponse` type.
+        `ResponseModel.content` contains `models.RouteSearchResponse` type.
 
         Parameters:
         query: str - Search term e.g victoria. Example: victoria
@@ -156,22 +157,22 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_SearchByPathQueryQueryModesQueryServiceTypes'], params=[query], endpoint_args={ 'modes': modes, 'serviceTypes': serviceTypes })
 
-    def StatusBySeverityByPathSeverity(self, severity: int) -> ResponseModel | ApiError:
+    def StatusBySeverityByPathSeverity(self, severity: int) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets the line status for all lines with a given severity A list of valid severity codes can be obtained from a call to Line/Meta/Severity
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         severity: int - Format - int32. The level of severity (eg: a number from 0 to 14). Example: 2
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusBySeverityByPathSeverity'], params=[severity], endpoint_args=None)
 
-    def StatusByModeByPathModesQueryDetailQuerySeverityLevel(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel | ApiError:
+    def StatusByModeByPathModesQueryDetailQuerySeverityLevel(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel[LineArray] | ApiError:
         '''
         Gets the line status of for all lines for the given modes
 
-        ResponseModel.content contains `models.LineArray` type.
+        `ResponseModel.content` contains `models.LineArray` type.
 
         Parameters:
         modes: str - A comma-separated list of modes to filter by. e.g. tube,dlr. Example: tube
@@ -180,11 +181,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel'], params=[modes], endpoint_args={ 'detail': detail, 'severityLevel': severityLevel })
 
-    def StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly(self, id: str, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
+    def StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly(self, id: str, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel[StopPointArray] | ApiError:
         '''
         Gets a list of the stations that serve the given line id
 
-        ResponseModel.content contains `models.StopPointArray` type.
+        `ResponseModel.content` contains `models.StopPointArray` type.
 
         Parameters:
         id: str - A single line id e.g. victoria. Example: victoria
@@ -192,11 +193,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly'], params=[id], endpoint_args={ 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def TimetableByPathFromStopPointIdPathId(self, fromStopPointId: str, id: str) -> ResponseModel | ApiError:
+    def TimetableByPathFromStopPointIdPathId(self, fromStopPointId: str, id: str) -> ResponseModel[TimetableResponse] | ApiError:
         '''
         Gets the timetable for a specified station on the give line
 
-        ResponseModel.content contains `models.TimetableResponse` type.
+        `ResponseModel.content` contains `models.TimetableResponse` type.
 
         Parameters:
         fromStopPointId: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUVIC
@@ -204,11 +205,11 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableByPathFromStopPointIdPathId'], params=[fromStopPointId, id], endpoint_args=None)
 
-    def TimetableToByPathFromStopPointIdPathIdPathToStopPointId(self, fromStopPointId: str, id: str, toStopPointId: str) -> ResponseModel | ApiError:
+    def TimetableToByPathFromStopPointIdPathIdPathToStopPointId(self, fromStopPointId: str, id: str, toStopPointId: str) -> ResponseModel[TimetableResponse] | ApiError:
         '''
         Gets the timetable for a specified station on the give line with specified destination
 
-        ResponseModel.content contains `models.TimetableResponse` type.
+        `ResponseModel.content` contains `models.TimetableResponse` type.
 
         Parameters:
         fromStopPointId: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUVIC
@@ -217,33 +218,33 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableToByPathFromStopPointIdPathIdPathToStopPointId'], params=[fromStopPointId, id, toStopPointId], endpoint_args=None)
 
-    def DisruptionByPathIds(self, ids: str) -> ResponseModel | ApiError:
+    def DisruptionByPathIds(self, ids: str) -> ResponseModel[DisruptionArray] | ApiError:
         '''
         Get disruptions for the given line ids
 
-        ResponseModel.content contains `models.DisruptionArray` type.
+        `ResponseModel.content` contains `models.DisruptionArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByPathIds'], params=[ids], endpoint_args=None)
 
-    def DisruptionByModeByPathModes(self, modes: str) -> ResponseModel | ApiError:
+    def DisruptionByModeByPathModes(self, modes: str) -> ResponseModel[DisruptionArray] | ApiError:
         '''
         Get disruptions for all lines of the given modes.
 
-        ResponseModel.content contains `models.DisruptionArray` type.
+        `ResponseModel.content` contains `models.DisruptionArray` type.
 
         Parameters:
         modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByModeByPathModes'], params=[modes], endpoint_args=None)
 
-    def ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina(self, ids: str, stopPointId: str, direction: str | None = None, destinationStationId: str | None = None) -> ResponseModel | ApiError:
+    def ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina(self, ids: str, stopPointId: str, direction: str | None = None, destinationStationId: str | None = None) -> ResponseModel[PredictionArray] | ApiError:
         '''
         Get the list of arrival predictions for given line ids based at the given stop
 
-        ResponseModel.content contains `models.PredictionArray` type.
+        `ResponseModel.content` contains `models.PredictionArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
@@ -253,22 +254,22 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina'], params=[ids, stopPointId], endpoint_args={ 'direction': direction, 'destinationStationId': destinationStationId })
 
-    def ArrivalsByPathIds(self, ids: str) -> ResponseModel | ApiError:
+    def ArrivalsByPathIds(self, ids: str) -> ResponseModel[PredictionArray] | ApiError:
         '''
         Get the list of arrival predictions for given line ids based at the given stop
 
-        ResponseModel.content contains `models.PredictionArray` type.
+        `ResponseModel.content` contains `models.PredictionArray` type.
 
         Parameters:
         ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsByPathIds'], params=[ids], endpoint_args=None)
 
-    def Proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel[ObjectResponse] | ApiError:
         '''
         Forwards any remaining requests to the back-end
 
-        ResponseModel.content contains `models.ObjectResponse` type.
+        `ResponseModel.content` contains `models.ObjectResponse` type.
 
         Parameters:
         No parameters required.

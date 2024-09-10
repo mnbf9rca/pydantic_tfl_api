@@ -1,24 +1,25 @@
 from .ModeClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import ActiveServiceTypesArray, PredictionArray
 
 class ModeClient(Client):
-    def GetActiveServiceTypes(self, ) -> ResponseModel | ApiError:
+    def GetActiveServiceTypes(self, ) -> ResponseModel[ActiveServiceTypesArray] | ApiError:
         '''
         Returns the service type active for a mode.
             Currently only supports tube
 
-        ResponseModel.content contains `models.ActiveServiceTypesArray` type.
+        `ResponseModel.content` contains `models.ActiveServiceTypesArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Mode_GetActiveServiceTypes'], endpoint_args=None)
 
-    def Arrivals(self, mode: str, count: int | None = None) -> ResponseModel | ApiError:
+    def Arrivals(self, mode: str, count: int | None = None) -> ResponseModel[PredictionArray] | ApiError:
         '''
         Gets the next arrival predictions for all stops of a given mode
 
-        ResponseModel.content contains `models.PredictionArray` type.
+        `ResponseModel.content` contains `models.PredictionArray` type.
 
         Parameters:
         mode: str - A mode name e.g. tube, dlr. Example: Tube

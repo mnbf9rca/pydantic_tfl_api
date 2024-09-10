@@ -1,12 +1,13 @@
 from .AirQualityClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import LondonAirForecast
 
 class AirQualityClient(Client):
-    def Get(self, ) -> ResponseModel | ApiError:
+    def Get(self, ) -> ResponseModel[LondonAirForecast] | ApiError:
         '''
         Gets air quality data feed
 
-        ResponseModel.content contains `models.LondonAirForecast` type.
+        `ResponseModel.content` contains `models.LondonAirForecast` type.
 
         Parameters:
         No parameters required.

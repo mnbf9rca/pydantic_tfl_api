@@ -1,15 +1,19 @@
 from pydantic import BaseModel, RootModel, Field, field_validator
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Generic, TypeVar
 
-class ResponseModel(BaseModel):
+# Define a type variable for the content
+T = TypeVar('T', bound=BaseModel)
+
+class ResponseModel(BaseModel, Generic[T]):
     content_expires: Optional[datetime]
     shared_expires: Optional[datetime]
-    content: BaseModel
+    content: T  # The content will now be of the specified type
 
     class Config:
         from_attributes = True
+
 
 
 class GenericResponseModel(RootModel[Any]):

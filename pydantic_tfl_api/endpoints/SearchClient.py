@@ -1,56 +1,57 @@
 from .SearchClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import SearchResponse, StringsArray
 
 class SearchClient(Client):
-    def GetByQueryQuery(self, query: str) -> ResponseModel | ApiError:
+    def GetByQueryQuery(self, query: str) -> ResponseModel[SearchResponse] | ApiError:
         '''
         Search the site for occurrences of the query string. The maximum number of results returned is equal to the maximum page size of 100. To return subsequent pages, use the paginated overload.
 
-        ResponseModel.content contains `models.SearchResponse` type.
+        `ResponseModel.content` contains `models.SearchResponse` type.
 
         Parameters:
         query: str - The search query. Example: Southwark
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_GetByQueryQuery'], endpoint_args={ 'query': query })
 
-    def BusSchedulesByQueryQuery(self, query: str) -> ResponseModel | ApiError:
+    def BusSchedulesByQueryQuery(self, query: str) -> ResponseModel[SearchResponse] | ApiError:
         '''
         Searches the bus schedules folder on S3 for a given bus number.
 
-        ResponseModel.content contains `models.SearchResponse` type.
+        `ResponseModel.content` contains `models.SearchResponse` type.
 
         Parameters:
         query: str - The search query. Example: Southwark
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_BusSchedulesByQueryQuery'], endpoint_args={ 'query': query })
 
-    def MetaSearchProviders(self, ) -> ResponseModel | ApiError:
+    def MetaSearchProviders(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets the available searchProvider names.
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaSearchProviders'], endpoint_args=None)
 
-    def MetaCategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets the available search categories.
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaCategories'], endpoint_args=None)
 
-    def MetaSorts(self, ) -> ResponseModel | ApiError:
+    def MetaSorts(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets the available sorting options.
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.

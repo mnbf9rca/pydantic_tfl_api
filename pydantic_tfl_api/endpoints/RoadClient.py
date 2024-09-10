@@ -1,34 +1,35 @@
 from .RoadClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import StatusSeveritiesArray, StringsArray, Object, RoadCorridorsArray, RoadDisruption, RoadDisruptionsArray
 
 class RoadClient(Client):
-    def Get(self, ) -> ResponseModel | ApiError:
+    def Get(self, ) -> ResponseModel[RoadCorridorsArray] | ApiError:
         '''
         Gets all roads managed by TfL
 
-        ResponseModel.content contains `models.RoadCorridorsArray` type.
+        `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_Get'], endpoint_args=None)
 
-    def GetByPathIds(self, ids: str) -> ResponseModel | ApiError:
+    def GetByPathIds(self, ids: str) -> ResponseModel[RoadCorridorsArray] | ApiError:
         '''
         Gets the road with the specified id (e.g. A1)
 
-        ResponseModel.content contains `models.RoadCorridorsArray` type.
+        `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
         Parameters:
         ids: str - Comma-separated list of road identifiers e.g. "A406, A2" (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A1
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_GetByPathIds'], params=[ids], endpoint_args=None)
 
-    def StatusByPathIdsQueryStartDateQueryEndDate(self, ids: str, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
+    def StatusByPathIdsQueryStartDateQueryEndDate(self, ids: str, startDate: str | None = None, endDate: str | None = None) -> ResponseModel[RoadCorridorsArray] | ApiError:
         '''
         Gets the specified roads with the status aggregated over the date range specified, or now until the end of today if no dates are passed.
 
-        ResponseModel.content contains `models.RoadCorridorsArray` type.
+        `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
         Parameters:
         ids: str - Comma-separated list of road identifiers e.g. "A406, A2" or use "all" to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A2
@@ -37,11 +38,11 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_StatusByPathIdsQueryStartDateQueryEndDate'], params=[ids], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
-    def DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery(self, ids: str, stripContent: bool | None = None, severities: list | None = None, categories: list | None = None, closures: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery(self, ids: str, stripContent: bool | None = None, severities: list | None = None, categories: list | None = None, closures: bool | None = None) -> ResponseModel[RoadDisruptionsArray] | ApiError:
         '''
         Get active disruptions, filtered by road ids
 
-        ResponseModel.content contains `models.RoadDisruptionsArray` type.
+        `ResponseModel.content` contains `models.RoadDisruptionsArray` type.
 
         Parameters:
         ids: str - Comma-separated list of road identifiers e.g. "A406, A2" use all for all to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A406
@@ -52,11 +53,11 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery'], params=[ids], endpoint_args={ 'stripContent': stripContent, 'severities': severities, 'categories': categories, 'closures': closures })
 
-    def DisruptedStreetsByQueryStartDateQueryEndDate(self, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
+    def DisruptedStreetsByQueryStartDateQueryEndDate(self, startDate: str | None = None, endDate: str | None = None) -> ResponseModel[Object] | ApiError:
         '''
         Gets a list of disrupted streets. If no date filters are provided, current disruptions are returned.
 
-        ResponseModel.content contains `models.Object` type.
+        `ResponseModel.content` contains `models.Object` type.
 
         Parameters:
         startDate: str - Format - date-time (as date-time in RFC3339). Optional, the start time to filter on.. Example: 2024-03-01
@@ -64,11 +65,11 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptedStreetsByQueryStartDateQueryEndDate'], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
-    def DisruptionByIdByPathDisruptionIdsQueryStripContent(self, disruptionIds: str, stripContent: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByIdByPathDisruptionIdsQueryStripContent(self, disruptionIds: str, stripContent: bool | None = None) -> ResponseModel[RoadDisruption] | ApiError:
         '''
         Gets a list of active disruptions filtered by disruption Ids.
 
-        ResponseModel.content contains `models.RoadDisruption` type.
+        `ResponseModel.content` contains `models.RoadDisruption` type.
 
         Parameters:
         disruptionIds: str - Comma-separated list of disruption identifiers to filter by.. Example: TIMS-89632
@@ -76,22 +77,22 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByIdByPathDisruptionIdsQueryStripContent'], params=[disruptionIds], endpoint_args={ 'stripContent': stripContent })
 
-    def MetaCategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel[StringsArray] | ApiError:
         '''
         Gets a list of valid RoadDisruption categories
 
-        ResponseModel.content contains `models.StringsArray` type.
+        `ResponseModel.content` contains `models.StringsArray` type.
 
         Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_MetaCategories'], endpoint_args=None)
 
-    def MetaSeverities(self, ) -> ResponseModel | ApiError:
+    def MetaSeverities(self, ) -> ResponseModel[StatusSeveritiesArray] | ApiError:
         '''
         Gets a list of valid RoadDisruption severity codes
 
-        ResponseModel.content contains `models.StatusSeveritiesArray` type.
+        `ResponseModel.content` contains `models.StatusSeveritiesArray` type.
 
         Parameters:
         No parameters required.

@@ -1080,13 +1080,12 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
     class_name = f"{sanitize_name(get_api_name(spec))}Client"
 
     class_lines = []
-    # class_lines.append("from ..core import Client\n")
     class_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
-    # class_lines.append("from .. import models\n")
-    class_lines.append("from ..core import ApiError, ResponseModel, Client\n\n")
+    class_lines.append("from ..core import ApiError, ResponseModel, Client\n")
     path_lines = [f"class {class_name}(Client):\n"]
 
     all_types = set()
+    all_package_models = set()
 
     for path, methods in paths.items():
         for method, details in methods.items():
@@ -1101,15 +1100,16 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                 response_content = details["responses"].get("200", {})
 
                 model_name = get_model_name_from_path(response_content)
+                all_package_models.add(model_name)
 
                 # Sanitize the operation_id to ensure it's a valid Python identifier
                 sanitized_operation_id = sanitize_name(operation_id)
                 path_lines.append(
-                    f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel | ApiError:\n"
+                    f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
                 )
 
                 docstring = details.get("description", "No description available.")
-                docstring = docstring + f"\n\n        ResponseModel.content contains `models.{model_name}` type."
+                docstring = docstring + f"\n\n        `ResponseModel.content` contains `models.{model_name}` type."
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
@@ -1153,9 +1153,13 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
     valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
     if valid_type_import_strings:
         class_lines.append(
-            f"from typing import {', '.join(valid_type_import_strings)}\n\n"
+            f"from typing import {', '.join(valid_type_import_strings)}\n"
         )
-
+    if all_package_models:
+        class_lines.append(
+            f"from ..models import {', '.join(all_package_models)}\n"
+        )
+    class_lines.append("\n")
     class_file_path = os.path.join(output_path, f"{class_name}.py")
     os.makedirs(os.path.dirname(class_file_path), exist_ok=True)
     with open(class_file_path, "w") as class_file:

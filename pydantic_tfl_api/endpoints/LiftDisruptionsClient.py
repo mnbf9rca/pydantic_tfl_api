@@ -1,12 +1,13 @@
 from .LiftDisruptionsClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
+from ..models import LiftDisruptionsArray
 
 class LiftDisruptionsClient(Client):
-    def get(self, ) -> ResponseModel | ApiError:
+    def get(self, ) -> ResponseModel[LiftDisruptionsArray] | ApiError:
         '''
         List of all currently disrupted lift routes
 
-        ResponseModel.content contains `models.LiftDisruptionsArray` type.
+        `ResponseModel.content` contains `models.LiftDisruptionsArray` type.
 
         Parameters:
         No parameters required.
