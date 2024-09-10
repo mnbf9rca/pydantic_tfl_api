@@ -7,10 +7,13 @@ class SearchClient(Client):
         '''
         Search the site for occurrences of the query string. The maximum number of results returned is equal to the maximum page size of 100. To return subsequent pages, use the paginated overload.
 
-        `ResponseModel.content` contains `models.SearchResponse` type.
+  Query path: `/Search/`
 
-        Parameters:
-        query: str - The search query. Example: Southwark
+  `ResponseModel.content` contains `models.SearchResponse` type.'
+
+
+  Parameters:
+    query: str - The search query. Example: Southwark
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_GetByQueryQuery'], endpoint_args={ 'query': query })
 
@@ -18,10 +21,13 @@ class SearchClient(Client):
         '''
         Searches the bus schedules folder on S3 for a given bus number.
 
-        `ResponseModel.content` contains `models.SearchResponse` type.
+  Query path: `/Search/BusSchedules`
 
-        Parameters:
-        query: str - The search query. Example: Southwark
+  `ResponseModel.content` contains `models.SearchResponse` type.'
+
+
+  Parameters:
+    query: str - The search query. Example: Southwark
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_BusSchedulesByQueryQuery'], endpoint_args={ 'query': query })
 
@@ -29,9 +35,12 @@ class SearchClient(Client):
         '''
         Gets the available searchProvider names.
 
-        `ResponseModel.content` contains `models.StringsArray` type.
+  Query path: `/Search/Meta/SearchProviders`
 
-        Parameters:
+  `ResponseModel.content` contains `models.StringsArray` type.'
+
+
+  Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaSearchProviders'], endpoint_args=None)
@@ -40,9 +49,12 @@ class SearchClient(Client):
         '''
         Gets the available search categories.
 
-        `ResponseModel.content` contains `models.StringsArray` type.
+  Query path: `/Search/Meta/Categories`
 
-        Parameters:
+  `ResponseModel.content` contains `models.StringsArray` type.'
+
+
+  Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaCategories'], endpoint_args=None)
@@ -51,9 +63,12 @@ class SearchClient(Client):
         '''
         Gets the available sorting options.
 
-        `ResponseModel.content` contains `models.StringsArray` type.
+  Query path: `/Search/Meta/Sorts`
 
-        Parameters:
+  `ResponseModel.content` contains `models.StringsArray` type.'
+
+
+  Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaSorts'], endpoint_args=None)

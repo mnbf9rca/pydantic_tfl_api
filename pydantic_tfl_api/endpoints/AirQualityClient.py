@@ -7,9 +7,12 @@ class AirQualityClient(Client):
         '''
         Gets air quality data feed
 
-        `ResponseModel.content` contains `models.LondonAirForecast` type.
+  Query path: `/AirQuality/`
 
-        Parameters:
+  `ResponseModel.content` contains `models.LondonAirForecast` type.'
+
+
+  Parameters:
         No parameters required.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['AirQuality_Get'], endpoint_args=None)

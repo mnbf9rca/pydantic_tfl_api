@@ -46,13 +46,14 @@ logging.basicConfig(
 
 
 # Helper functions
-def sanitize_name(name: str) -> str:
+def sanitize_name(name: str, prefix: str = "Model") -> str:
     """
     Sanitize class names or field names to ensure they are valid Python identifiers.
     1. Replace invalid characters (like hyphens) with underscores.
     2. Extract the portion after the last underscore for more concise names.
-    3. Prepend 'Model_' if the name starts with a number or is a Python keyword.
+    3. Prepend prefix if the name starts with a digit or is a Python keyword.
     """
+
     # Replace invalid characters (like hyphens) with underscores
     sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
 
@@ -63,9 +64,9 @@ def sanitize_name(name: str) -> str:
     words = sanitized.split()
     sanitized = words[0] + "".join(word.capitalize() for word in words[1:])
 
-    # Always prepend 'Model_' to ensure names are valid and don't conflict with Python keywords
+    # Prepend prefix if necessary (i.e., name starts with a digit or is a Python keyword)
     if sanitized[0].isdigit() or keyword.iskeyword(sanitized):
-        sanitized = f"Model_{sanitized}"
+        sanitized = f"{prefix}_{sanitized}"
 
     return sanitized
 
@@ -1086,8 +1087,10 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
 
     all_types = set()
     all_package_models = set()
+    api_path = "/" + spec.get("servers", [{}])[0].get("url", "").split("/", 3)[3]
 
     for path, methods in paths.items():
+        full_path = join_url_paths(api_path, path)
         for method, details in methods.items():
             operation_id = details.get("operationId")
             if operation_id:
@@ -1103,24 +1106,25 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                 all_package_models.add(model_name)
 
                 # Sanitize the operation_id to ensure it's a valid Python identifier
-                sanitized_operation_id = sanitize_name(operation_id)
+                sanitized_operation_id = sanitize_name(operation_id, prefix="Query")
                 path_lines.append(
                     f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
                 )
 
-                docstring = details.get("description", "No description available.")
-                docstring = docstring + f"\n\n        `ResponseModel.content` contains `models.{model_name}` type."
+                docstring = f"{details.get("description", "No description in the OpenAPI spec.")}\n"
+                docstring = docstring + f"\n  Query path: `{full_path}`\n"
+                docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.'\n"
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
-                            f"        {sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. Example: {param.get('example', 'None given')}"
+                            f"    {sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. Example: {param.get('example', 'None given')}"
                             for param in parameters
                         ]
                     )
                 else:
                     docstring_parameters = "        No parameters required."
                 path_lines.append(
-                    f"        '''\n        {docstring}\n\n        Parameters:\n{docstring_parameters}\n        '''\n"
+                    f"        '''\n        {docstring}\n\n  Parameters:\n{docstring_parameters}\n        '''\n"
                 )
 
                 path_params, query_params = classify_parameters(parameters)
