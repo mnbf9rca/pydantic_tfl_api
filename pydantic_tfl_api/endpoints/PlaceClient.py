@@ -1,6 +1,6 @@
 from .PlaceClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
-from ..models import StopPointArray, PlaceArray, Object, PlaceCategoryArray, ObjectResponse
+from ..models import Object, ObjectResponse, PlaceArray, PlaceCategoryArray, StopPointArray
 
 class PlaceClient(Client):
     def MetaCategories(self, ) -> ResponseModel[PlaceCategoryArray] | ApiError:

@@ -1,6 +1,6 @@
 from .StopPointClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
-from ..models import PlaceCategoryArray, StopPointArray, SearchResponse, DisruptedPointArray, Object, ModeArray, GenericResponseModel, LineServiceTypeArray, StopPointsResponse, ArrivalDepartureArray, PlaceArray, PredictionArray, StopPointRouteSectionArray
+from ..models import ArrivalDepartureArray, DisruptedPointArray, GenericResponseModel, LineServiceTypeArray, ModeArray, Object, PlaceArray, PlaceCategoryArray, PredictionArray, SearchResponse, StopPointArray, StopPointRouteSectionArray, StopPointsResponse
 
 class StopPointClient(Client):
     def MetaCategories(self, ) -> ResponseModel[PlaceCategoryArray] | ApiError:

@@ -1,6 +1,6 @@
 from .LineClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
-from ..models import StatusSeveritiesArray, StopPointArray, RouteSequence, StringsArray, LineArray, RouteSearchResponse, TimetableResponse, DisruptionArray, ModeArray, ObjectResponse, PredictionArray
+from ..models import DisruptionArray, LineArray, ModeArray, ObjectResponse, PredictionArray, RouteSearchResponse, RouteSequence, StatusSeveritiesArray, StopPointArray, StringsArray, TimetableResponse
 
 class LineClient(Client):
     def MetaModes(self, ) -> ResponseModel[ModeArray] | ApiError:

@@ -1,6 +1,6 @@
 from .JourneyClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
-from ..models import ModeArray, ItineraryResult, ObjectResponse
+from ..models import ItineraryResult, ModeArray, ObjectResponse
 
 class JourneyClient(Client):
     def Meta(self, ) -> ResponseModel[ModeArray] | ApiError:

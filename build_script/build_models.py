@@ -1157,7 +1157,7 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
         )
     if all_package_models:
         class_lines.append(
-            f"from ..models import {', '.join(all_package_models)}\n"
+            f"from ..models import {', '.join(sorted(all_package_models))}\n"
         )
     class_lines.append("\n")
     class_file_path = os.path.join(output_path, f"{class_name}.py")
