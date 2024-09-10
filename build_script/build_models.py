@@ -605,6 +605,7 @@ def write_enum_files(models: Dict[str, Type[BaseModel]], models_dir: str):
 def sanitize_field_name(field_name: str) -> str:
     """Sanitize field names that are Python reserved keywords."""
     if keyword.iskeyword(field_name):
+        logging.info(f"Field name '{field_name}' is a Python keyword, sanitizing to '{field_name}_field'")
         return f"{field_name}_field"  # Append '_field' to reserved keywords
     return field_name
 
