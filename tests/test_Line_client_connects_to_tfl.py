@@ -9,7 +9,7 @@ def test_get_line_status_by_mode_rejected_with_invalid_api_key():
     client = LineClient(api_token)
     assert client.client.app_key["app_key"] == api_token
     # should get a 429 error inside an ApiError object
-    result = client.statusbymodebypathmodesquerydetailqueryseveritylevel(
+    result = client.StatusByModeByPathModesQueryDetailQuerySeverityLevel(
         "overground,tube"
     )
     assert isinstance(result, ApiError)
@@ -21,7 +21,7 @@ def test_get_line_status_by_mode():
     # this API doesnt need authentication so we can use it to test that the API is working
     test_client = LineClient()
     # should get a list of Line objects
-    result = test_client.statusbymodebypathmodesquerydetailqueryseveritylevel(
+    result = test_client.StatusByModeByPathModesQueryDetailQuerySeverityLevel(
         "overground,tube"
     )
     assert isinstance(result, ResponseModel)
