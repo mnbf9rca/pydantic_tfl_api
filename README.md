@@ -23,104 +23,71 @@ Uses Pydantic so you can use the `model_dump_json()` method to fully expand all 
 You can obtain an API key from [your profile page on the API portal](https://api-portal.tfl.gov.uk/profile) although you only need this if doing more than a dozen or so requests per minute.
 
 ```python
-from pydantic_tfl_api.client import Client
+from pydantic_tfl_api import LineClient
 
-token = "your_secret_token from https://api-portal.tfl.gov.uk/profile"
+token = None # only need a token if > 1 request per second
 
-client = Client(token)
-print (client.get_line_meta_modes())
-print (client.get_lines(mode="bus")[0].model_dump_json())
-print (client.get_lines(line_id="victoria")[0].model_dump_json())
-print (client.get_route_by_line_id_with_direction(line_id="northern", direction="all").model_dump_json())
+client = LineClient(token)
+response_object = client.MetaModes()
+# the response object is a pydantic model
+# the `content`` attribute is the API response, parsed into a pydantic model
+mode_array = response_object.content
+# if it's an array, it's a wrapped in a `RootModel``, which means it has a root attribute containing the array
+array_content = mode_array.root
+
+print(array_content[0].modeName)
+
+# obviously, you can chain these together
+print (client.MetaModes().content.root[0].model_dump_json())
+print (client.GetByModeByPathModes(modes="bus").content.root[0].model_dump_json())
+
+# you can also use the models directly
+print ([f'The {line_item.name} line is {line_item.modeName}' for line_item in client.StatusByModeByPathModesQueryDetailQuerySeverityLevel(modes="tube").content.root])
+
+# some return enormous amounts of data with very complex models
+print(client.RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding(id="northern", direction="all").model_dump_json())
 ```
 ## Class structure
 
-The Pydantic classes are in the `tfl.models` module. The `tfl.client` module contains the `Client` class, which is the main class you will use to interact with the API.
-
-Pydantic models are used to represent the data returned by the TfL API. There is a circular reference in the TfL API, so I handled this in the `StopPoint` model to load the `Line` model only after `StopPoint` is fully loaded.
-
-The following objects represent responses from the TfL API, and are therefore returned by the `Client` class methods - either individually or as an array of objects:
-
-- `StopPoint`
-- `Mode`
-- `Line`
-- `RouteSequence`
-- `Disruption`
-- `StopPointsResponse`
-- `Prediction`
-
-These objects contains two properties `content_expires` and `shared_expires`, which are the calculated expiry based on the HTTP response timestamp and the `maxage`/`s-maxage` header respectively. You can use these to calculate the time to live of the object, and to determine if the object is still valid - for example if implementing caching.
-
-Here's a Mermaid visualisation of the Pydantic models (or [view online](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqNVE1r4zAQ_StG59AfkMNC2XaXhXQ3xKGHxRdhTZIBW9KOpJZQ-t9Xlhxbkl3aHBzpzXvzpWHeWKsEsC1rO27MA_Iz8b6Rlf8JJGgtKlntDhEJnOr-dPI4iINyFlJDAOqo-c215fJRWrrW8M-BbEdqpq7u7r59Lktj7AkEBuoRe5TndVtE53uIU0qr3PN3Uq-i9Og_IM9APzr1mhqOxFHuFJ8FN3kMtdRl9lyeOv4lQFo8IVBE53sQzkmmoj8kgD5-kLT90fDEbXsBUVulI5wxQ6QvUPKw2YhofCRSlMX0czawUmyHcsxrOAWnD2jI6fkRJ8NwqC23zhSGdH4KUw30gi0cr7oMs97IpauIL_xE-Jl3KNBe90CoRFlYmmxE09oy977Je4XSroLmAEYrabLQ98IH9o54tyelgSyC-bp6SG94j5-knC4NIzi_1VxMaN1a1QVlWeiMBMLKDkkGLlCSyb85-WRTxCefexlFEzBNUVL10li0JSd83PWlowKf3iHPkm1YD9RzFH4Hvw2ahtkL9NCwrT9KcJZ417BGvnsqd1bVV9myrSUHG-bzPF_Y9sQ7429OC25h3OET6peeVfQ0bvnhb8M0l3-VunHe_wMvtQ55)):
-
-```mermaid
-classDiagram
-    direction LR
-    class AffectedRoute
-    class RouteSectionNaptanEntrySequence
-    AffectedRoute ..> RouteSectionNaptanEntrySequence
-
-    class PredictionTiming
-    class Prediction
-    Prediction ..> PredictionTiming 
-
-    class Crowding
-    class PassengerFlow
-    class TrainLoading
-    Crowding ..> PassengerFlow
-    Crowding ..> TrainLoading
-
-    class Identifier
-    Identifier ..> Crowding
-
-    class OrderedRoute
-    class RouteSequence
-    class MatchedStop
-    RouteSequence ..> MatchedStop
-    RouteSequence ..> OrderedRoute
-
-    class ApiError
-    class Mode
 
 
-    class Line
-    Line ..> Disruption
-    Line ..> LineStatus
-    Line ..> RouteSection
-    Line ..> ServiceType
-    Line ..> Crowding
+### Models
 
-    class RouteSection
-    class ServiceType
-    class ValidityPeriod
-    class LineStatus
-    class Disruption
+Pydantic models are used to represent the data returned by the TfL API, and are in the `models` module. There are circular references in the TfL API, so these are handled by using `ForwardRef` in the models. Overall, there are 117 Pydantic models in the package. Models are automatically generated from the TfL API OpenAPI documentation, so if the TfL API changes, the models will be updated to reflect this. Fields are 'santizied' to remove any reserved words in Python (`class` or `from` for example), but otherwise are identical to the TfL API. In some cases, the TfL response has no definition, so the model is a `Dict[str, Any]`.
 
-    class StopPoint
-    class StopPointsResponse
-    class AdditionalProperties
-    class StopPointsResponse
-    class LineModeGroup
-    class LineGroup
+Some of the TfL responses are arrays, and these are wrapped in a `RootModel` object, which contains the array in the `root` attribute - for example, a `LineArray` model contains an array of `Line` objects in the `root` attribute. See the [Pydantic documentation for more information on how to use RootModels](https://docs.pydantic.dev/latest/concepts/models/#rootmodel-and-custom-root-types).
 
 
+Successful responses are wrapped in a `ResponseModel` object, which contains the cache expiry time (`content_expires` and `shared_expires`, which are the calculated expiry based on the HTTP response timestamp and the `maxage`/`s-maxage` header respectively) for use to calculate the time to live of the object, and to determine if the object is still valid - for example if implementing caching - and the response object (in the `content` attribute).
+Failures return an `ApiError` object, which contains the HTTP status code and the error message.
 
-    LineStatus ..> ValidityPeriod
-    LineStatus ..> Disruption
+### Clients
 
-    Disruption ..> AffectedRoute
-    MatchedStop ..> Identifier 
+ There are dedicated clients for each of the TfL APIs. These all inherit from `core.Client`. The method names are the same as the path IDs in the TfL API documentation, unless they are reserved words in Python, in which case they are suffixed with `Query_` (there are currently none in the package).
 
-    RouteSectionNaptanEntrySequence ..> StopPoint
+Clients are automatically generated from the TfL API OpenAPI documentation, so if the TfL API changes, the clients will be updated to reflect this. Clients are available for all the TfL API endpoints, and are named after the endpoint, with the `Client` suffix. Methods are named after the path ID in the TfL API documentation, with the `Query_` prefix if the path ID is a reserved word in Python (there are none in the package as far as i know), and they take the same parameters as the TfL API documentation. Here are the current clients from the `endpoints` module:
 
-    StopPoint ..> LineGroup
-    StopPoint ..> LineModeGroup
-    StopPoint ..> AdditionalProperties
-    StopPoint ..> Line
-    StopPointsResponse ..> StopPoint
-
-
+```bash
+endpoints
+├── AccidentStatsClient.py
+├── AirQualityClient.py
+├── BikePointClient.py
+├── CrowdingClient.py
+├── JourneyClient.py
+├── LiftDisruptionsClient.py
+├── LineClient.py
+├── ModeClient.py
+├── OccupancyClient.py
+├── PlaceClient.py
+├── RoadClient.py
+├── SearchClient.py
+├── StopPointClient.py
+├── VehicleClient.py
 ```
+
+Here's a Mermaid visualisation of the Pydantic models (or [view online](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqVWNtu2zgQ_ZVCz0mwce1c_LBA1m5Sd9O1EQUpsMjLWJrYbGRSS1HOaoP8-47uvMlJCxStzjkzJIfDI8qvQSRiDKZBlECWzRlsJOwe-Sf6cxVFLEau5qiAJVdSQvHp-Ph3C_dpK9kMshwSVQwKHnDLogRbXrE9hij3LML7IsVMH9Di6pBqxkMkRbM9JHNMQapcopbNYvz6SrqSGDPKL_g92zG-qaV_sGdcCcbVMoryFHhU9MldTp_rEDsDuQL53KF1KjBjzUezurMtyA3OBOcYKSE9ExtSGDkPauYsk3mqMK5W0Gc2cT2fj2kwKqmTgTA9-gY5ShbdYZYKnuF3atOm2RaKEQWyIC5PVJXjm8glx-JdwSoBWp6cFdR5X5nEuYieaWdDBeX4c1DwboqHqjrDsluChtkQQUbbmWSKVtcM1iTWB7mGtjN18hY3BliqKsKRG8wM9gjNBhjEPaR6yX1akujy-vxmdpSf-cWaG0F6lWnZ3kZp8UXpLOyJoaVf8EzJPHIDlutMQec9LboCtbWQaubxDyGfLaLv6Ba6E7nCpTY7bXR7NqHC1BGVYDePK6UkW1PGZhD2pPrVa95oEnodfUzZmnosxx6vbUKKl7hzug725elSaN674E_Cp6CdzjOL-A4q2mJcla2ntGTmRB2Ht8BemGJEvRD5A1zy8DraWh5YZr26wTpp9AMkLGaqWNHRF7FtiH0Xhaj1rCUIlUgdp70VPCZHZfJaSIwgM0i30KWX9tUtnwy99bxc_6T5uEjrzCajH6yykb0HtCO-pV8S3IPduwOw52DQCY20tVSPGjMDhRshC0vRwkZy-6w3cF_r_jqgpeswW3PgBtFk9nJ3AuKZoNtILKR2znVYT-LiJeK1CpPwieseXt-goFtgui0GNSa02KUQ0Y0A4YMBvfG8Kw3L1s2Tw_KVFH2LejShkoheup_6R9be-6Gt0wBb8AOT5E8uXjid_tw4LB8SHSpHr7Aq0L2JvKev8ZjyHtKeYd17SrzyDEddoZ1fulbller206iz9-WlzdkO7A7oGpx3hMhrr39BqoB_4UoWIf6TI4_QjfKIfDbchGgCZx2uZCljlIYxu5puHHOKjds6CczbZZWBzAWv4p95pnbUBpmuM3bf2fh6DAeu32ch7mkExfTvNIMxvNXHdCvTExhF7R5_zcVtokuj76tn0KH2OiBwdse_9Z0sMys-sNz6MzWmmwINBAmd7RRlWWqfzj7cJlsemxsp8nSILF_2gwLtbdqfQk3dg06a0nA17w1xU3afWdZhgt6GdV_VuNXCnrbW431MiSlYJ2hsAPkq7NZsk2s3Db_S2VK_rEO7q5uW3zPk0rm1D_PaFLwb3z97bvLtU_N9kWXINyivE_Hi4e8lMH5LbxX7wuLGdQs2l685konVLWG8xHyC-stwwcnF9tB89bdRlaJ6Vxrf_AatX7DrubsBtaaxvupqfy3rU-wK7l-otsU1hX-lv7OEPmDLaZs-6cthraT5DtSXVUf7sKFt-MBkfB8aDaP_6GZAjvMPO1DlC--4VK9pXCQ4CnYod8DiYBq8lqLHQG2RJh5M6b8xPkGeqMfgkb-RFHIlwoJHwZQ-j_EoyNOYTL35fbIFU-DB9DX4N5gen12cn5xdjiaTyelkcjEej46CIpiejn87GX-eXJ5PTseXn8eT0fnbUfCfEJRhdDKaXJxPzieXp6PxOcWcHQVkYJttMH2CJKuz_11J68Hosq6E_N78Wlr-8_Y_OZA7FA)):
+
+[![](https://mermaid.ink/img/pako:eNqVWNtu2zgQ_ZVCz0mwce1c_LBA1m5Sd9O1EQUpsMjLWJrYbGRSS1HOaoP8-47uvMlJCxStzjkzJIfDI8qvQSRiDKZBlECWzRlsJOwe-Sf6cxVFLEau5qiAJVdSQvHp-Ph3C_dpK9kMshwSVQwKHnDLogRbXrE9hij3LML7IsVMH9Di6pBqxkMkRbM9JHNMQapcopbNYvz6SrqSGDPKL_g92zG-qaV_sGdcCcbVMoryFHhU9MldTp_rEDsDuQL53KF1KjBjzUezurMtyA3OBOcYKSE9ExtSGDkPauYsk3mqMK5W0Gc2cT2fj2kwKqmTgTA9-gY5ShbdYZYKnuF3atOm2RaKEQWyIC5PVJXjm8glx-JdwSoBWp6cFdR5X5nEuYieaWdDBeX4c1DwboqHqjrDsluChtkQQUbbmWSKVtcM1iTWB7mGtjN18hY3BliqKsKRG8wM9gjNBhjEPaR6yX1akujy-vxmdpSf-cWaG0F6lWnZ3kZp8UXpLOyJoaVf8EzJPHIDlutMQec9LboCtbWQaubxDyGfLaLv6Ba6E7nCpTY7bXR7NqHC1BGVYDePK6UkW1PGZhD2pPrVa95oEnodfUzZmnosxx6vbUKKl7hzug725elSaN674E_Cp6CdzjOL-A4q2mJcla2ntGTmRB2Ht8BemGJEvRD5A1zy8DraWh5YZr26wTpp9AMkLGaqWNHRF7FtiH0Xhaj1rCUIlUgdp70VPCZHZfJaSIwgM0i30KWX9tUtnwy99bxc_6T5uEjrzCajH6yykb0HtCO-pV8S3IPduwOw52DQCY20tVSPGjMDhRshC0vRwkZy-6w3cF_r_jqgpeswW3PgBtFk9nJ3AuKZoNtILKR2znVYT-LiJeK1CpPwieseXt-goFtgui0GNSa02KUQ0Y0A4YMBvfG8Kw3L1s2Tw_KVFH2LejShkoheup_6R9be-6Gt0wBb8AOT5E8uXjid_tw4LB8SHSpHr7Aq0L2JvKev8ZjyHtKeYd17SrzyDEddoZ1fulbller206iz9-WlzdkO7A7oGpx3hMhrr39BqoB_4UoWIf6TI4_QjfKIfDbchGgCZx2uZCljlIYxu5puHHOKjds6CczbZZWBzAWv4p95pnbUBpmuM3bf2fh6DAeu32ch7mkExfTvNIMxvNXHdCvTExhF7R5_zcVtokuj76tn0KH2OiBwdse_9Z0sMys-sNz6MzWmmwINBAmd7RRlWWqfzj7cJlsemxsp8nSILF_2gwLtbdqfQk3dg06a0nA17w1xU3afWdZhgt6GdV_VuNXCnrbW431MiSlYJ2hsAPkq7NZsk2s3Db_S2VK_rEO7q5uW3zPk0rm1D_PaFLwb3z97bvLtU_N9kWXINyivE_Hi4e8lMH5LbxX7wuLGdQs2l685konVLWG8xHyC-stwwcnF9tB89bdRlaJ6Vxrf_AatX7DrubsBtaaxvupqfy3rU-wK7l-otsU1hX-lv7OEPmDLaZs-6cthraT5DtSXVUf7sKFt-MBkfB8aDaP_6GZAjvMPO1DlC--4VK9pXCQ4CnYod8DiYBq8lqLHQG2RJh5M6b8xPkGeqMfgkb-RFHIlwoJHwZQ-j_EoyNOYTL35fbIFU-DB9DX4N5gen12cn5xdjiaTyelkcjEej46CIpiejn87GX-eXJ5PTseXn8eT0fnbUfCfEJRhdDKaXJxPzieXp6PxOcWcHQVkYJttMH2CJKuz_11J68Hosq6E_N78Wlr-8_Y_OZA7FA?type=png)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqVWNtu2zgQ_ZVCz0mwce1c_LBA1m5Sd9O1EQUpsMjLWJrYbGRSS1HOaoP8-47uvMlJCxStzjkzJIfDI8qvQSRiDKZBlECWzRlsJOwe-Sf6cxVFLEau5qiAJVdSQvHp-Ph3C_dpK9kMshwSVQwKHnDLogRbXrE9hij3LML7IsVMH9Di6pBqxkMkRbM9JHNMQapcopbNYvz6SrqSGDPKL_g92zG-qaV_sGdcCcbVMoryFHhU9MldTp_rEDsDuQL53KF1KjBjzUezurMtyA3OBOcYKSE9ExtSGDkPauYsk3mqMK5W0Gc2cT2fj2kwKqmTgTA9-gY5ShbdYZYKnuF3atOm2RaKEQWyIC5PVJXjm8glx-JdwSoBWp6cFdR5X5nEuYieaWdDBeX4c1DwboqHqjrDsluChtkQQUbbmWSKVtcM1iTWB7mGtjN18hY3BliqKsKRG8wM9gjNBhjEPaR6yX1akujy-vxmdpSf-cWaG0F6lWnZ3kZp8UXpLOyJoaVf8EzJPHIDlutMQec9LboCtbWQaubxDyGfLaLv6Ba6E7nCpTY7bXR7NqHC1BGVYDePK6UkW1PGZhD2pPrVa95oEnodfUzZmnosxx6vbUKKl7hzug725elSaN674E_Cp6CdzjOL-A4q2mJcla2ntGTmRB2Ht8BemGJEvRD5A1zy8DraWh5YZr26wTpp9AMkLGaqWNHRF7FtiH0Xhaj1rCUIlUgdp70VPCZHZfJaSIwgM0i30KWX9tUtnwy99bxc_6T5uEjrzCajH6yykb0HtCO-pV8S3IPduwOw52DQCY20tVSPGjMDhRshC0vRwkZy-6w3cF_r_jqgpeswW3PgBtFk9nJ3AuKZoNtILKR2znVYT-LiJeK1CpPwieseXt-goFtgui0GNSa02KUQ0Y0A4YMBvfG8Kw3L1s2Tw_KVFH2LejShkoheup_6R9be-6Gt0wBb8AOT5E8uXjid_tw4LB8SHSpHr7Aq0L2JvKev8ZjyHtKeYd17SrzyDEddoZ1fulbller206iz9-WlzdkO7A7oGpx3hMhrr39BqoB_4UoWIf6TI4_QjfKIfDbchGgCZx2uZCljlIYxu5puHHOKjds6CczbZZWBzAWv4p95pnbUBpmuM3bf2fh6DAeu32ch7mkExfTvNIMxvNXHdCvTExhF7R5_zcVtokuj76tn0KH2OiBwdse_9Z0sMys-sNz6MzWmmwINBAmd7RRlWWqfzj7cJlsemxsp8nSILF_2gwLtbdqfQk3dg06a0nA17w1xU3afWdZhgt6GdV_VuNXCnrbW431MiSlYJ2hsAPkq7NZsk2s3Db_S2VK_rEO7q5uW3zPk0rm1D_PaFLwb3z97bvLtU_N9kWXINyivE_Hi4e8lMH5LbxX7wuLGdQs2l685konVLWG8xHyC-stwwcnF9tB89bdRlaJ6Vxrf_AatX7DrubsBtaaxvupqfy3rU-wK7l-otsU1hX-lv7OEPmDLaZs-6cthraT5DtSXVUf7sKFt-MBkfB8aDaP_6GZAjvMPO1DlC--4VK9pXCQ4CnYod8DiYBq8lqLHQG2RJh5M6b8xPkGeqMfgkb-RFHIlwoJHwZQ-j_EoyNOYTL35fbIFU-DB9DX4N5gen12cn5xdjiaTyelkcjEej46CIpiejn87GX-eXJ5PTseXn8eT0fnbUfCfEJRhdDKaXJxPzieXp6PxOcWcHQVkYJttMH2CJKuz_11J68Hosq6E_N78Wlr-8_Y_OZA7FA)
 
 # Development environment
 
