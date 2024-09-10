@@ -1,1 +1,35 @@
-{"status_code": 200, "headers": {"Date": "Mon, 15 Jul 2024 15:41:02 GMT", "Content-Type": "application/json; charset=utf-8", "Transfer-Encoding": "chunked", "Connection": "keep-alive", "Cache-Control": "public, must-revalidate, max-age=30, s-maxage=60", "Via": "1.1 varnish", "Content-Encoding": "gzip", "Age": "0", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS", "Access-Control-Allow-Origin": "*", "Api-Entity-Payload": "Disruption", "X-Backend": "api", "X-Cache": "MISS", "X-Cacheable": "Yes. Cacheable", "X-Frame-Options": "deny", "X-Proxy-Connection": "unset", "X-TTL": "60.000", "X-TTL-RULE": "0", "X-Varnish": "906082421", "X-AspNet-Version": "4.0.30319", "X-Operation": "Line_DisruptionByPathIds", "X-API": "Line", "CF-Cache-Status": "DYNAMIC", "Strict-Transport-Security": "max-age=31536000", "Set-Cookie": "_cfuvid=kizi0XVE_di6A9ybmZKT.QL021brtLdEc7pZZ3twcCk-1721058062585-0.0.1.1-604800000; path=/; domain=.tfl.gov.uk; HttpOnly; Secure; SameSite=None", "Server": "cloudflare", "CF-RAY": "8a3adabaa91679af-LHR"}, "url": "https://api.tfl.gov.uk/Line/victoria/Disruption", "content": "[]"}
+{
+  "status_code": 200,
+  "headers": {
+    "Date": "Mon, 15 Jul 2024 15:41:02 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+    "Connection": "keep-alive",
+    "Cache-Control": "public, must-revalidate, max-age=30, s-maxage=60",
+    "Via": "1.1 varnish",
+    "Content-Encoding": "gzip",
+    "Age": "0",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Api-Entity-Payload": "Disruption",
+    "X-Backend": "api",
+    "X-Cache": "MISS",
+    "X-Cacheable": "Yes. Cacheable",
+    "X-Frame-Options": "deny",
+    "X-Proxy-Connection": "unset",
+    "X-TTL": "60.000",
+    "X-TTL-RULE": "0",
+    "X-Varnish": "906082421",
+    "X-AspNet-Version": "4.0.30319",
+    "X-Operation": "Line_DisruptionByPathIds",
+    "X-API": "Line",
+    "CF-Cache-Status": "DYNAMIC",
+    "Strict-Transport-Security": "max-age=31536000",
+    "Set-Cookie": "_cfuvid=kizi0XVE_di6A9ybmZKT.QL021brtLdEc7pZZ3twcCk-1721058062585-0.0.1.1-604800000; path=/; domain=.tfl.gov.uk; HttpOnly; Secure; SameSite=None",
+    "Server": "cloudflare",
+    "CF-RAY": "8a3adabaa91679af-LHR"
+  },
+  "url": "https://api.tfl.gov.uk/Line/victoria/Disruption",
+  "content": "[]"
+}

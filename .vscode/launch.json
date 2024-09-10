@@ -1,31 +1,44 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Debug Tests",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "purpose": [
-              "debug-test"
-            ],
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "env": {
-              "PYTEST_ADDOPTS": "--no-cov",
-              "PYTHONPATH": "${workspaceFolder}",
-              "LOG_LEVEL": "DEBUG"
-            }
-          },
-        {
-            "name": "Python Debugger: example.py",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/example.py",
-            "console": "integratedTerminal"
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: build_models.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/build_script/build_models.py",
+      "args": [
+        "${workspaceFolder}/TfL_OpenAPI_specs",
+        "${workspaceFolder}/pydantic_tfl_api"
+      ],
+      "console": "integratedTerminal",
+      "preLaunchTask": "clean up the pydantic_tfl_api folder"
+    },
+    {
+      "name": "Python: Debug Tests - pydantic_tfl_api",
+      "cwd": "${workspaceFolder}",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": [
+        "debug-test"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTEST_ADDOPTS": "--no-cov",
+        "PYTHONPATH": "${workspaceFolder}",
+        "LOG_LEVEL": "DEBUG"
+      }
+    },
+    {
+      "name": "Python Debugger: example.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/example.py",
+      "console": "integratedTerminal"
+    }
+  ]
 }

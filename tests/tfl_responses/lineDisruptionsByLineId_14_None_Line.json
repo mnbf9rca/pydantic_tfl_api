@@ -1,1 +1,35 @@
-{"status_code": 200, "headers": {"Date": "Mon, 15 Jul 2024 15:41:02 GMT", "Content-Type": "application/json; charset=utf-8", "Content-Length": "22", "Connection": "keep-alive", "Cache-Control": "public, must-revalidate, max-age=30, s-maxage=60", "Via": "1.1 varnish", "Content-Encoding": "gzip", "Age": "0", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS", "Access-Control-Allow-Origin": "*", "Api-Entity-Payload": "Disruption", "X-Backend": "api", "X-Cache": "MISS", "X-Cacheable": "Yes. Cacheable", "X-Frame-Options": "deny", "X-Proxy-Connection": "unset", "X-TTL": "60.000", "X-TTL-RULE": "0", "X-Varnish": "2107611194", "X-AspNet-Version": "4.0.30319", "X-Operation": "Line_DisruptionByPathIds", "X-API": "Line", "CF-Cache-Status": "DYNAMIC", "Strict-Transport-Security": "max-age=31536000", "Set-Cookie": "_cfuvid=imvaFJ4LBwA1Z4WbhYBoMa4T7Ug7TkpAwAgjHQCJKW8-1721058062943-0.0.1.1-604800000; path=/; domain=.tfl.gov.uk; HttpOnly; Secure; SameSite=None", "Server": "cloudflare", "CF-RAY": "8a3adabc6e2bbf0d-LHR"}, "url": "https://api.tfl.gov.uk/Line/14/Disruption", "content": "[]"}
+{
+  "status_code": 200,
+  "headers": {
+    "Date": "Mon, 15 Jul 2024 15:41:02 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": "22",
+    "Connection": "keep-alive",
+    "Cache-Control": "public, must-revalidate, max-age=30, s-maxage=60",
+    "Via": "1.1 varnish",
+    "Content-Encoding": "gzip",
+    "Age": "0",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Origin": "*",
+    "Api-Entity-Payload": "Disruption",
+    "X-Backend": "api",
+    "X-Cache": "MISS",
+    "X-Cacheable": "Yes. Cacheable",
+    "X-Frame-Options": "deny",
+    "X-Proxy-Connection": "unset",
+    "X-TTL": "60.000",
+    "X-TTL-RULE": "0",
+    "X-Varnish": "2107611194",
+    "X-AspNet-Version": "4.0.30319",
+    "X-Operation": "Line_DisruptionByPathIds",
+    "X-API": "Line",
+    "CF-Cache-Status": "DYNAMIC",
+    "Strict-Transport-Security": "max-age=31536000",
+    "Set-Cookie": "_cfuvid=imvaFJ4LBwA1Z4WbhYBoMa4T7Ug7TkpAwAgjHQCJKW8-1721058062943-0.0.1.1-604800000; path=/; domain=.tfl.gov.uk; HttpOnly; Secure; SameSite=None",
+    "Server": "cloudflare",
+    "CF-RAY": "8a3adabc6e2bbf0d-LHR"
+  },
+  "url": "https://api.tfl.gov.uk/Line/14/Disruption",
+  "content": "[]"
+}

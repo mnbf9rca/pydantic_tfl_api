@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "clean up the pydantic_tfl_api folder",
+      "type": "shell",
+      "command": "${workspaceFolder}/build_scripts/build.sh",
+      "args": [
+        "${workspaceFolder}/pydantic_tfl_api",
+        "${workspaceFolder}/TfL_OpenAPI_specs",
+        "false"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+
+  ]
+}

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "14",
+    "name": "14",
+    "modeName": "bus",
+    "disruptions": [],
+    "created": "2024-07-09T13:08:01.79Z",
+    "modified": "2024-07-09T13:08:01.79Z",
+    "lineStatuses": [],
+    "routeSections": [
+      {
+        "routeCode": null,
+        "name": "Putney Heath / Green Man - .Russell Square",
+        "direction": "outbound",
+        "originationName": "Putney Heath / Green Man",
+        "destinationName": ".Russell Square",
+        "originator": "490011285E2",
+        "destination": "490000200E",
+        "serviceType": "Regular",
+        "validTo": "2024-12-23T00:00:00Z",
+        "validFrom": "2024-07-06T00:00:00Z"
+      },
+      {
+        "routeCode": null,
+        "name": ".Russell Square - Putney Heath / Green Man",
+        "direction": "inbound",
+        "originationName": ".Russell Square",
+        "destinationName": "Putney Heath / Green Man",
+        "originator": "490000200E",
+        "destination": "490011285S1",
+        "serviceType": "Regular",
+        "validTo": "2024-12-23T00:00:00Z",
+        "validFrom": "2024-07-06T00:00:00Z"
+      }
+    ],
+    "serviceTypes": [
+      {
+        "name": "Regular",
+        "uri": "/Line/Route?ids=14&serviceTypes=Regular"
+      }
+    ],
+    "crowding": {
+      "passengerFlows": null,
+      "trainLoadings": null
+    }
+  },
+  {
+    "id": "15",
+    "name": "15",
+    "modeName": "bus",
+    "disruptions": [],
+    "created": "2024-07-09T13:08:01.79Z",
+    "modified": "2024-07-09T13:08:01.79Z",
+    "lineStatuses": [],
+    "routeSections": [
+      {
+        "routeCode": null,
+        "name": "Blackwall Station - Charing Cross Station",
+        "direction": "outbound",
+        "originationName": "Blackwall Station",
+        "destinationName": "Charing Cross Station",
+        "originator": "490002018P",
+        "destination": "490013766H",
+        "serviceType": "Regular",
+        "validTo": "2024-12-23T00:00:00Z",
+        "validFrom": "2024-07-06T00:00:00Z"
+      },
+      {
+        "routeCode": null,
+        "name": "Charing Cross Stn  / Trafalgar Square - Blackwall Station",
+        "direction": "inbound",
+        "originationName": "Charing Cross Stn  / Trafalgar Square",
+        "destinationName": "Blackwall Station",
+        "originator": "490013766F",
+        "destination": "490002018AP",
+        "serviceType": "Regular",
+        "validTo": "2024-12-23T00:00:00Z",
+        "validFrom": "2024-07-06T00:00:00Z"
+      }
+    ],
+    "serviceTypes": [
+      {
+        "name": "Regular",
+        "uri": "/Line/Route?ids=15&serviceTypes=Regular"
+      }
+    ],
+    "crowding": {
+      "passengerFlows": null,
+      "trainLoadings": null
+    }
+  }
+]
