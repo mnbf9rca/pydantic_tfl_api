@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-tfl-api"
-version = "0.28.1"
+version = "1.0.0"
 description = "A Pydantic-based wrapper for the TfL Unified API https://api.tfl.gov.uk/. Not associated with or endorsed by TfL."
 authors = ["Rob Aleck <mnbf9rca@users.noreply.github.com>"]
 license = "MIT"
@@ -37,7 +37,8 @@ omit = [
     "*/.venv/*",
     "*/.tox/*",
     "*/.eggs/*",
-    "*/.vscode-remote/*"
+    "*/.vscode-remote/*",
+    "*/build_script/*",
 ]
 relative_files = true
 
@@ -55,5 +56,6 @@ exclude = [
     "old",
     "build",
     "dist",
-    "venv"
+    "venv",
+    "build_script",
 ]

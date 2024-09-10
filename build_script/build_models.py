@@ -359,33 +359,6 @@ def save_models(
     write_enum_files(models, models_dir)
 
 
-# def find_existing_models(models_dir: str) -> Dict[str, Type[BaseModel]]:
-#     model_folder_name = os.path.basename(models_dir)
-#     package_name = os.path.basename(os.path.dirname(models_dir))
-#     existing_models = {}
-
-#     for file in os.listdir(models_dir):
-#         if file.endswith(".py") and file != "__init__.py":
-#             model_name = file.split(".")[0]
-#             # Dynamically import the module
-#             module = __import__(
-#                 f"{package_name}.{model_folder_name}.{model_name}",
-#                 fromlist=[model_name],
-#             )
-
-#             # Iterate over all attributes in the module
-#             for name, obj in inspect.getmembers(module):
-#                 # Check if the attribute is a class and is a subclass of pydantic BaseModel
-#                 if (
-#                     inspect.isclass(obj)
-#                     and issubclass(obj, BaseModel)
-#                     and obj.__module__ == module.__name__
-#                 ):
-#                     # Add the class to the existing_models dictionary
-#                     existing_models[name] = obj
-
-#     return existing_models
-
 def save_model_file(
     model_name: str,
     model: Any,
