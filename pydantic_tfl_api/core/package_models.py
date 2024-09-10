@@ -6,7 +6,7 @@ from typing import Optional, Any, Dict
 class ResponseModel(BaseModel):
     content_expires: Optional[datetime]
     shared_expires: Optional[datetime]
-    content: Any
+    content: BaseModel
 
     class Config:
         from_attributes = True
