@@ -2,7 +2,7 @@ from .SearchClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class SearchClient(Client):
-    def getbyqueryquery(self, query: str) -> ResponseModel | ApiError:
+    def GetByQueryQuery(self, query: str) -> ResponseModel | ApiError:
         '''
         Search the site for occurrences of the query string. The maximum number of results returned is equal to the maximum page size of 100. To return subsequent pages, use the paginated overload.
 
@@ -13,7 +13,7 @@ class SearchClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_GetByQueryQuery'], endpoint_args={ 'query': query })
 
-    def busschedulesbyqueryquery(self, query: str) -> ResponseModel | ApiError:
+    def BusSchedulesByQueryQuery(self, query: str) -> ResponseModel | ApiError:
         '''
         Searches the bus schedules folder on S3 for a given bus number.
 
@@ -24,7 +24,7 @@ class SearchClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_BusSchedulesByQueryQuery'], endpoint_args={ 'query': query })
 
-    def metasearchproviders(self, ) -> ResponseModel | ApiError:
+    def MetaSearchProviders(self, ) -> ResponseModel | ApiError:
         '''
         Gets the available searchProvider names.
 
@@ -35,7 +35,7 @@ class SearchClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaSearchProviders'], endpoint_args=None)
 
-    def metacategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets the available search categories.
 
@@ -46,7 +46,7 @@ class SearchClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_MetaCategories'], endpoint_args=None)
 
-    def metasorts(self, ) -> ResponseModel | ApiError:
+    def MetaSorts(self, ) -> ResponseModel | ApiError:
         '''
         Gets the available sorting options.
 

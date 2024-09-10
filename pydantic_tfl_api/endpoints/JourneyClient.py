@@ -2,7 +2,7 @@ from .JourneyClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class JourneyClient(Client):
-    def meta(self, ) -> ResponseModel | ApiError:
+    def Meta(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of all of the available journey planner modes
 
@@ -13,7 +13,7 @@ class JourneyClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Journey_Meta'], endpoint_args=None)
 
-    def journeyresultsbypathfrompathtoqueryviaquerynationalsearchquerydatequ(self, from_field: str, to: str, via: str | None = None, nationalSearch: bool | None = None, date: str | None = None, time: str | None = None, timeIs: str | None = None, journeyPreference: str | None = None, mode: list | None = None, accessibilityPreference: str | None = None, fromName: str | None = None, toName: str | None = None, viaName: str | None = None, maxTransferMinutes: str | None = None, maxWalkingMinutes: str | None = None, walkingSpeed: str | None = None, cyclePreference: str | None = None, adjustment: str | None = None, bikeProficiency: str | None = None, alternativeCycle: bool | None = None, alternativeWalking: bool | None = None, applyHtmlMarkup: bool | None = None, useMultiModalCall: bool | None = None, walkingOptimization: bool | None = None, taxiOnlyTrip: bool | None = None, routeBetweenEntrances: bool | None = None, useRealTimeLiveArrivals: bool | None = None, calcOneDirection: bool | None = None, includeAlternativeRoutes: bool | None = None, overrideMultiModalScenario: int | None = None, combineTransferLegs: bool | None = None) -> ResponseModel | ApiError:
+    def JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(self, from_field: str, to: str, via: str | None = None, nationalSearch: bool | None = None, date: str | None = None, time: str | None = None, timeIs: str | None = None, journeyPreference: str | None = None, mode: list | None = None, accessibilityPreference: str | None = None, fromName: str | None = None, toName: str | None = None, viaName: str | None = None, maxTransferMinutes: str | None = None, maxWalkingMinutes: str | None = None, walkingSpeed: str | None = None, cyclePreference: str | None = None, adjustment: str | None = None, bikeProficiency: str | None = None, alternativeCycle: bool | None = None, alternativeWalking: bool | None = None, applyHtmlMarkup: bool | None = None, useMultiModalCall: bool | None = None, walkingOptimization: bool | None = None, taxiOnlyTrip: bool | None = None, routeBetweenEntrances: bool | None = None, useRealTimeLiveArrivals: bool | None = None, calcOneDirection: bool | None = None, includeAlternativeRoutes: bool | None = None, overrideMultiModalScenario: int | None = None, combineTransferLegs: bool | None = None) -> ResponseModel | ApiError:
         '''
         Perform a Journey Planner search from the parameters specified in simple types
 
@@ -54,7 +54,7 @@ class JourneyClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Journey_JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu'], params=[from_field, to], endpoint_args={ 'via': via, 'nationalSearch': nationalSearch, 'date': date, 'time': time, 'timeIs': timeIs, 'journeyPreference': journeyPreference, 'mode': mode, 'accessibilityPreference': accessibilityPreference, 'fromName': fromName, 'toName': toName, 'viaName': viaName, 'maxTransferMinutes': maxTransferMinutes, 'maxWalkingMinutes': maxWalkingMinutes, 'walkingSpeed': walkingSpeed, 'cyclePreference': cyclePreference, 'adjustment': adjustment, 'bikeProficiency': bikeProficiency, 'alternativeCycle': alternativeCycle, 'alternativeWalking': alternativeWalking, 'applyHtmlMarkup': applyHtmlMarkup, 'useMultiModalCall': useMultiModalCall, 'walkingOptimization': walkingOptimization, 'taxiOnlyTrip': taxiOnlyTrip, 'routeBetweenEntrances': routeBetweenEntrances, 'useRealTimeLiveArrivals': useRealTimeLiveArrivals, 'calcOneDirection': calcOneDirection, 'includeAlternativeRoutes': includeAlternativeRoutes, 'overrideMultiModalScenario': overrideMultiModalScenario, 'combineTransferLegs': combineTransferLegs })
 
-    def proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 

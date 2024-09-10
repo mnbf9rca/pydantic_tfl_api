@@ -2,7 +2,7 @@ from .OccupancyClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class OccupancyClient(Client):
-    def getallchargeconnectorstatus(self, ) -> ResponseModel | ApiError:
+    def GetAllChargeConnectorStatus(self, ) -> ResponseModel | ApiError:
         '''
         Gets the occupancy for all charge connectors
 
@@ -13,7 +13,7 @@ class OccupancyClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetAllChargeConnectorStatus'], endpoint_args=None)
 
-    def getchargeconnectorstatusbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def GetChargeConnectorStatusByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Gets the occupancy for a charge connectors with a given id (sourceSystemPlaceId)
 
@@ -24,7 +24,7 @@ class OccupancyClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetChargeConnectorStatusByPathIds'], params=[ids], endpoint_args=None)
 
-    def getbikepointsoccupanciesbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def GetBikePointsOccupanciesByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Get the occupancy for bike points.
 
@@ -35,7 +35,7 @@ class OccupancyClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetBikePointsOccupanciesByPathIds'], params=[ids], endpoint_args=None)
 
-    def proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 

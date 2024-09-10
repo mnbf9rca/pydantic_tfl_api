@@ -2,7 +2,7 @@ from .LineClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class LineClient(Client):
-    def metamodes(self, ) -> ResponseModel | ApiError:
+    def MetaModes(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid modes
 
@@ -13,7 +13,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaModes'], endpoint_args=None)
 
-    def metaseverity(self, ) -> ResponseModel | ApiError:
+    def MetaSeverity(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid severity codes
 
@@ -24,7 +24,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaSeverity'], endpoint_args=None)
 
-    def metadisruptioncategories(self, ) -> ResponseModel | ApiError:
+    def MetaDisruptionCategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid disruption categories
 
@@ -35,7 +35,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaDisruptionCategories'], endpoint_args=None)
 
-    def metaservicetypes(self, ) -> ResponseModel | ApiError:
+    def MetaServiceTypes(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid ServiceTypes to filter on
 
@@ -46,7 +46,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_MetaServiceTypes'], endpoint_args=None)
 
-    def getbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def GetByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Gets lines that match the specified line ids.
 
@@ -57,7 +57,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByPathIds'], params=[ids], endpoint_args=None)
 
-    def getbymodebypathmodes(self, modes: str) -> ResponseModel | ApiError:
+    def GetByModeByPathModes(self, modes: str) -> ResponseModel | ApiError:
         '''
         Gets lines that serve the given modes.
 
@@ -68,7 +68,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByModeByPathModes'], params=[modes], endpoint_args=None)
 
-    def routebyqueryservicetypes(self, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def RouteByQueryServiceTypes(self, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Get all valid routes for all lines, including the name and id of the originating and terminating stops for each route.
 
@@ -79,7 +79,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByQueryServiceTypes'], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def lineroutesbyidsbypathidsqueryservicetypes(self, ids: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def LineRoutesByIdsByPathIdsQueryServiceTypes(self, ids: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Get all valid routes for given line ids, including the name and id of the originating and terminating stops for each route.
 
@@ -91,7 +91,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_LineRoutesByIdsByPathIdsQueryServiceTypes'], params=[ids], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def routebymodebypathmodesqueryservicetypes(self, modes: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def RouteByModeByPathModesQueryServiceTypes(self, modes: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets all lines and their valid routes for given modes, including the name and id of the originating and terminating stops for each route
 
@@ -103,7 +103,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByModeByPathModesQueryServiceTypes'], params=[modes], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def routesequencebypathidpathdirectionqueryservicetypesqueryexcludecrowding(self, id: str, direction: str, serviceTypes: str | None = None, excludeCrowding: bool | None = None) -> ResponseModel | ApiError:
+    def RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding(self, id: str, direction: str, serviceTypes: str | None = None, excludeCrowding: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets all valid routes for given line id, including the sequence of stops on each route.
 
@@ -117,7 +117,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding'], params=[id, direction], endpoint_args={ 'serviceTypes': serviceTypes, 'excludeCrowding': excludeCrowding })
 
-    def statusbypathidspathstartdatepathenddatequerydetail(self, ids: str, startDate: str, endDate: str, detail: bool | None = None) -> ResponseModel | ApiError:
+    def StatusByPathIdsPathStartDatePathEndDateQueryDetail(self, ids: str, startDate: str, endDate: str, detail: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets the line status for given line ids during the provided dates e.g Minor Delays
 
@@ -131,7 +131,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByPathIdsPathStartDatePathEndDateQueryDetail'], params=[ids, startDate, endDate], endpoint_args={ 'detail': detail })
 
-    def statusbyidsbypathidsquerydetail(self, ids: str, detail: bool | None = None) -> ResponseModel | ApiError:
+    def StatusByIdsByPathIdsQueryDetail(self, ids: str, detail: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets the line status of for given line ids e.g Minor Delays
 
@@ -143,7 +143,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByIdsByPathIdsQueryDetail'], params=[ids], endpoint_args={ 'detail': detail })
 
-    def searchbypathqueryquerymodesqueryservicetypes(self, query: str, modes: list | None = None, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def SearchByPathQueryQueryModesQueryServiceTypes(self, query: str, modes: list | None = None, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Search for lines or routes matching the query string
 
@@ -156,7 +156,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_SearchByPathQueryQueryModesQueryServiceTypes'], params=[query], endpoint_args={ 'modes': modes, 'serviceTypes': serviceTypes })
 
-    def statusbyseveritybypathseverity(self, severity: int) -> ResponseModel | ApiError:
+    def StatusBySeverityByPathSeverity(self, severity: int) -> ResponseModel | ApiError:
         '''
         Gets the line status for all lines with a given severity A list of valid severity codes can be obtained from a call to Line/Meta/Severity
 
@@ -167,7 +167,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusBySeverityByPathSeverity'], params=[severity], endpoint_args=None)
 
-    def statusbymodebypathmodesquerydetailqueryseveritylevel(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel | ApiError:
+    def StatusByModeByPathModesQueryDetailQuerySeverityLevel(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets the line status of for all lines for the given modes
 
@@ -180,7 +180,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel'], params=[modes], endpoint_args={ 'detail': detail, 'severityLevel': severityLevel })
 
-    def stoppointsbypathidquerytfloperatednationalrailstationsonly(self, id: str, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
+    def StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly(self, id: str, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of the stations that serve the given line id
 
@@ -192,7 +192,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly'], params=[id], endpoint_args={ 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def timetablebypathfromstoppointidpathid(self, fromStopPointId: str, id: str) -> ResponseModel | ApiError:
+    def TimetableByPathFromStopPointIdPathId(self, fromStopPointId: str, id: str) -> ResponseModel | ApiError:
         '''
         Gets the timetable for a specified station on the give line
 
@@ -204,7 +204,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableByPathFromStopPointIdPathId'], params=[fromStopPointId, id], endpoint_args=None)
 
-    def timetabletobypathfromstoppointidpathidpathtostoppointid(self, fromStopPointId: str, id: str, toStopPointId: str) -> ResponseModel | ApiError:
+    def TimetableToByPathFromStopPointIdPathIdPathToStopPointId(self, fromStopPointId: str, id: str, toStopPointId: str) -> ResponseModel | ApiError:
         '''
         Gets the timetable for a specified station on the give line with specified destination
 
@@ -217,7 +217,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableToByPathFromStopPointIdPathIdPathToStopPointId'], params=[fromStopPointId, id, toStopPointId], endpoint_args=None)
 
-    def disruptionbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def DisruptionByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Get disruptions for the given line ids
 
@@ -228,7 +228,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByPathIds'], params=[ids], endpoint_args=None)
 
-    def disruptionbymodebypathmodes(self, modes: str) -> ResponseModel | ApiError:
+    def DisruptionByModeByPathModes(self, modes: str) -> ResponseModel | ApiError:
         '''
         Get disruptions for all lines of the given modes.
 
@@ -239,7 +239,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByModeByPathModes'], params=[modes], endpoint_args=None)
 
-    def arrivalswithstoppointbypathidspathstoppointidquerydirectionquerydestina(self, ids: str, stopPointId: str, direction: str | None = None, destinationStationId: str | None = None) -> ResponseModel | ApiError:
+    def ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina(self, ids: str, stopPointId: str, direction: str | None = None, destinationStationId: str | None = None) -> ResponseModel | ApiError:
         '''
         Get the list of arrival predictions for given line ids based at the given stop
 
@@ -253,7 +253,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina'], params=[ids, stopPointId], endpoint_args={ 'direction': direction, 'destinationStationId': destinationStationId })
 
-    def arrivalsbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def ArrivalsByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Get the list of arrival predictions for given line ids based at the given stop
 
@@ -264,7 +264,7 @@ class LineClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsByPathIds'], params=[ids], endpoint_args=None)
 
-    def proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 

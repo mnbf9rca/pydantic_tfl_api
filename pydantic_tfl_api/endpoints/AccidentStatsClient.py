@@ -2,7 +2,7 @@ from .AccidentStatsClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class AccidentStatsClient(Client):
-    def get(self, year: int) -> ResponseModel | ApiError:
+    def Get(self, year: int) -> ResponseModel | ApiError:
         '''
         Gets all accident details for accidents occuring in the specified year
 

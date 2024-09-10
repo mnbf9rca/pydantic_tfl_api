@@ -2,7 +2,7 @@ from .StopPointClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class StopPointClient(Client):
-    def metacategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint additional information categories
 
@@ -13,7 +13,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaCategories'], endpoint_args=None)
 
-    def proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 
@@ -24,7 +24,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Forward_Proxy'], endpoint_args=None)
 
-    def metastoptypes(self, ) -> ResponseModel | ApiError:
+    def MetaStopTypes(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint types
 
@@ -35,7 +35,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaStopTypes'], endpoint_args=None)
 
-    def metamodes(self, ) -> ResponseModel | ApiError:
+    def MetaModes(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint modes
 
@@ -46,7 +46,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaModes'], endpoint_args=None)
 
-    def getbypathidsqueryincludecrowdingdata(self, ids: str, includeCrowdingData: bool | None = None) -> ResponseModel | ApiError:
+    def GetByPathIdsQueryIncludeCrowdingData(self, ids: str, includeCrowdingData: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints corresponding to the given list of stop ids.
 
@@ -59,7 +59,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByPathIdsQueryIncludeCrowdingData'], params=[ids], endpoint_args={ 'includeCrowdingData': includeCrowdingData })
 
-    def getbypathidqueryplacetypes(self, id: str, placeTypes: str) -> ResponseModel | ApiError:
+    def GetByPathIdQueryPlaceTypes(self, id: str, placeTypes: str) -> ResponseModel | ApiError:
         '''
         Get a list of places corresponding to a given id and place types.
 
@@ -71,7 +71,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByPathIdQueryPlaceTypes'], params=[id], endpoint_args={ 'placeTypes': placeTypes })
 
-    def crowdingbypathidpathlinequerydirection(self, id: str, line: str, direction: str) -> ResponseModel | ApiError:
+    def CrowdingByPathIdPathLineQueryDirection(self, id: str, line: str, direction: str) -> ResponseModel | ApiError:
         '''
         Gets all the Crowding data (static) for the StopPointId, plus crowding data for a given line and optionally a particular direction.
 
@@ -84,7 +84,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_CrowdingByPathIdPathLineQueryDirection'], params=[id, line], endpoint_args={ 'direction': direction })
 
-    def getbytypebypathtypes(self, types: str) -> ResponseModel | ApiError:
+    def GetByTypeByPathTypes(self, types: str) -> ResponseModel | ApiError:
         '''
         Gets all stop points of a given type
 
@@ -96,7 +96,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByTypeByPathTypes'], params=[types], endpoint_args=None)
 
-    def getbytypewithpaginationbypathtypespathpage(self, types: str, page: int) -> ResponseModel | ApiError:
+    def GetByTypeWithPaginationByPathTypesPathPage(self, types: str, page: int) -> ResponseModel | ApiError:
         '''
         Gets all the stop points of given type(s) with a page number
 
@@ -108,7 +108,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByTypeWithPaginationByPathTypesPathPage'], params=[types, page], endpoint_args=None)
 
-    def getservicetypesbyqueryidquerylineidsquerymodes(self, id: str, lineIds: list | None = None, modes: list | None = None) -> ResponseModel | ApiError:
+    def GetServiceTypesByQueryIdQueryLineIdsQueryModes(self, id: str, lineIds: list | None = None, modes: list | None = None) -> ResponseModel | ApiError:
         '''
         Gets the service types for a given stoppoint
 
@@ -121,7 +121,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetServiceTypesByQueryIdQueryLineIdsQueryModes'], endpoint_args={ 'id': id, 'lineIds': lineIds, 'modes': modes })
 
-    def arrivalsbypathid(self, id: str) -> ResponseModel | ApiError:
+    def ArrivalsByPathId(self, id: str) -> ResponseModel | ApiError:
         '''
         Gets the list of arrival predictions for the given stop point id
 
@@ -132,7 +132,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ArrivalsByPathId'], params=[id], endpoint_args=None)
 
-    def arrivaldeparturesbypathidquerylineids(self, id: str, lineIds: str) -> ResponseModel | ApiError:
+    def ArrivalDeparturesByPathIdQueryLineIds(self, id: str, lineIds: str) -> ResponseModel | ApiError:
         '''
         Gets the list of arrival and departure predictions for the given stop point id (overground and tfl rail only)
 
@@ -144,7 +144,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ArrivalDeparturesByPathIdQueryLineIds'], params=[id], endpoint_args={ 'lineIds': lineIds })
 
-    def reachablefrombypathidpathlineidqueryservicetypes(self, id: str, lineId: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def ReachableFromByPathIdPathLineIdQueryServiceTypes(self, id: str, lineId: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets Stopoints that are reachable from a station/line combination.
 
@@ -157,7 +157,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ReachableFromByPathIdPathLineIdQueryServiceTypes'], params=[id, lineId], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def routebypathidqueryservicetypes(self, id: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
+    def RouteByPathIdQueryServiceTypes(self, id: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Returns the route sections for all the lines that service the given stop point ids
 
@@ -169,7 +169,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_RouteByPathIdQueryServiceTypes'], params=[id], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def disruptionbymodebypathmodesqueryincluderouteblockedstops(self, modes: str, includeRouteBlockedStops: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByModeByPathModesQueryIncludeRouteBlockedStops(self, modes: str, includeRouteBlockedStops: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a distinct list of disrupted stop points for the given modes
 
@@ -181,7 +181,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByModeByPathModesQueryIncludeRouteBlockedStops'], params=[modes], endpoint_args={ 'includeRouteBlockedStops': includeRouteBlockedStops })
 
-    def disruptionbypathidsquerygetfamilyqueryincluderouteblockedstopsquer(self, ids: str, getFamily: bool | None = None, includeRouteBlockedStops: bool | None = None, flattenResponse: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByPathIdsQueryGetFamilyQueryIncludeRouteBlockedStopsQuer(self, ids: str, getFamily: bool | None = None, includeRouteBlockedStops: bool | None = None, flattenResponse: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets all disruptions for the specified StopPointId, plus disruptions for any child Naptan records it may have.
 
@@ -196,7 +196,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByPathIdsQueryGetFamilyQueryIncludeRouteBlockedStopsQuer'], params=[ids], endpoint_args={ 'getFamily': getFamily, 'includeRouteBlockedStops': includeRouteBlockedStops, 'flattenResponse': flattenResponse })
 
-    def directionbypathidpathtostoppointidquerylineid(self, id: str, toStopPointId: str, lineId: str | None = None) -> ResponseModel | ApiError:
+    def DirectionByPathIdPathToStopPointIdQueryLineId(self, id: str, toStopPointId: str, lineId: str | None = None) -> ResponseModel | ApiError:
         '''
         Returns the canonical direction, "inbound" or "outbound", for a given pair of stop point Ids in the direction from -&gt; to.
 
@@ -209,7 +209,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DirectionByPathIdPathToStopPointIdQueryLineId'], params=[id, toStopPointId], endpoint_args={ 'lineId': lineId })
 
-    def getbygeopointbyquerylatquerylonquerystoptypesqueryradiusqueryusest(self, lat: float, lon: float, stopTypes: str, radius: int | None = None, useStopPointHierarchy: bool | None = None, modes: list | None = None, categories: list | None = None, returnLines: bool | None = None) -> ResponseModel | ApiError:
+    def GetByGeoPointByQueryLatQueryLonQueryStopTypesQueryRadiusQueryUseSt(self, lat: float, lon: float, stopTypes: str, radius: int | None = None, useStopPointHierarchy: bool | None = None, modes: list | None = None, categories: list | None = None, returnLines: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints within {radius} by the specified criteria
 
@@ -227,7 +227,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByGeoPointByQueryLatQueryLonQueryStopTypesQueryRadiusQueryUseSt'], endpoint_args={ 'lat': lat, 'lon': lon, 'stopTypes': stopTypes, 'radius': radius, 'useStopPointHierarchy': useStopPointHierarchy, 'modes': modes, 'categories': categories, 'returnLines': returnLines })
 
-    def getbymodebypathmodesquerypage(self, modes: str, page: int | None = None) -> ResponseModel | ApiError:
+    def GetByModeByPathModesQueryPage(self, modes: str, page: int | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints filtered by the modes available at that StopPoint.
 
@@ -239,7 +239,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByModeByPathModesQueryPage'], params=[modes], endpoint_args={ 'page': page })
 
-    def searchbypathqueryquerymodesqueryfaresonlyquerymaxresultsquerylines(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
+    def SearchByPathQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLines(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Search StopPoints by their common name, or their 5-digit Countdown Bus Stop Code.
 
@@ -257,7 +257,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByPathQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLines'], params=[query], endpoint_args={ 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def searchbyqueryqueryquerymodesqueryfaresonlyquerymaxresultsqueryline(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
+    def SearchByQueryQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLine(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Search StopPoints by their common name, or their 5-digit Countdown Bus Stop Code.
 
@@ -275,7 +275,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByQueryQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLine'], endpoint_args={ 'query': query, 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def getbysmsbypathidqueryoutput(self, id: str, output: str | None = None) -> ResponseModel | ApiError:
+    def GetBySmsByPathIdQueryOutput(self, id: str, output: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets a StopPoint for a given sms code.
 
@@ -287,7 +287,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetBySmsByPathIdQueryOutput'], params=[id], endpoint_args={ 'output': output })
 
-    def gettaxiranksbyidsbypathstoppointid(self, stopPointId: str) -> ResponseModel | ApiError:
+    def GetTaxiRanksByIdsByPathStopPointId(self, stopPointId: str) -> ResponseModel | ApiError:
         '''
         Gets a list of taxi ranks corresponding to the given stop point id.
 
@@ -298,7 +298,7 @@ class StopPointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetTaxiRanksByIdsByPathStopPointId'], params=[stopPointId], endpoint_args=None)
 
-    def getcarparksbyidbypathstoppointid(self, stopPointId: str) -> ResponseModel | ApiError:
+    def GetCarParksByIdByPathStopPointId(self, stopPointId: str) -> ResponseModel | ApiError:
         '''
         Get car parks corresponding to the given stop point id.
 

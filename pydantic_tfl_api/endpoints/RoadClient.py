@@ -2,7 +2,7 @@ from .RoadClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class RoadClient(Client):
-    def get(self, ) -> ResponseModel | ApiError:
+    def Get(self, ) -> ResponseModel | ApiError:
         '''
         Gets all roads managed by TfL
 
@@ -13,7 +13,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_Get'], endpoint_args=None)
 
-    def getbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def GetByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Gets the road with the specified id (e.g. A1)
 
@@ -24,7 +24,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_GetByPathIds'], params=[ids], endpoint_args=None)
 
-    def statusbypathidsquerystartdatequeryenddate(self, ids: str, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
+    def StatusByPathIdsQueryStartDateQueryEndDate(self, ids: str, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets the specified roads with the status aggregated over the date range specified, or now until the end of today if no dates are passed.
 
@@ -37,7 +37,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_StatusByPathIdsQueryStartDateQueryEndDate'], params=[ids], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
-    def disruptionbypathidsquerystripcontentqueryseveritiesquerycategoriesquery(self, ids: str, stripContent: bool | None = None, severities: list | None = None, categories: list | None = None, closures: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery(self, ids: str, stripContent: bool | None = None, severities: list | None = None, categories: list | None = None, closures: bool | None = None) -> ResponseModel | ApiError:
         '''
         Get active disruptions, filtered by road ids
 
@@ -52,7 +52,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery'], params=[ids], endpoint_args={ 'stripContent': stripContent, 'severities': severities, 'categories': categories, 'closures': closures })
 
-    def disruptedstreetsbyquerystartdatequeryenddate(self, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
+    def DisruptedStreetsByQueryStartDateQueryEndDate(self, startDate: str | None = None, endDate: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of disrupted streets. If no date filters are provided, current disruptions are returned.
 
@@ -64,7 +64,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptedStreetsByQueryStartDateQueryEndDate'], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
-    def disruptionbyidbypathdisruptionidsquerystripcontent(self, disruptionIds: str, stripContent: bool | None = None) -> ResponseModel | ApiError:
+    def DisruptionByIdByPathDisruptionIdsQueryStripContent(self, disruptionIds: str, stripContent: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of active disruptions filtered by disruption Ids.
 
@@ -76,7 +76,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByIdByPathDisruptionIdsQueryStripContent'], params=[disruptionIds], endpoint_args={ 'stripContent': stripContent })
 
-    def metacategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid RoadDisruption categories
 
@@ -87,7 +87,7 @@ class RoadClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_MetaCategories'], endpoint_args=None)
 
-    def metaseverities(self, ) -> ResponseModel | ApiError:
+    def MetaSeverities(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of valid RoadDisruption severity codes
 

@@ -2,7 +2,7 @@ from .ModeClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class ModeClient(Client):
-    def getactiveservicetypes(self, ) -> ResponseModel | ApiError:
+    def GetActiveServiceTypes(self, ) -> ResponseModel | ApiError:
         '''
         Returns the service type active for a mode.
             Currently only supports tube
@@ -14,7 +14,7 @@ class ModeClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Mode_GetActiveServiceTypes'], endpoint_args=None)
 
-    def arrivals(self, mode: str, count: int | None = None) -> ResponseModel | ApiError:
+    def Arrivals(self, mode: str, count: int | None = None) -> ResponseModel | ApiError:
         '''
         Gets the next arrival predictions for all stops of a given mode
 

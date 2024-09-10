@@ -1105,7 +1105,7 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                 # Sanitize the operation_id to ensure it's a valid Python identifier
                 sanitized_operation_id = sanitize_name(operation_id)
                 path_lines.append(
-                    f"    def {sanitized_operation_id.lower()}(self, {param_str}) -> ResponseModel | ApiError:\n"
+                    f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel | ApiError:\n"
                 )
 
                 docstring = details.get("description", "No description available.")

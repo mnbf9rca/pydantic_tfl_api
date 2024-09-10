@@ -2,7 +2,7 @@ from .BikePointClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class BikePointClient(Client):
-    def getall(self, ) -> ResponseModel | ApiError:
+    def GetAll(self, ) -> ResponseModel | ApiError:
         '''
         Gets all bike point locations. The Place object has an addtionalProperties array which contains the nbBikes, nbDocks and nbSpaces
             numbers which give the status of the BikePoint. A mismatch in these numbers i.e. nbDocks - (nbBikes + nbSpaces) != 0 indicates broken docks.
@@ -14,7 +14,7 @@ class BikePointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['BikePoint_GetAll'], endpoint_args=None)
 
-    def get(self, id: str) -> ResponseModel | ApiError:
+    def Get(self, id: str) -> ResponseModel | ApiError:
         '''
         Gets the bike point with the given id.
 
@@ -25,7 +25,7 @@ class BikePointClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['BikePoint_Get'], params=[id], endpoint_args=None)
 
-    def search(self, query: str) -> ResponseModel | ApiError:
+    def Search(self, query: str) -> ResponseModel | ApiError:
         '''
         Search for bike stations by their name, a bike point's name often contains information about the name of the street
             or nearby landmarks, for example. Note that the search result does not contain the PlaceProperties i.e. the status

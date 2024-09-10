@@ -2,7 +2,7 @@ from .PlaceClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class PlaceClient(Client):
-    def metacategories(self, ) -> ResponseModel | ApiError:
+    def MetaCategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of all of the available place property categories and keys.
 
@@ -13,7 +13,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_MetaCategories'], endpoint_args=None)
 
-    def metaplacetypes(self, ) -> ResponseModel | ApiError:
+    def MetaPlaceTypes(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of the available types of Place.
 
@@ -24,7 +24,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_MetaPlaceTypes'], endpoint_args=None)
 
-    def getbytypebypathtypesqueryactiveonly(self, types: str, activeOnly: bool | None = None) -> ResponseModel | ApiError:
+    def GetByTypeByPathTypesQueryActiveOnly(self, types: str, activeOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets all places of a given type
 
@@ -37,7 +37,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByTypeByPathTypesQueryActiveOnly'], params=[types], endpoint_args={ 'activeOnly': activeOnly })
 
-    def getbypathidqueryincludechildren(self, id: str, includeChildren: bool | None = None) -> ResponseModel | ApiError:
+    def GetByPathIdQueryIncludeChildren(self, id: str, includeChildren: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets the place with the given id.
 
@@ -49,7 +49,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByPathIdQueryIncludeChildren'], params=[id], endpoint_args={ 'includeChildren': includeChildren })
 
-    def getbygeopointbyquerylatquerylonqueryradiusquerycategoriesqueryincludec(self, Lat: float, Lon: float, radius: float | None = None, categories: list | None = None, includeChildren: bool | None = None, type: list | None = None, activeOnly: bool | None = None, numberOfPlacesToReturn: int | None = None) -> ResponseModel | ApiError:
+    def GetByGeoPointByQueryLatQueryLonQueryRadiusQueryCategoriesQueryIncludeC(self, Lat: float, Lon: float, radius: float | None = None, categories: list | None = None, includeChildren: bool | None = None, type: list | None = None, activeOnly: bool | None = None, numberOfPlacesToReturn: int | None = None) -> ResponseModel | ApiError:
         '''
         Gets the places that lie within a geographic region. The geographic region of interest can either be specified by using a lat/lon geo-point and a radius in metres to return places within the locus defined by the lat/lon of its centre or alternatively, by the use of a bounding box defined by the lat/lon of its north-west and south-east corners. Optionally filters on type and can strip properties for a smaller payload.
 
@@ -67,7 +67,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByGeoPointByQueryLatQueryLonQueryRadiusQueryCategoriesQueryIncludeC'], endpoint_args={ 'Lat': Lat, 'Lon': Lon, 'radius': radius, 'categories': categories, 'includeChildren': includeChildren, 'type': type, 'activeOnly': activeOnly, 'numberOfPlacesToReturn': numberOfPlacesToReturn })
 
-    def getatbypathtypepathlatpathlon(self, type: str, lat: float, lon: float) -> ResponseModel | ApiError:
+    def GetAtByPathTypePathLatPathLon(self, type: str, lat: float, lon: float) -> ResponseModel | ApiError:
         '''
         Gets any places of the given type whose geography intersects the given latitude and longitude. In practice this means the Place must be polygonal e.g. a BoroughBoundary.
 
@@ -80,7 +80,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetAtByPathTypePathLatPathLon'], params=[type, lat, lon], endpoint_args=None)
 
-    def searchbyquerynamequerytypes(self, name: str, types: list | None = None) -> ResponseModel | ApiError:
+    def SearchByQueryNameQueryTypes(self, name: str, types: list | None = None) -> ResponseModel | ApiError:
         '''
         Gets all places that matches the given query
 
@@ -92,7 +92,7 @@ class PlaceClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_SearchByQueryNameQueryTypes'], endpoint_args={ 'name': name, 'types': types })
 
-    def proxy(self, ) -> ResponseModel | ApiError:
+    def Proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 

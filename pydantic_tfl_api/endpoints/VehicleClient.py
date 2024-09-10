@@ -2,7 +2,7 @@ from .VehicleClient_config import endpoints, base_url
 from ..core import ApiError, ResponseModel, Client
 
 class VehicleClient(Client):
-    def getbypathids(self, ids: str) -> ResponseModel | ApiError:
+    def GetByPathIds(self, ids: str) -> ResponseModel | ApiError:
         '''
         Gets the predictions for a given list of vehicle Id's.
 

@@ -33,23 +33,6 @@
         "LOG_LEVEL": "DEBUG"
       }
     },
-    // {
-    //   "name": "Python: Debug Tests - src",
-    //   "type": "debugpy",
-    //   "request": "launch",
-    //   "program": "${file}",
-    //   "purpose": [
-    //     "debug-test"
-    //   ],
-    //   "console": "integratedTerminal",
-    //   "justMyCode": true,
-    //   "env": {
-    //     "PYTHON_TEST_TARGET": "src",
-    //     "PYTEST_ADDOPTS": "--no-cov",
-    //     "PYTHONPATH": "${workspaceFolder}",
-    //     "LOG_LEVEL": "DEBUG"
-    //   }
-    // },    
     {
       "name": "Python Debugger: example.py",
       "type": "debugpy",
