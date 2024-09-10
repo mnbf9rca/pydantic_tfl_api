@@ -14,9 +14,7 @@ from .endpoints import (
     LiftDisruptionsClient,
     RoadClient
 )
-from .client import Client
-from .rest_client import RestClient
-from .models import ApiError
+from . import models
 __all__ = [
     'LineClient',
     'OccupancyClient',
@@ -31,21 +29,6 @@ __all__ = [
     'BikePointClient',
     'AccidentStatsClient',
     'LiftDisruptionsClient',
-    'RoadClient'    'LineClient',
-    'OccupancyClient',
-    'VehicleClient',
-    'ModeClient',
-    'CrowdingClient',
-    'PlaceClient',
-    'AirQualityClient',
-    'SearchClient',
-    'StopPointClient',
-    'JourneyClient',
-    'BikePointClient',
-    'AccidentStatsClient',
-    'LiftDisruptionsClient',
     'RoadClient',
-    'Client',
-    'RestClient',
-    'ApiError'
+    'models'
 ]

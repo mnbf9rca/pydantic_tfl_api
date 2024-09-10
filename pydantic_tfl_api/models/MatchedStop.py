@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .Identifier import Identifier
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -12,13 +11,13 @@ class MatchedStop(BaseModel):
     topMostParentId: Optional[str] = Field(None, alias='topMostParentId')
     direction: Optional[str] = Field(None, alias='direction')
     towards: Optional[str] = Field(None, alias='towards')
-    modes: Optional[List[str]] = Field(None, alias='modes')
+    modes: Optional[list[str]] = Field(None, alias='modes')
     stopType: Optional[str] = Field(None, alias='stopType')
     stopLetter: Optional[str] = Field(None, alias='stopLetter')
     zone: Optional[str] = Field(None, alias='zone')
     accessibilitySummary: Optional[str] = Field(None, alias='accessibilitySummary')
     hasDisruption: Optional[bool] = Field(None, alias='hasDisruption')
-    lines: Optional[List[Identifier]] = Field(None, alias='lines')
+    lines: Optional[list[Identifier]] = Field(None, alias='lines')
     status: Optional[bool] = Field(None, alias='status')
     id: Optional[str] = Field(None, alias='id')
     url: Optional[str] = Field(None, alias='url')

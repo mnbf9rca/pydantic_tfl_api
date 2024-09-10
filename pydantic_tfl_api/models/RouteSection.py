@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .RouteSectionNaptanEntrySequence import RouteSectionNaptanEntrySequence
 from pydantic import BaseModel, Field
 from typing import List, Optional, Sequence
@@ -15,7 +14,7 @@ class RouteSection(BaseModel):
     destinationName: Optional[str] = Field(None, alias='destinationName')
     validTo: Optional[str] = Field(None, alias='validTo')
     validFrom: Optional[str] = Field(None, alias='validFrom')
-    routeSectionNaptanEntrySequence: Optional[List[RouteSectionNaptanEntrySequence]] = Field(None, alias='routeSectionNaptanEntrySequence')
+    routeSectionNaptanEntrySequence: Optional[list[RouteSectionNaptanEntrySequence]] = Field(None, alias='routeSectionNaptanEntrySequence')
 
     class Config:
         from_attributes = True

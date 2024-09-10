@@ -1,51 +1,59 @@
-from ..client import Client
-from .PlaceClient_config import endpoints
-from .. import models
-from ..models import ApiError
+from .PlaceClient_config import endpoints, base_url
+from ..core import ApiError, ResponseModel, Client
 
 class PlaceClient(Client):
-    def metacategories(self, ) -> models.PlaceCategoryArray | ApiError:
+    def metacategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of all of the available place property categories and keys.
 
+        ResponseModel.content contains `models.PlaceCategoryArray` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Place_MetaCategories'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Place_MetaCategories'], endpoint_args=None)
 
-    def metaplacetypes(self, ) -> models.PlaceCategoryArray | ApiError:
+    def metaplacetypes(self, ) -> ResponseModel | ApiError:
         '''
         Gets a list of the available types of Place.
 
+        ResponseModel.content contains `models.PlaceCategoryArray` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Place_MetaPlaceTypes'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Place_MetaPlaceTypes'], endpoint_args=None)
 
-    def getbytypebypathtypesqueryactiveonly(self, types: str, activeOnly: bool | None = None) -> models.PlaceArray | ApiError:
+    def getbytypebypathtypesqueryactiveonly(self, types: str, activeOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets all places of a given type
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         types: str - A comma-separated list of the types to return. Max. approx 12 types.
             A valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint.. Example: CarPark
         activeOnly: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['Place_GetByTypeByPathTypesQueryActiveOnly'], params=[types], endpoint_args={ 'activeOnly': activeOnly })
+        return self._send_request_and_deserialize(base_url, endpoints['Place_GetByTypeByPathTypesQueryActiveOnly'], params=[types], endpoint_args={ 'activeOnly': activeOnly })
 
-    def getbypathidqueryincludechildren(self, id: str, includeChildren: bool | None = None) -> models.PlaceArray | ApiError:
+    def getbypathidqueryincludechildren(self, id: str, includeChildren: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets the place with the given id.
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         id: str - The id of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their ids. Example: CarParks_800491
         includeChildren: bool - Defaults to false. If true child places e.g. individual charging stations at a charge point while be included, otherwise just the URLs of any child places will be returned. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['Place_GetByPathIdQueryIncludeChildren'], params=[id], endpoint_args={ 'includeChildren': includeChildren })
+        return self._send_request_and_deserialize(base_url, endpoints['Place_GetByPathIdQueryIncludeChildren'], params=[id], endpoint_args={ 'includeChildren': includeChildren })
 
-    def getbygeopointbyquerylatquerylonqueryradiusquerycategoriesqueryincludec(self, Lat: float, Lon: float, radius: float | None = None, categories: list | None = None, includeChildren: bool | None = None, type: list | None = None, activeOnly: bool | None = None, numberOfPlacesToReturn: int | None = None) -> models.StopPointArray | ApiError:
+    def getbygeopointbyquerylatquerylonqueryradiusquerycategoriesqueryincludec(self, Lat: float, Lon: float, radius: float | None = None, categories: list | None = None, includeChildren: bool | None = None, type: list | None = None, activeOnly: bool | None = None, numberOfPlacesToReturn: int | None = None) -> ResponseModel | ApiError:
         '''
         Gets the places that lie within a geographic region. The geographic region of interest can either be specified by using a lat/lon geo-point and a radius in metres to return places within the locus defined by the lat/lon of its centre or alternatively, by the use of a bounding box defined by the lat/lon of its north-west and south-east corners. Optionally filters on type and can strip properties for a smaller payload.
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         Lat: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: 51.5029703
@@ -57,35 +65,41 @@ class PlaceClient(Client):
         activeOnly: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). Example: None given
         numberOfPlacesToReturn: int - Format - int32. If specified, limits the number of returned places equal to the given value. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['Place_GetByGeoPointByQueryLatQueryLonQueryRadiusQueryCategoriesQueryIncludeC'], endpoint_args={ 'Lat': Lat, 'Lon': Lon, 'radius': radius, 'categories': categories, 'includeChildren': includeChildren, 'type': type, 'activeOnly': activeOnly, 'numberOfPlacesToReturn': numberOfPlacesToReturn })
+        return self._send_request_and_deserialize(base_url, endpoints['Place_GetByGeoPointByQueryLatQueryLonQueryRadiusQueryCategoriesQueryIncludeC'], endpoint_args={ 'Lat': Lat, 'Lon': Lon, 'radius': radius, 'categories': categories, 'includeChildren': includeChildren, 'type': type, 'activeOnly': activeOnly, 'numberOfPlacesToReturn': numberOfPlacesToReturn })
 
-    def getatbypathtypepathlatpathlon(self, type: str, lat: float, lon: float) -> models.Object | ApiError:
+    def getatbypathtypepathlatpathlon(self, type: str, lat: float, lon: float) -> ResponseModel | ApiError:
         '''
         Gets any places of the given type whose geography intersects the given latitude and longitude. In practice this means the Place must be polygonal e.g. a BoroughBoundary.
+
+        ResponseModel.content contains `models.Object` type.
 
         Parameters:
         type: str - The place type (a valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint). Example: CarPark
         lat: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: 51.5029703
         lon: float - Format - double. lon is longitude of the centre of the bounding circle. Example: -0.1365283
         '''
-        return self._send_request_and_deserialize(endpoints['Place_GetAtByPathTypePathLatPathLon'], params=[type, lat, lon], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Place_GetAtByPathTypePathLatPathLon'], params=[type, lat, lon], endpoint_args=None)
 
-    def searchbyquerynamequerytypes(self, name: str, types: list | None = None) -> models.PlaceArray | ApiError:
+    def searchbyquerynamequerytypes(self, name: str, types: list | None = None) -> ResponseModel | ApiError:
         '''
         Gets all places that matches the given query
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         name: str - The name of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their names.. Example: Bridge
         types: list - A comma-separated list of the types to return. Max. approx 12 types.. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['Place_SearchByQueryNameQueryTypes'], endpoint_args={ 'name': name, 'types': types })
+        return self._send_request_and_deserialize(base_url, endpoints['Place_SearchByQueryNameQueryTypes'], endpoint_args={ 'name': name, 'types': types })
 
-    def proxy(self, ) -> models.ObjectResponse | ApiError:
+    def proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
+
+        ResponseModel.content contains `models.ObjectResponse` type.
 
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Forward_Proxy'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Forward_Proxy'], endpoint_args=None)
 

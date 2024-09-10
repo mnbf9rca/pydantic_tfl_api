@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .SearchMatch import SearchMatch
 from pydantic import BaseModel, Field
 from typing import List, Match, Optional
@@ -11,7 +10,7 @@ class SearchResponse(BaseModel):
     pageSize: Optional[int] = Field(None, alias='pageSize')
     provider: Optional[str] = Field(None, alias='provider')
     total: Optional[int] = Field(None, alias='total')
-    matches: Optional[List[SearchMatch]] = Field(None, alias='matches')
+    matches: Optional[list[SearchMatch]] = Field(None, alias='matches')
     maxScore: Optional[float] = Field(None, alias='maxScore')
 
     class Config:

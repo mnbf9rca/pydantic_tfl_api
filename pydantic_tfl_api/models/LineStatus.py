@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .Disruption import Disruption
 from .ValidityPeriod import ValidityPeriod
 from pydantic import BaseModel, Field
@@ -13,7 +12,7 @@ class LineStatus(BaseModel):
     reason: Optional[str] = Field(None, alias='reason')
     created: Optional[str] = Field(None, alias='created')
     modified: Optional[str] = Field(None, alias='modified')
-    validityPeriods: Optional[List[ValidityPeriod]] = Field(None, alias='validityPeriods')
+    validityPeriods: Optional[list[ValidityPeriod]] = Field(None, alias='validityPeriods')
     disruption: Optional[Disruption] = Field(None, alias='disruption')
 
     class Config:

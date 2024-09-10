@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .AdditionalProperties import AdditionalProperties
 from .Identifier import Identifier
 from .LineGroup import LineGroup
@@ -13,16 +12,16 @@ class StopPoint(BaseModel):
     platformName: Optional[str] = Field(None, alias='platformName')
     indicator: Optional[str] = Field(None, alias='indicator')
     stopLetter: Optional[str] = Field(None, alias='stopLetter')
-    modes: Optional[List[str]] = Field(None, alias='modes')
+    modes: Optional[list[str]] = Field(None, alias='modes')
     icsCode: Optional[str] = Field(None, alias='icsCode')
     smsCode: Optional[str] = Field(None, alias='smsCode')
     stopType: Optional[str] = Field(None, alias='stopType')
     stationNaptan: Optional[str] = Field(None, alias='stationNaptan')
     accessibilitySummary: Optional[str] = Field(None, alias='accessibilitySummary')
     hubNaptanCode: Optional[str] = Field(None, alias='hubNaptanCode')
-    lines: Optional[List[Identifier]] = Field(None, alias='lines')
-    lineGroup: Optional[List[LineGroup]] = Field(None, alias='lineGroup')
-    lineModeGroups: Optional[List[LineModeGroup]] = Field(None, alias='lineModeGroups')
+    lines: Optional[list[Identifier]] = Field(None, alias='lines')
+    lineGroup: Optional[list[LineGroup]] = Field(None, alias='lineGroup')
+    lineModeGroups: Optional[list[LineModeGroup]] = Field(None, alias='lineModeGroups')
     fullName: Optional[str] = Field(None, alias='fullName')
     naptanMode: Optional[str] = Field(None, alias='naptanMode')
     status: Optional[bool] = Field(None, alias='status')
@@ -31,9 +30,9 @@ class StopPoint(BaseModel):
     commonName: Optional[str] = Field(None, alias='commonName')
     distance: Optional[float] = Field(None, alias='distance')
     placeType: Optional[str] = Field(None, alias='placeType')
-    additionalProperties: Optional[List[AdditionalProperties]] = Field(None, alias='additionalProperties')
-    children: 'Optional[List[Place]]' = Field(None, alias='children')
-    childrenUrls: Optional[List[str]] = Field(None, alias='childrenUrls')
+    additionalProperties: Optional[list[AdditionalProperties]] = Field(None, alias='additionalProperties')
+    children: Optional[list['Place']] = Field(None, alias='children')
+    childrenUrls: Optional[list[str]] = Field(None, alias='childrenUrls')
     lat: Optional[float] = Field(None, alias='lat')
     lon: Optional[float] = Field(None, alias='lon')
 

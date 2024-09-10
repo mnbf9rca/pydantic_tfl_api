@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .Crowding import Crowding
 from .RouteTypeEnum import RouteTypeEnum
 from .StatusEnum import StatusEnum

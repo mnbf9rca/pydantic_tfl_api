@@ -1,161 +1,191 @@
-from ..client import Client
-from .StopPointClient_config import endpoints
-from .. import models
-from ..models import ApiError
+from .StopPointClient_config import endpoints, base_url
+from ..core import ApiError, ResponseModel, Client
 
 class StopPointClient(Client):
-    def metacategories(self, ) -> models.PlaceCategoryArray | ApiError:
+    def metacategories(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint additional information categories
 
+        ResponseModel.content contains `models.PlaceCategoryArray` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_MetaCategories'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaCategories'], endpoint_args=None)
 
-    def proxy(self, ) -> models.GenericResponseModel | ApiError:
+    def proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
 
+        ResponseModel.content contains `models.GenericResponseModel` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Forward_Proxy'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Forward_Proxy'], endpoint_args=None)
 
-    def metastoptypes(self, ) -> models.GenericResponseModel | ApiError:
+    def metastoptypes(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint types
 
+        ResponseModel.content contains `models.GenericResponseModel` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_MetaStopTypes'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaStopTypes'], endpoint_args=None)
 
-    def metamodes(self, ) -> models.ModeArray | ApiError:
+    def metamodes(self, ) -> ResponseModel | ApiError:
         '''
         Gets the list of available StopPoint modes
 
+        ResponseModel.content contains `models.ModeArray` type.
+
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_MetaModes'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_MetaModes'], endpoint_args=None)
 
-    def getbypathidsqueryincludecrowdingdata(self, ids: str, includeCrowdingData: bool | None = None) -> models.StopPointArray | ApiError:
+    def getbypathidsqueryincludecrowdingdata(self, ids: str, includeCrowdingData: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints corresponding to the given list of stop ids.
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         ids: str - A comma-separated list of stop point ids (station naptan code e.g. 940GZZLUASL). Max. approx. 20 ids.
             You can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name.. Example: HUBWAT
         includeCrowdingData: bool - Include the crowding data (static). To Filter further use: /StopPoint/{ids}/Crowding/{line}. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByPathIdsQueryIncludeCrowdingData'], params=[ids], endpoint_args={ 'includeCrowdingData': includeCrowdingData })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByPathIdsQueryIncludeCrowdingData'], params=[ids], endpoint_args={ 'includeCrowdingData': includeCrowdingData })
 
-    def getbypathidqueryplacetypes(self, id: str, placeTypes: str) -> models.PlaceArray | ApiError:
+    def getbypathidqueryplacetypes(self, id: str, placeTypes: str) -> ResponseModel | ApiError:
         '''
         Get a list of places corresponding to a given id and place types.
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         id: str - A naptan id for a stop point (station naptan code e.g. 940GZZLUASL).. Example: 930GWMP
         placeTypes: str - A comcomma-separated value representing the place types.. Example: NaptanFerryEntrance
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByPathIdQueryPlaceTypes'], params=[id], endpoint_args={ 'placeTypes': placeTypes })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByPathIdQueryPlaceTypes'], params=[id], endpoint_args={ 'placeTypes': placeTypes })
 
-    def crowdingbypathidpathlinequerydirection(self, id: str, line: str, direction: str) -> models.StopPointArray | ApiError:
+    def crowdingbypathidpathlinequerydirection(self, id: str, line: str, direction: str) -> ResponseModel | ApiError:
         '''
         Gets all the Crowding data (static) for the StopPointId, plus crowding data for a given line and optionally a particular direction.
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         id: str - The Naptan id of the stop. Example: 940GZZLUSWK
         line: str - A particular line e.g. victoria, circle, northern etc.. Example: jubilee
         direction: str - The direction of travel. Can be inbound or outbound.. Example: all
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_CrowdingByPathIdPathLineQueryDirection'], params=[id, line], endpoint_args={ 'direction': direction })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_CrowdingByPathIdPathLineQueryDirection'], params=[id, line], endpoint_args={ 'direction': direction })
 
-    def getbytypebypathtypes(self, types: str) -> models.StopPointArray | ApiError:
+    def getbytypebypathtypes(self, types: str) -> ResponseModel | ApiError:
         '''
         Gets all stop points of a given type
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         types: str - A comma-separated list of the types to return. Max. approx. 12 types. 
             A list of valid stop types can be obtained from the StopPoint/meta/stoptypes endpoint.. Example: TransportInterchange
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByTypeByPathTypes'], params=[types], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByTypeByPathTypes'], params=[types], endpoint_args=None)
 
-    def getbytypewithpaginationbypathtypespathpage(self, types: str, page: int) -> models.StopPointArray | ApiError:
+    def getbytypewithpaginationbypathtypespathpage(self, types: str, page: int) -> ResponseModel | ApiError:
         '''
         Gets all the stop points of given type(s) with a page number
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         types: str - . Example: TransportInterchange
         page: int - Format - int32.. Example: 1
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByTypeWithPaginationByPathTypesPathPage'], params=[types, page], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByTypeWithPaginationByPathTypesPathPage'], params=[types, page], endpoint_args=None)
 
-    def getservicetypesbyqueryidquerylineidsquerymodes(self, id: str, lineIds: list | None = None, modes: list | None = None) -> models.LineServiceTypeArray | ApiError:
+    def getservicetypesbyqueryidquerylineidsquerymodes(self, id: str, lineIds: list | None = None, modes: list | None = None) -> ResponseModel | ApiError:
         '''
         Gets the service types for a given stoppoint
+
+        ResponseModel.content contains `models.LineServiceTypeArray` type.
 
         Parameters:
         id: str - The Naptan id of the stop. Example: 910GSTJMSST
         lineIds: list - The lines which contain the given Naptan id (all lines relevant to the given stoppoint if empty). Example: None given
         modes: list - The modes which the lines are relevant to (all if empty). Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetServiceTypesByQueryIdQueryLineIdsQueryModes'], endpoint_args={ 'id': id, 'lineIds': lineIds, 'modes': modes })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetServiceTypesByQueryIdQueryLineIdsQueryModes'], endpoint_args={ 'id': id, 'lineIds': lineIds, 'modes': modes })
 
-    def arrivalsbypathid(self, id: str) -> models.PredictionArray | ApiError:
+    def arrivalsbypathid(self, id: str) -> ResponseModel | ApiError:
         '''
         Gets the list of arrival predictions for the given stop point id
+
+        ResponseModel.content contains `models.PredictionArray` type.
 
         Parameters:
         id: str - A StopPoint id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: HUBWAT
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_ArrivalsByPathId'], params=[id], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ArrivalsByPathId'], params=[id], endpoint_args=None)
 
-    def arrivaldeparturesbypathidquerylineids(self, id: str, lineIds: str) -> models.ArrivalDepartureArray | ApiError:
+    def arrivaldeparturesbypathidquerylineids(self, id: str, lineIds: str) -> ResponseModel | ApiError:
         '''
         Gets the list of arrival and departure predictions for the given stop point id (overground and tfl rail only)
+
+        ResponseModel.content contains `models.ArrivalDepartureArray` type.
 
         Parameters:
         id: str - A StopPoint id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 910GLIVST
         lineIds: str - A comma-separated list of line ids e.g. tfl-rail, london-overground. Example: elizabeth
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_ArrivalDeparturesByPathIdQueryLineIds'], params=[id], endpoint_args={ 'lineIds': lineIds })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ArrivalDeparturesByPathIdQueryLineIds'], params=[id], endpoint_args={ 'lineIds': lineIds })
 
-    def reachablefrombypathidpathlineidqueryservicetypes(self, id: str, lineId: str, serviceTypes: str | None = None) -> models.StopPointArray | ApiError:
+    def reachablefrombypathidpathlineidqueryservicetypes(self, id: str, lineId: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets Stopoints that are reachable from a station/line combination.
+
+        ResponseModel.content contains `models.StopPointArray` type.
 
         Parameters:
         id: str - The id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name) of the stop point to filter by. Example: 940GZZLUASL
         lineId: str - Line id of the line to filter by (e.g. victoria). Example: Piccadilly
         serviceTypes: str - A comma-separated list of service types to filter on. If not specified. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: Regular
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_ReachableFromByPathIdPathLineIdQueryServiceTypes'], params=[id, lineId], endpoint_args={ 'serviceTypes': serviceTypes })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_ReachableFromByPathIdPathLineIdQueryServiceTypes'], params=[id, lineId], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def routebypathidqueryservicetypes(self, id: str, serviceTypes: str | None = None) -> models.StopPointRouteSectionArray | ApiError:
+    def routebypathidqueryservicetypes(self, id: str, serviceTypes: str | None = None) -> ResponseModel | ApiError:
         '''
         Returns the route sections for all the lines that service the given stop point ids
+
+        ResponseModel.content contains `models.StopPointRouteSectionArray` type.
 
         Parameters:
         id: str - A stop point id (station naptan codes e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUASL
         serviceTypes: str - A comma-separated list of service types to filter on. If not specified. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: Regular
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_RouteByPathIdQueryServiceTypes'], params=[id], endpoint_args={ 'serviceTypes': serviceTypes })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_RouteByPathIdQueryServiceTypes'], params=[id], endpoint_args={ 'serviceTypes': serviceTypes })
 
-    def disruptionbymodebypathmodesqueryincluderouteblockedstops(self, modes: str, includeRouteBlockedStops: bool | None = None) -> models.DisruptedPointArray | ApiError:
+    def disruptionbymodebypathmodesqueryincluderouteblockedstops(self, modes: str, includeRouteBlockedStops: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a distinct list of disrupted stop points for the given modes
+
+        ResponseModel.content contains `models.DisruptedPointArray` type.
 
         Parameters:
         modes: str - A comma-seperated list of modes e.g. tube,dlr. Example: Tube
         includeRouteBlockedStops: bool - . Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_DisruptionByModeByPathModesQueryIncludeRouteBlockedStops'], params=[modes], endpoint_args={ 'includeRouteBlockedStops': includeRouteBlockedStops })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByModeByPathModesQueryIncludeRouteBlockedStops'], params=[modes], endpoint_args={ 'includeRouteBlockedStops': includeRouteBlockedStops })
 
-    def disruptionbypathidsquerygetfamilyqueryincluderouteblockedstopsquer(self, ids: str, getFamily: bool | None = None, includeRouteBlockedStops: bool | None = None, flattenResponse: bool | None = None) -> models.DisruptedPointArray | ApiError:
+    def disruptionbypathidsquerygetfamilyqueryincluderouteblockedstopsquer(self, ids: str, getFamily: bool | None = None, includeRouteBlockedStops: bool | None = None, flattenResponse: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets all disruptions for the specified StopPointId, plus disruptions for any child Naptan records it may have.
+
+        ResponseModel.content contains `models.DisruptedPointArray` type.
 
         Parameters:
         ids: str - A comma-seperated list of stop point ids. Max. approx. 20 ids.
@@ -164,22 +194,26 @@ class StopPointClient(Client):
         includeRouteBlockedStops: bool - . Example: None given
         flattenResponse: bool - Specify true to associate all disruptions with parent stop point. (Only applicable when getFamily is true).. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_DisruptionByPathIdsQueryGetFamilyQueryIncludeRouteBlockedStopsQuer'], params=[ids], endpoint_args={ 'getFamily': getFamily, 'includeRouteBlockedStops': includeRouteBlockedStops, 'flattenResponse': flattenResponse })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByPathIdsQueryGetFamilyQueryIncludeRouteBlockedStopsQuer'], params=[ids], endpoint_args={ 'getFamily': getFamily, 'includeRouteBlockedStops': includeRouteBlockedStops, 'flattenResponse': flattenResponse })
 
-    def directionbypathidpathtostoppointidquerylineid(self, id: str, toStopPointId: str, lineId: str | None = None) -> models.GenericResponseModel | ApiError:
+    def directionbypathidpathtostoppointidquerylineid(self, id: str, toStopPointId: str, lineId: str | None = None) -> ResponseModel | ApiError:
         '''
         Returns the canonical direction, "inbound" or "outbound", for a given pair of stop point Ids in the direction from -&gt; to.
+
+        ResponseModel.content contains `models.GenericResponseModel` type.
 
         Parameters:
         id: str - Originating stop id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUASL
         toStopPointId: str - Destination stop id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUHWY
         lineId: str - Optional line id filter e.g. victoria. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_DirectionByPathIdPathToStopPointIdQueryLineId'], params=[id, toStopPointId], endpoint_args={ 'lineId': lineId })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DirectionByPathIdPathToStopPointIdQueryLineId'], params=[id, toStopPointId], endpoint_args={ 'lineId': lineId })
 
-    def getbygeopointbyquerylatquerylonquerystoptypesqueryradiusqueryusest(self, lat: float, lon: float, stopTypes: str, radius: int | None = None, useStopPointHierarchy: bool | None = None, modes: list | None = None, categories: list | None = None, returnLines: bool | None = None) -> models.StopPointsResponse | ApiError:
+    def getbygeopointbyquerylatquerylonquerystoptypesqueryradiusqueryusest(self, lat: float, lon: float, stopTypes: str, radius: int | None = None, useStopPointHierarchy: bool | None = None, modes: list | None = None, categories: list | None = None, returnLines: bool | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints within {radius} by the specified criteria
+
+        ResponseModel.content contains `models.StopPointsResponse` type.
 
         Parameters:
         lat: float - Format - double. the latitude of the centre of the bounding circle. Example: 51.5
@@ -191,21 +225,25 @@ class StopPointClient(Client):
         categories: list - an optional list of comma separated property categories to return in the StopPoint's property bag. If null or empty, all categories of property are returned. Pass the keyword "none" to return no properties (a valid list of categories can be obtained from the /StopPoint/Meta/categories endpoint). Example: None given
         returnLines: bool - true to return the lines that each stop point serves as a nested resource. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByGeoPointByQueryLatQueryLonQueryStopTypesQueryRadiusQueryUseSt'], endpoint_args={ 'lat': lat, 'lon': lon, 'stopTypes': stopTypes, 'radius': radius, 'useStopPointHierarchy': useStopPointHierarchy, 'modes': modes, 'categories': categories, 'returnLines': returnLines })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByGeoPointByQueryLatQueryLonQueryStopTypesQueryRadiusQueryUseSt'], endpoint_args={ 'lat': lat, 'lon': lon, 'stopTypes': stopTypes, 'radius': radius, 'useStopPointHierarchy': useStopPointHierarchy, 'modes': modes, 'categories': categories, 'returnLines': returnLines })
 
-    def getbymodebypathmodesquerypage(self, modes: str, page: int | None = None) -> models.StopPointsResponse | ApiError:
+    def getbymodebypathmodesquerypage(self, modes: str, page: int | None = None) -> ResponseModel | ApiError:
         '''
         Gets a list of StopPoints filtered by the modes available at that StopPoint.
+
+        ResponseModel.content contains `models.StopPointsResponse` type.
 
         Parameters:
         modes: str - A comma-seperated list of modes e.g. tube,dlr. Example: Tube
         page: int - Format - int32. The data set page to return. Page 1 equates to the first 1000 stop points, page 2 equates to 1001-2000 etc. Must be entered for bus mode as data set is too large.. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetByModeByPathModesQueryPage'], params=[modes], endpoint_args={ 'page': page })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByModeByPathModesQueryPage'], params=[modes], endpoint_args={ 'page': page })
 
-    def searchbypathqueryquerymodesqueryfaresonlyquerymaxresultsquerylines(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> models.SearchResponse | ApiError:
+    def searchbypathqueryquerymodesqueryfaresonlyquerymaxresultsquerylines(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Search StopPoints by their common name, or their 5-digit Countdown Bus Stop Code.
+
+        ResponseModel.content contains `models.SearchResponse` type.
 
         Parameters:
         query: str - The query string, case-insensitive. Leading and trailing wildcards are applied automatically.. Example: Waterloo
@@ -217,11 +255,13 @@ class StopPointClient(Client):
         includeHubs: bool - If true, returns results including HUBs.. Example: None given
         tflOperatedNationalRailStationsOnly: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_SearchByPathQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLines'], params=[query], endpoint_args={ 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByPathQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLines'], params=[query], endpoint_args={ 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def searchbyqueryqueryquerymodesqueryfaresonlyquerymaxresultsqueryline(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> models.SearchResponse | ApiError:
+    def searchbyqueryqueryquerymodesqueryfaresonlyquerymaxresultsqueryline(self, query: str, modes: list | None = None, faresOnly: bool | None = None, maxResults: int | None = None, lines: list | None = None, includeHubs: bool | None = None, tflOperatedNationalRailStationsOnly: bool | None = None) -> ResponseModel | ApiError:
         '''
         Search StopPoints by their common name, or their 5-digit Countdown Bus Stop Code.
+
+        ResponseModel.content contains `models.SearchResponse` type.
 
         Parameters:
         query: str - The query string, case-insensitive. Leading and trailing wildcards are applied automatically.. Example: Waterloo
@@ -233,33 +273,39 @@ class StopPointClient(Client):
         includeHubs: bool - If true, returns results including HUBs.. Example: None given
         tflOperatedNationalRailStationsOnly: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_SearchByQueryQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLine'], endpoint_args={ 'query': query, 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByQueryQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLine'], endpoint_args={ 'query': query, 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
-    def getbysmsbypathidqueryoutput(self, id: str, output: str | None = None) -> models.Object | ApiError:
+    def getbysmsbypathidqueryoutput(self, id: str, output: str | None = None) -> ResponseModel | ApiError:
         '''
         Gets a StopPoint for a given sms code.
+
+        ResponseModel.content contains `models.Object` type.
 
         Parameters:
         id: str - A 5-digit Countdown Bus Stop Code e.g. 73241, 50435, 56334.. Example: 73241
         output: str - If set to "web", a 302 redirect to relevant website bus stop page is returned. Valid values are : web. All other values are ignored.. Example: None given
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetBySmsByPathIdQueryOutput'], params=[id], endpoint_args={ 'output': output })
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetBySmsByPathIdQueryOutput'], params=[id], endpoint_args={ 'output': output })
 
-    def gettaxiranksbyidsbypathstoppointid(self, stopPointId: str) -> models.PlaceArray | ApiError:
+    def gettaxiranksbyidsbypathstoppointid(self, stopPointId: str) -> ResponseModel | ApiError:
         '''
         Gets a list of taxi ranks corresponding to the given stop point id.
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         stopPointId: str - stopPointId is required to get the taxi ranks.. Example: HUBWAT
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetTaxiRanksByIdsByPathStopPointId'], params=[stopPointId], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetTaxiRanksByIdsByPathStopPointId'], params=[stopPointId], endpoint_args=None)
 
-    def getcarparksbyidbypathstoppointid(self, stopPointId: str) -> models.PlaceArray | ApiError:
+    def getcarparksbyidbypathstoppointid(self, stopPointId: str) -> ResponseModel | ApiError:
         '''
         Get car parks corresponding to the given stop point id.
+
+        ResponseModel.content contains `models.PlaceArray` type.
 
         Parameters:
         stopPointId: str - stopPointId is required to get the car parks.. Example: HUBWAT
         '''
-        return self._send_request_and_deserialize(endpoints['StopPoint_GetCarParksByIdByPathStopPointId'], params=[stopPointId], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetCarParksByIdByPathStopPointId'], params=[stopPointId], endpoint_args=None)
 

@@ -1,42 +1,48 @@
-from ..client import Client
-from .OccupancyClient_config import endpoints
-from .. import models
-from ..models import ApiError
+from .OccupancyClient_config import endpoints, base_url
+from ..core import ApiError, ResponseModel, Client
 
 class OccupancyClient(Client):
-    def getallchargeconnectorstatus(self, ) -> models.ChargeConnectorOccupancyArray | ApiError:
+    def getallchargeconnectorstatus(self, ) -> ResponseModel | ApiError:
         '''
         Gets the occupancy for all charge connectors
+
+        ResponseModel.content contains `models.ChargeConnectorOccupancyArray` type.
 
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Occupancy_GetAllChargeConnectorStatus'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetAllChargeConnectorStatus'], endpoint_args=None)
 
-    def getchargeconnectorstatusbypathids(self, ids: str) -> models.ChargeConnectorOccupancyArray | ApiError:
+    def getchargeconnectorstatusbypathids(self, ids: str) -> ResponseModel | ApiError:
         '''
         Gets the occupancy for a charge connectors with a given id (sourceSystemPlaceId)
+
+        ResponseModel.content contains `models.ChargeConnectorOccupancyArray` type.
 
         Parameters:
         ids: str - . Example: ChargePointCM-24473-67148
         '''
-        return self._send_request_and_deserialize(endpoints['Occupancy_GetChargeConnectorStatusByPathIds'], params=[ids], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetChargeConnectorStatusByPathIds'], params=[ids], endpoint_args=None)
 
-    def getbikepointsoccupanciesbypathids(self, ids: str) -> models.BikePointOccupancyArray | ApiError:
+    def getbikepointsoccupanciesbypathids(self, ids: str) -> ResponseModel | ApiError:
         '''
         Get the occupancy for bike points.
+
+        ResponseModel.content contains `models.BikePointOccupancyArray` type.
 
         Parameters:
         ids: str - . Example: BikePoints_805
         '''
-        return self._send_request_and_deserialize(endpoints['Occupancy_GetBikePointsOccupanciesByPathIds'], params=[ids], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Occupancy_GetBikePointsOccupanciesByPathIds'], params=[ids], endpoint_args=None)
 
-    def proxy(self, ) -> models.GenericResponseModel | ApiError:
+    def proxy(self, ) -> ResponseModel | ApiError:
         '''
         Forwards any remaining requests to the back-end
+
+        ResponseModel.content contains `models.GenericResponseModel` type.
 
         Parameters:
         No parameters required.
         '''
-        return self._send_request_and_deserialize(endpoints['Forward_Proxy'], endpoint_args=None)
+        return self._send_request_and_deserialize(base_url, endpoints['Forward_Proxy'], endpoint_args=None)
 

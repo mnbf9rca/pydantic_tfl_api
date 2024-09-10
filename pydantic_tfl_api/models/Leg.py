@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .Disruption import Disruption
 from .Identifier import Identifier
 from .Instruction import Instruction
@@ -15,16 +14,16 @@ class Leg(BaseModel):
     duration: Optional[int] = Field(None, alias='duration')
     speed: Optional[str] = Field(None, alias='speed')
     instruction: Optional[Instruction] = Field(None, alias='instruction')
-    obstacles: Optional[List[Obstacle]] = Field(None, alias='obstacles')
+    obstacles: Optional[list[Obstacle]] = Field(None, alias='obstacles')
     departureTime: Optional[str] = Field(None, alias='departureTime')
     arrivalTime: Optional[str] = Field(None, alias='arrivalTime')
     departurePoint: Optional[Point] = Field(None, alias='departurePoint')
     arrivalPoint: Optional[Point] = Field(None, alias='arrivalPoint')
     path: Optional[Path] = Field(None, alias='path')
-    routeOptions: Optional[List[RouteOption]] = Field(None, alias='routeOptions')
+    routeOptions: Optional[list[RouteOption]] = Field(None, alias='routeOptions')
     mode: Optional[Identifier] = Field(None, alias='mode')
-    disruptions: Optional[List[Disruption]] = Field(None, alias='disruptions')
-    plannedWorks: Optional[List[PlannedWork]] = Field(None, alias='plannedWorks')
+    disruptions: Optional[list[Disruption]] = Field(None, alias='disruptions')
+    plannedWorks: Optional[list[PlannedWork]] = Field(None, alias='plannedWorks')
     distance: Optional[float] = Field(None, alias='distance')
     isDisrupted: Optional[bool] = Field(None, alias='isDisrupted')
     hasFixedLocations: Optional[bool] = Field(None, alias='hasFixedLocations')

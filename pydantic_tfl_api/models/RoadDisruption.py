@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .DbGeography import DbGeography
 from .RoadDisruptionImpactArea import RoadDisruptionImpactArea
 from .RoadDisruptionLine import RoadDisruptionLine
@@ -20,7 +19,7 @@ class RoadDisruption(BaseModel):
     comments: Optional[str] = Field(None, alias='comments')
     currentUpdate: Optional[str] = Field(None, alias='currentUpdate')
     currentUpdateDateTime: Optional[str] = Field(None, alias='currentUpdateDateTime')
-    corridorIds: Optional[List[str]] = Field(None, alias='corridorIds')
+    corridorIds: Optional[list[str]] = Field(None, alias='corridorIds')
     startDateTime: Optional[str] = Field(None, alias='startDateTime')
     endDateTime: Optional[str] = Field(None, alias='endDateTime')
     lastModifiedTime: Optional[str] = Field(None, alias='lastModifiedTime')
@@ -29,7 +28,7 @@ class RoadDisruption(BaseModel):
     status: Optional[str] = Field(None, alias='status')
     geography: Optional[DbGeography] = Field(None, alias='geography')
     geometry: Optional[DbGeography] = Field(None, alias='geometry')
-    streets: Optional[List[Street]] = Field(None, alias='streets')
+    streets: Optional[list[Street]] = Field(None, alias='streets')
     isProvisional: Optional[bool] = Field(None, alias='isProvisional')
     hasClosures: Optional[bool] = Field(None, alias='hasClosures')
     linkText: Optional[str] = Field(None, alias='linkText')
@@ -38,9 +37,9 @@ class RoadDisruption(BaseModel):
     publishStartDate: Optional[str] = Field(None, alias='publishStartDate')
     publishEndDate: Optional[str] = Field(None, alias='publishEndDate')
     timeFrame: Optional[str] = Field(None, alias='timeFrame')
-    roadDisruptionLines: Optional[List[RoadDisruptionLine]] = Field(None, alias='roadDisruptionLines')
-    roadDisruptionImpactAreas: Optional[List[RoadDisruptionImpactArea]] = Field(None, alias='roadDisruptionImpactAreas')
-    recurringSchedules: Optional[List[RoadDisruptionSchedule]] = Field(None, alias='recurringSchedules')
+    roadDisruptionLines: Optional[list[RoadDisruptionLine]] = Field(None, alias='roadDisruptionLines')
+    roadDisruptionImpactAreas: Optional[list[RoadDisruptionImpactArea]] = Field(None, alias='roadDisruptionImpactAreas')
+    recurringSchedules: Optional[list[RoadDisruptionSchedule]] = Field(None, alias='recurringSchedules')
 
     class Config:
         from_attributes = True

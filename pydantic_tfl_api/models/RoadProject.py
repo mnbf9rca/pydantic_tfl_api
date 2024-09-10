@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .PhaseEnum import PhaseEnum
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -15,7 +14,7 @@ class RoadProject(BaseModel):
     consultationEndDate: Optional[str] = Field(None, alias='consultationEndDate')
     constructionStartDate: Optional[str] = Field(None, alias='constructionStartDate')
     constructionEndDate: Optional[str] = Field(None, alias='constructionEndDate')
-    boroughsBenefited: Optional[List[str]] = Field(None, alias='boroughsBenefited')
+    boroughsBenefited: Optional[list[str]] = Field(None, alias='boroughsBenefited')
     cycleSuperhighwayId: Optional[str] = Field(None, alias='cycleSuperhighwayId')
     phase: Optional[PhaseEnum] = Field(None, alias='phase')
     contactName: Optional[str] = Field(None, alias='contactName')

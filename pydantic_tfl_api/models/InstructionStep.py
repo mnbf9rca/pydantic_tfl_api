@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .PathAttribute import PathAttribute
 from .SkyDirectionDescriptionEnum import SkyDirectionDescriptionEnum
 from .TrackTypeEnum import TrackTypeEnum

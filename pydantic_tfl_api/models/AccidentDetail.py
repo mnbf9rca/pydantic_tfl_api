@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .Casualty import Casualty
 from .Vehicle import Vehicle
 from pydantic import BaseModel, Field
@@ -13,8 +12,8 @@ class AccidentDetail(BaseModel):
     date: Optional[str] = Field(None, alias='date')
     severity: Optional[str] = Field(None, alias='severity')
     borough: Optional[str] = Field(None, alias='borough')
-    casualties: Optional[List[Casualty]] = Field(None, alias='casualties')
-    vehicles: Optional[List[Vehicle]] = Field(None, alias='vehicles')
+    casualties: Optional[list[Casualty]] = Field(None, alias='casualties')
+    vehicles: Optional[list[Vehicle]] = Field(None, alias='vehicles')
 
     class Config:
         from_attributes = True

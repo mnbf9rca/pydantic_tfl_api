@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .LineServiceTypeInfo import LineServiceTypeInfo
 from pydantic import BaseModel, Field
 from typing import Optional, Type

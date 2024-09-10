@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .FareTap import FareTap
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -13,7 +12,7 @@ class Fare(BaseModel):
     chargeLevel: Optional[str] = Field(None, alias='chargeLevel')
     peak: Optional[int] = Field(None, alias='peak')
     offPeak: Optional[int] = Field(None, alias='offPeak')
-    taps: Optional[List[FareTap]] = Field(None, alias='taps')
+    taps: Optional[list[FareTap]] = Field(None, alias='taps')
 
     class Config:
         from_attributes = True

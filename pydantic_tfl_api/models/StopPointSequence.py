@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .MatchedStop import MatchedStop
 from .ServiceTypeEnum import ServiceTypeEnum
 from pydantic import BaseModel, Field
@@ -10,9 +9,9 @@ class StopPointSequence(BaseModel):
     lineName: Optional[str] = Field(None, alias='lineName')
     direction: Optional[str] = Field(None, alias='direction')
     branchId: Optional[int] = Field(None, alias='branchId')
-    nextBranchIds: Optional[List[int]] = Field(None, alias='nextBranchIds')
-    prevBranchIds: Optional[List[int]] = Field(None, alias='prevBranchIds')
-    stopPoint: Optional[List[MatchedStop]] = Field(None, alias='stopPoint')
+    nextBranchIds: Optional[list[int]] = Field(None, alias='nextBranchIds')
+    prevBranchIds: Optional[list[int]] = Field(None, alias='prevBranchIds')
+    stopPoint: Optional[list[MatchedStop]] = Field(None, alias='stopPoint')
     serviceType: Optional[ServiceTypeEnum] = Field(None, alias='serviceType')
 
     class Config:

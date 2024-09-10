@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .ServiceFrequency import ServiceFrequency
 from .TwentyFourHourClockTime import TwentyFourHourClockTime
 from .TypeEnum import TypeEnum

@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from pydantic import RootModel
 from typing import Any
 

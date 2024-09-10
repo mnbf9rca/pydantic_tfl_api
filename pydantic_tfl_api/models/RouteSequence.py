@@ -1,4 +1,3 @@
-from pydantic import BaseModel, Field
 from .MatchedStop import MatchedStop
 from .OrderedRoute import OrderedRoute
 from .StopPointSequence import StopPointSequence
@@ -12,10 +11,10 @@ class RouteSequence(BaseModel):
     direction: Optional[str] = Field(None, alias='direction')
     isOutboundOnly: Optional[bool] = Field(None, alias='isOutboundOnly')
     mode: Optional[str] = Field(None, alias='mode')
-    lineStrings: Optional[List[str]] = Field(None, alias='lineStrings')
-    stations: Optional[List[MatchedStop]] = Field(None, alias='stations')
-    stopPointSequences: Optional[List[StopPointSequence]] = Field(None, alias='stopPointSequences')
-    orderedLineRoutes: Optional[List[OrderedRoute]] = Field(None, alias='orderedLineRoutes')
+    lineStrings: Optional[list[str]] = Field(None, alias='lineStrings')
+    stations: Optional[list[MatchedStop]] = Field(None, alias='stations')
+    stopPointSequences: Optional[list[StopPointSequence]] = Field(None, alias='stopPointSequences')
+    orderedLineRoutes: Optional[list[OrderedRoute]] = Field(None, alias='orderedLineRoutes')
 
     class Config:
         from_attributes = True
