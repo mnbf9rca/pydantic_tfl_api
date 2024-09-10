@@ -1,1 +1,110 @@
-["{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"bus\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"cable-car\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"coach\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":false,\"is_scheduled_service\":false,\"mode_name\":\"cycle\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":false,\"mode_name\":\"cycle-hire\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"dlr\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"elizabeth-line\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":false,\"is_scheduled_service\":false,\"mode_name\":\"interchange-keep-sitting\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":false,\"is_scheduled_service\":false,\"mode_name\":\"interchange-secure\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"national-rail\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"overground\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"replacement-bus\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"river-bus\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"river-tour\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":false,\"is_scheduled_service\":false,\"mode_name\":\"taxi\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"tram\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":true,\"is_fare_paying\":true,\"is_scheduled_service\":true,\"mode_name\":\"tube\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}", "{\"is_tfl_service\":false,\"is_fare_paying\":false,\"is_scheduled_service\":false,\"mode_name\":\"walking\",\"content_expires\":\"2024-07-16T03:41:04Z\",\"shared_expires\":\"2024-07-16T15:41:04Z\"}"]
+[
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "bus"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "cable-car"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "coach"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": false,
+    "isScheduledService": false,
+    "modeName": "cycle"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": false,
+    "modeName": "cycle-hire"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "dlr"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "elizabeth-line"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": false,
+    "isScheduledService": false,
+    "modeName": "interchange-keep-sitting"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": false,
+    "isScheduledService": false,
+    "modeName": "interchange-secure"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "national-rail"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "overground"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "replacement-bus"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "river-bus"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "river-tour"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": false,
+    "isScheduledService": false,
+    "modeName": "taxi"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "tram"
+  },
+  {
+    "isTflService": true,
+    "isFarePaying": true,
+    "isScheduledService": true,
+    "modeName": "tube"
+  },
+  {
+    "isTflService": false,
+    "isFarePaying": false,
+    "isScheduledService": false,
+    "modeName": "walking"
+  }
+]

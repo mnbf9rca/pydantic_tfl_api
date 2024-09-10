@@ -1,1 +1,56 @@
-[{"id":"piccadilly","name":"Piccadilly","modeName":"tube","disruptions":[],"created":"2024-07-09T13:08:01.777Z","modified":"2024-07-09T13:08:01.777Z","lineStatuses":[{"id":0,"lineId":"piccadilly","statusSeverity":3,"statusSeverityDescription":"Part Suspended","reason":"Piccadilly Line: No service between Rayners Lane and Uxbridge due to a points failure at Uxbridge. GOOD SERVICE on the rest of the line. To continue your journey beyond Rayners Lane, please change at Rayners Lane for the Metropolitan line. ","created":"0001-01-01T00:00:00","modified":null,"validityPeriods":[{"fromDate":"2024-07-15T06:59:31Z","toDate":"2024-07-15T18:39:27Z","isNow":true}],"disruption":{"category":"RealTime","type":null,"categoryDescription":"RealTime","description":"Piccadilly Line: No service between Rayners Lane and Uxbridge due to a points failure at Uxbridge. GOOD SERVICE on the rest of the line. To continue your journey beyond Rayners Lane, please change at Rayners Lane for the Metropolitan line. ","summary":null,"additionalInfo":null,"created":null,"lastUpdate":null,"affectedRoutes":[],"affectedStops":[],"closureText":"partSuspended"}}],"routeSections":[],"serviceTypes":[{"name":"Regular","uri":"/Line/Route?ids=Piccadilly&serviceTypes=Regular"},{"name":"Night","uri":"/Line/Route?ids=Piccadilly&serviceTypes=Night"}],"crowding":{"passengerFlows":null,"trainLoadings":null}}]
+[
+  {
+    "id": "piccadilly",
+    "name": "Piccadilly",
+    "modeName": "tube",
+    "disruptions": [],
+    "created": "2024-07-09T13:08:01.777Z",
+    "modified": "2024-07-09T13:08:01.777Z",
+    "lineStatuses": [
+      {
+        "id": 0,
+        "lineId": "piccadilly",
+        "statusSeverity": 3,
+        "statusSeverityDescription": "Part Suspended",
+        "reason": "Piccadilly Line: No service between Rayners Lane and Uxbridge due to a points failure at Uxbridge. GOOD SERVICE on the rest of the line. To continue your journey beyond Rayners Lane, please change at Rayners Lane for the Metropolitan line. ",
+        "created": "0001-01-01T00:00:00",
+        "modified": null,
+        "validityPeriods": [
+          {
+            "fromDate": "2024-07-15T06:59:31Z",
+            "toDate": "2024-07-15T18:39:27Z",
+            "isNow": true
+          }
+        ],
+        "disruption": {
+          "category": "RealTime",
+          "type": null,
+          "categoryDescription": "RealTime",
+          "description": "Piccadilly Line: No service between Rayners Lane and Uxbridge due to a points failure at Uxbridge. GOOD SERVICE on the rest of the line. To continue your journey beyond Rayners Lane, please change at Rayners Lane for the Metropolitan line. ",
+          "summary": null,
+          "additionalInfo": null,
+          "created": null,
+          "lastUpdate": null,
+          "affectedRoutes": [],
+          "affectedStops": [],
+          "closureText": "partSuspended"
+        }
+      }
+    ],
+    "routeSections": [],
+    "serviceTypes": [
+      {
+        "name": "Regular",
+        "uri": "/Line/Route?ids=Piccadilly&serviceTypes=Regular"
+      },
+      {
+        "name": "Night",
+        "uri": "/Line/Route?ids=Piccadilly&serviceTypes=Night"
+      }
+    ],
+    "crowding": {
+      "passengerFlows": null,
+      "trainLoadings": null
+    }
+  }
+]
