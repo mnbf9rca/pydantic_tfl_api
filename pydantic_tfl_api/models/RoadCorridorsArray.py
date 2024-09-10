@@ -4,6 +4,5 @@ from .RoadCorridor import RoadCorridor
 
 
 class RoadCorridorsArray(RootModel[List[RoadCorridor]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

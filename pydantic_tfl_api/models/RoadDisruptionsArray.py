@@ -4,6 +4,5 @@ from .RoadDisruption import RoadDisruption
 
 
 class RoadDisruptionsArray(RootModel[List[RoadDisruption]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

@@ -4,6 +4,5 @@ from .StopPoint import StopPoint
 
 
 class StopPointArray(RootModel[List[StopPoint]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

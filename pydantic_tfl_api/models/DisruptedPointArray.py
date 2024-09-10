@@ -4,6 +4,5 @@ from .DisruptedPoint import DisruptedPoint
 
 
 class DisruptedPointArray(RootModel[List[DisruptedPoint]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

@@ -4,6 +4,5 @@ from .Place import Place
 
 
 class PlaceArray(RootModel[List[Place]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

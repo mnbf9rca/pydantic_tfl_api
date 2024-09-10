@@ -464,8 +464,7 @@ def handle_list_or_dict_model(
     # Write class definition
     model_file.write(f"\n\n{class_definition}")
 
-    model_file.write("    class Config:\n")
-    model_file.write("        from_attributes = True\n\n")
+    model_file.write("\n    model_config = {'from_attributes': True}\n")
 
 
 def handle_regular_model(

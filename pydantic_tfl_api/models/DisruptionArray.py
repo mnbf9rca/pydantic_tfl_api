@@ -4,6 +4,5 @@ from .Disruption import Disruption
 
 
 class DisruptionArray(RootModel[List[Disruption]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

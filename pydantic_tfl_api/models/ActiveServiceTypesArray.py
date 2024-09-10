@@ -4,6 +4,5 @@ from .ActiveServiceType import ActiveServiceType
 
 
 class ActiveServiceTypesArray(RootModel[List[ActiveServiceType]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

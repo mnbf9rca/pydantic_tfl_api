@@ -4,6 +4,5 @@ from .PlaceCategory import PlaceCategory
 
 
 class StopPointCategoryArray(RootModel[List[PlaceCategory]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

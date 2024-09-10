@@ -4,6 +4,5 @@ from .Prediction import Prediction
 
 
 class PredictionArray(RootModel[List[Prediction]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}

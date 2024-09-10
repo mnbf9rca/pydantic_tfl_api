@@ -4,6 +4,5 @@ from .StopPointRouteSection import StopPointRouteSection
 
 
 class StopPointRouteSectionArray(RootModel[List[StopPointRouteSection]]):
-    class Config:
-        from_attributes = True
 
+    model_config = {'from_attributes': True}
