@@ -9,7 +9,7 @@ class PlaceClient(Client):
 
   Query path: `/Place/Meta/Categories`
 
-  `ResponseModel.content` contains `models.PlaceCategoryArray` type.'
+  `ResponseModel.content` contains `models.PlaceCategoryArray` type.
 
 
   Parameters:
@@ -23,7 +23,7 @@ class PlaceClient(Client):
 
   Query path: `/Place/Meta/PlaceTypes`
 
-  `ResponseModel.content` contains `models.PlaceCategoryArray` type.'
+  `ResponseModel.content` contains `models.PlaceCategoryArray` type.
 
 
   Parameters:
@@ -37,13 +37,13 @@ class PlaceClient(Client):
 
   Query path: `/Place/Type/{types}`
 
-  `ResponseModel.content` contains `models.PlaceArray` type.'
+  `ResponseModel.content` contains `models.PlaceArray` type.
 
 
   Parameters:
-    types: str - A comma-separated list of the types to return. Max. approx 12 types.
-            A valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint.. Example: CarPark
-    activeOnly: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). Example: None given
+    `types`: str - A comma-separated list of the types to return. Max. approx 12 types.
+            A valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint.. Example: `CarPark`
+    `activeOnly`: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByTypeByPathTypesQueryActiveOnly'], params=[types], endpoint_args={ 'activeOnly': activeOnly })
 
@@ -53,12 +53,12 @@ class PlaceClient(Client):
 
   Query path: `/Place/{id}`
 
-  `ResponseModel.content` contains `models.PlaceArray` type.'
+  `ResponseModel.content` contains `models.PlaceArray` type.
 
 
   Parameters:
-    id: str - The id of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their ids. Example: CarParks_800491
-    includeChildren: bool - Defaults to false. If true child places e.g. individual charging stations at a charge point while be included, otherwise just the URLs of any child places will be returned. Example: None given
+    `id`: str - The id of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their ids. Example: `CarParks_800491`
+    `includeChildren`: bool - Defaults to false. If true child places e.g. individual charging stations at a charge point while be included, otherwise just the URLs of any child places will be returned. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByPathIdQueryIncludeChildren'], params=[id], endpoint_args={ 'includeChildren': includeChildren })
 
@@ -68,18 +68,18 @@ class PlaceClient(Client):
 
   Query path: `/Place/`
 
-  `ResponseModel.content` contains `models.StopPointArray` type.'
+  `ResponseModel.content` contains `models.StopPointArray` type.
 
 
   Parameters:
-    Lat: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: 51.5029703
-    Lon: float - Format - double. lon is longitude of the centre of the bounding circle.. Example: -0.1365283
-    radius: float - Format - double. The radius of the bounding circle in metres when only lat/lon are specified.. Example: 100
-    categories: list - An optional list of comma separated property categories to return in the Place's property bag. If null or empty, all categories of property are returned. Pass the keyword "none" to return no properties (a valid list of categories can be obtained from the /Place/Meta/categories endpoint). Example: None given
-    includeChildren: bool - Defaults to false. If true child places e.g. individual charging stations at a charge point while be included, otherwise just the URLs of any child places will be returned. Example: None given
-    type: list - Place types to filter on, or null to return all types. Example: None given
-    activeOnly: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). Example: None given
-    numberOfPlacesToReturn: int - Format - int32. If specified, limits the number of returned places equal to the given value. Example: None given
+    `Lat`: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: `51.5029703`
+    `Lon`: float - Format - double. lon is longitude of the centre of the bounding circle.. Example: `-0.1365283`
+    `radius`: float - Format - double. The radius of the bounding circle in metres when only lat/lon are specified.. Example: `100`
+    `categories`: list - An optional list of comma separated property categories to return in the Place's property bag. If null or empty, all categories of property are returned. Pass the keyword "none" to return no properties (a valid list of categories can be obtained from the /Place/Meta/categories endpoint). 
+    `includeChildren`: bool - Defaults to false. If true child places e.g. individual charging stations at a charge point while be included, otherwise just the URLs of any child places will be returned. 
+    `type`: list - Place types to filter on, or null to return all types. 
+    `activeOnly`: bool - An optional parameter to limit the results to active records only (Currently only the 'VariableMessageSign' place type is supported). 
+    `numberOfPlacesToReturn`: int - Format - int32. If specified, limits the number of returned places equal to the given value. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetByGeoPointByQueryLatQueryLonQueryRadiusQueryCategoriesQueryIncludeC'], endpoint_args={ 'Lat': Lat, 'Lon': Lon, 'radius': radius, 'categories': categories, 'includeChildren': includeChildren, 'type': type, 'activeOnly': activeOnly, 'numberOfPlacesToReturn': numberOfPlacesToReturn })
 
@@ -89,13 +89,13 @@ class PlaceClient(Client):
 
   Query path: `/Place/{type}/At/{lat}/{lon}`
 
-  `ResponseModel.content` contains `models.Object` type.'
+  `ResponseModel.content` contains `models.Object` type.
 
 
   Parameters:
-    type: str - The place type (a valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint). Example: CarPark
-    lat: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: 51.5029703
-    lon: float - Format - double. lon is longitude of the centre of the bounding circle. Example: -0.1365283
+    `type`: str - The place type (a valid list of place types can be obtained from the /Place/Meta/placeTypes endpoint). Example: `CarPark`
+    `lat`: float - Format - double. lat is latitude of the centre of the bounding circle.. Example: `51.5029703`
+    `lon`: float - Format - double. lon is longitude of the centre of the bounding circle. Example: `-0.1365283`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_GetAtByPathTypePathLatPathLon'], params=[type, lat, lon], endpoint_args=None)
 
@@ -105,12 +105,12 @@ class PlaceClient(Client):
 
   Query path: `/Place/Search`
 
-  `ResponseModel.content` contains `models.PlaceArray` type.'
+  `ResponseModel.content` contains `models.PlaceArray` type.
 
 
   Parameters:
-    name: str - The name of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their names.. Example: Bridge
-    types: list - A comma-separated list of the types to return. Max. approx 12 types.. Example: None given
+    `name`: str - The name of the place, you can use the /Place/Types/{types} endpoint to get a list of places for a given type including their names.. Example: `Bridge`
+    `types`: list - A comma-separated list of the types to return. Max. approx 12 types.. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Place_SearchByQueryNameQueryTypes'], endpoint_args={ 'name': name, 'types': types })
 
@@ -120,7 +120,7 @@ class PlaceClient(Client):
 
   Query path: `/Place/*`
 
-  `ResponseModel.content` contains `models.ObjectResponse` type.'
+  `ResponseModel.content` contains `models.ObjectResponse` type.
 
 
   Parameters:

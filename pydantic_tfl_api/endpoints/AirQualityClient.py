@@ -9,7 +9,7 @@ class AirQualityClient(Client):
 
   Query path: `/AirQuality/`
 
-  `ResponseModel.content` contains `models.LondonAirForecast` type.'
+  `ResponseModel.content` contains `models.LondonAirForecast` type.
 
 
   Parameters:

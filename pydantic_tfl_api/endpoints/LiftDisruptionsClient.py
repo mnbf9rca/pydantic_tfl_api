@@ -9,7 +9,7 @@ class LiftDisruptionsClient(Client):
 
   Query path: `/Disruptions/Lifts/v2/`
 
-  `ResponseModel.content` contains `models.LiftDisruptionsArray` type.'
+  `ResponseModel.content` contains `models.LiftDisruptionsArray` type.
 
 
   Parameters:

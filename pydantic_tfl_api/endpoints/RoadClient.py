@@ -9,7 +9,7 @@ class RoadClient(Client):
 
   Query path: `/Road/`
 
-  `ResponseModel.content` contains `models.RoadCorridorsArray` type.'
+  `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
 
   Parameters:
@@ -23,11 +23,11 @@ class RoadClient(Client):
 
   Query path: `/Road/{ids}`
 
-  `ResponseModel.content` contains `models.RoadCorridorsArray` type.'
+  `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
 
   Parameters:
-    ids: str - Comma-separated list of road identifiers e.g. "A406, A2" (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A1
+    `ids`: str - Comma-separated list of road identifiers e.g. "A406, A2" (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: `A1`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_GetByPathIds'], params=[ids], endpoint_args=None)
 
@@ -37,13 +37,13 @@ class RoadClient(Client):
 
   Query path: `/Road/{ids}/Status`
 
-  `ResponseModel.content` contains `models.RoadCorridorsArray` type.'
+  `ResponseModel.content` contains `models.RoadCorridorsArray` type.
 
 
   Parameters:
-    ids: str - Comma-separated list of road identifiers e.g. "A406, A2" or use "all" to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A2
-    startDate: str - Format - date-time (as date-time in RFC3339). The start date to aggregate status from. Example: None given
-    endDate: str - Format - date-time (as date-time in RFC3339). The end date to aggregate status up to. Example: None given
+    `ids`: str - Comma-separated list of road identifiers e.g. "A406, A2" or use "all" to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: `A2`
+    `startDate`: str - Format - date-time (as date-time in RFC3339). The start date to aggregate status from. 
+    `endDate`: str - Format - date-time (as date-time in RFC3339). The end date to aggregate status up to. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_StatusByPathIdsQueryStartDateQueryEndDate'], params=[ids], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
@@ -53,15 +53,15 @@ class RoadClient(Client):
 
   Query path: `/Road/{ids}/Disruption`
 
-  `ResponseModel.content` contains `models.RoadDisruptionsArray` type.'
+  `ResponseModel.content` contains `models.RoadDisruptionsArray` type.
 
 
   Parameters:
-    ids: str - Comma-separated list of road identifiers e.g. "A406, A2" use all for all to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: A406
-    stripContent: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location, comments and streets. Example: None given
-    severities: list - an optional list of Severity names to filter on (a valid list of severities can be obtained from the /Road/Meta/severities endpoint). Example: None given
-    categories: list - an optional list of category names to filter on (a valid list of categories can be obtained from the /Road/Meta/categories endpoint). Example: None given
-    closures: bool - Optional, defaults to true. When true, always includes disruptions that have road closures, regardless of the severity filter. When false, the severity filter works as normal.. Example: None given
+    `ids`: str - Comma-separated list of road identifiers e.g. "A406, A2" use all for all to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: `A406`
+    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location, comments and streets. 
+    `severities`: list - an optional list of Severity names to filter on (a valid list of severities can be obtained from the /Road/Meta/severities endpoint). 
+    `categories`: list - an optional list of category names to filter on (a valid list of categories can be obtained from the /Road/Meta/categories endpoint). 
+    `closures`: bool - Optional, defaults to true. When true, always includes disruptions that have road closures, regardless of the severity filter. When false, the severity filter works as normal.. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery'], params=[ids], endpoint_args={ 'stripContent': stripContent, 'severities': severities, 'categories': categories, 'closures': closures })
 
@@ -71,12 +71,12 @@ class RoadClient(Client):
 
   Query path: `/Road/all/Street/Disruption`
 
-  `ResponseModel.content` contains `models.Object` type.'
+  `ResponseModel.content` contains `models.Object` type.
 
 
   Parameters:
-    startDate: str - Format - date-time (as date-time in RFC3339). Optional, the start time to filter on.. Example: 2024-03-01
-    endDate: str - Format - date-time (as date-time in RFC3339). Optional, The end time to filter on.. Example: 2024-03-31
+    `startDate`: str - Format - date-time (as date-time in RFC3339). Optional, the start time to filter on.. Example: `2024-03-01`
+    `endDate`: str - Format - date-time (as date-time in RFC3339). Optional, The end time to filter on.. Example: `2024-03-31`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptedStreetsByQueryStartDateQueryEndDate'], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
@@ -86,12 +86,12 @@ class RoadClient(Client):
 
   Query path: `/Road/all/Disruption/{disruptionIds}`
 
-  `ResponseModel.content` contains `models.RoadDisruption` type.'
+  `ResponseModel.content` contains `models.RoadDisruption` type.
 
 
   Parameters:
-    disruptionIds: str - Comma-separated list of disruption identifiers to filter by.. Example: TIMS-89632
-    stripContent: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location and comments.. Example: None given
+    `disruptionIds`: str - Comma-separated list of disruption identifiers to filter by.. Example: `TIMS-89632`
+    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location and comments.. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByIdByPathDisruptionIdsQueryStripContent'], params=[disruptionIds], endpoint_args={ 'stripContent': stripContent })
 
@@ -101,7 +101,7 @@ class RoadClient(Client):
 
   Query path: `/Road/Meta/Categories`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:
@@ -115,7 +115,7 @@ class RoadClient(Client):
 
   Query path: `/Road/Meta/Severities`
 
-  `ResponseModel.content` contains `models.StatusSeveritiesArray` type.'
+  `ResponseModel.content` contains `models.StatusSeveritiesArray` type.
 
 
   Parameters:

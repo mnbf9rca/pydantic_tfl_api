@@ -9,7 +9,7 @@ class LineClient(Client):
 
   Query path: `/Line/Meta/Modes`
 
-  `ResponseModel.content` contains `models.ModeArray` type.'
+  `ResponseModel.content` contains `models.ModeArray` type.
 
 
   Parameters:
@@ -23,7 +23,7 @@ class LineClient(Client):
 
   Query path: `/Line/Meta/Severity`
 
-  `ResponseModel.content` contains `models.StatusSeveritiesArray` type.'
+  `ResponseModel.content` contains `models.StatusSeveritiesArray` type.
 
 
   Parameters:
@@ -37,7 +37,7 @@ class LineClient(Client):
 
   Query path: `/Line/Meta/DisruptionCategories`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:
@@ -51,7 +51,7 @@ class LineClient(Client):
 
   Query path: `/Line/Meta/ServiceTypes`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:
@@ -65,11 +65,11 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByPathIds'], params=[ids], endpoint_args=None)
 
@@ -79,11 +79,11 @@ class LineClient(Client):
 
   Query path: `/Line/Mode/{modes}`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
+    `modes`: str - A comma-separated list of modes e.g. tube,dlr. Example: `tube`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_GetByModeByPathModes'], params=[modes], endpoint_args=None)
 
@@ -93,11 +93,11 @@ class LineClient(Client):
 
   Query path: `/Line/Route`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByQueryServiceTypes'], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -107,12 +107,12 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Route`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
-    serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_LineRoutesByIdsByPathIdsQueryServiceTypes'], params=[ids], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -122,12 +122,12 @@ class LineClient(Client):
 
   Query path: `/Line/Mode/{modes}/Route`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
-    serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
+    `modes`: str - A comma-separated list of modes e.g. tube,dlr. Example: `tube`
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByModeByPathModesQueryServiceTypes'], params=[modes], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -137,14 +137,14 @@ class LineClient(Client):
 
   Query path: `/Line/{id}/Route/Sequence/{direction}`
 
-  `ResponseModel.content` contains `models.RouteSequence` type.'
+  `ResponseModel.content` contains `models.RouteSequence` type.
 
 
   Parameters:
-    id: str - A single line id e.g. victoria. Example: victoria
-    direction: str - The direction of travel. Can be inbound or outbound.. Example: inbound
-    serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
-    excludeCrowding: bool - That excludes crowding from line disruptions. Can be true or false.. Example: None given
+    `id`: str - A single line id e.g. victoria. Example: `victoria`
+    `direction`: str - The direction of travel. Can be inbound or outbound.. Example: `inbound`
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
+    `excludeCrowding`: bool - That excludes crowding from line disruptions. Can be true or false.. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding'], params=[id, direction], endpoint_args={ 'serviceTypes': serviceTypes, 'excludeCrowding': excludeCrowding })
 
@@ -154,14 +154,14 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Status/{startDate}/to/{endDate}`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
-    startDate: str - Format - date-time (as date-time in RFC3339). Start date for start of the period. Example: 2024-03-01
-    endDate: str - Format - date-time (as date-time in RFC3339). End date for the period that the disruption will fall within to be included in the results. Example: 2024-03-31
-    detail: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. Example: None given
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
+    `startDate`: str - Format - date-time (as date-time in RFC3339). Start date for start of the period. Example: `2024-03-01`
+    `endDate`: str - Format - date-time (as date-time in RFC3339). End date for the period that the disruption will fall within to be included in the results. Example: `2024-03-31`
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByPathIdsPathStartDatePathEndDateQueryDetail'], params=[ids, startDate, endDate], endpoint_args={ 'detail': detail })
 
@@ -171,12 +171,12 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Status`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
-    detail: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. Example: None given
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByIdsByPathIdsQueryDetail'], params=[ids], endpoint_args={ 'detail': detail })
 
@@ -186,13 +186,13 @@ class LineClient(Client):
 
   Query path: `/Line/Search/{query}`
 
-  `ResponseModel.content` contains `models.RouteSearchResponse` type.'
+  `ResponseModel.content` contains `models.RouteSearchResponse` type.
 
 
   Parameters:
-    query: str - Search term e.g victoria. Example: victoria
-    modes: list - Optionally filter by the specified modes. Example: None given
-    serviceTypes: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. Example: None given
+    `query`: str - Search term e.g victoria. Example: `victoria`
+    `modes`: list - Optionally filter by the specified modes. 
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_SearchByPathQueryQueryModesQueryServiceTypes'], params=[query], endpoint_args={ 'modes': modes, 'serviceTypes': serviceTypes })
 
@@ -202,11 +202,11 @@ class LineClient(Client):
 
   Query path: `/Line/Status/{severity}`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    severity: int - Format - int32. The level of severity (eg: a number from 0 to 14). Example: 2
+    `severity`: int - Format - int32. The level of severity (eg: a number from 0 to 14). Example: `2`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusBySeverityByPathSeverity'], params=[severity], endpoint_args=None)
 
@@ -216,13 +216,13 @@ class LineClient(Client):
 
   Query path: `/Line/Mode/{modes}/Status`
 
-  `ResponseModel.content` contains `models.LineArray` type.'
+  `ResponseModel.content` contains `models.LineArray` type.
 
 
   Parameters:
-    modes: str - A comma-separated list of modes to filter by. e.g. tube,dlr. Example: tube
-    detail: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. Example: None given
-    severityLevel: str - If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level.. Example: None given
+    `modes`: str - A comma-separated list of modes to filter by. e.g. tube,dlr. Example: `tube`
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
+    `severityLevel`: str - If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level.. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel'], params=[modes], endpoint_args={ 'detail': detail, 'severityLevel': severityLevel })
 
@@ -232,12 +232,12 @@ class LineClient(Client):
 
   Query path: `/Line/{id}/StopPoints`
 
-  `ResponseModel.content` contains `models.StopPointArray` type.'
+  `ResponseModel.content` contains `models.StopPointArray` type.
 
 
   Parameters:
-    id: str - A single line id e.g. victoria. Example: victoria
-    tflOperatedNationalRailStationsOnly: bool - If the national-rail line is requested, this flag will filter the national rail stations so that only those operated by TfL are returned. Example: None given
+    `id`: str - A single line id e.g. victoria. Example: `victoria`
+    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail line is requested, this flag will filter the national rail stations so that only those operated by TfL are returned. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly'], params=[id], endpoint_args={ 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
@@ -247,12 +247,12 @@ class LineClient(Client):
 
   Query path: `/Line/{id}/Timetable/{fromStopPointId}`
 
-  `ResponseModel.content` contains `models.TimetableResponse` type.'
+  `ResponseModel.content` contains `models.TimetableResponse` type.
 
 
   Parameters:
-    fromStopPointId: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUVIC
-    id: str - A single line id e.g. victoria. Example: victoria
+    `fromStopPointId`: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUVIC`
+    `id`: str - A single line id e.g. victoria. Example: `victoria`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableByPathFromStopPointIdPathId'], params=[fromStopPointId, id], endpoint_args=None)
 
@@ -262,13 +262,13 @@ class LineClient(Client):
 
   Query path: `/Line/{id}/Timetable/{fromStopPointId}/to/{toStopPointId}`
 
-  `ResponseModel.content` contains `models.TimetableResponse` type.'
+  `ResponseModel.content` contains `models.TimetableResponse` type.
 
 
   Parameters:
-    fromStopPointId: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUVIC
-    id: str - A single line id e.g. victoria. Example: victoria
-    toStopPointId: str - The destination stations's Naptan code. Example: 940GZZLUGPK
+    `fromStopPointId`: str - The originating station's stop point id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUVIC`
+    `id`: str - A single line id e.g. victoria. Example: `victoria`
+    `toStopPointId`: str - The destination stations's Naptan code. Example: `940GZZLUGPK`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_TimetableToByPathFromStopPointIdPathIdPathToStopPointId'], params=[fromStopPointId, id, toStopPointId], endpoint_args=None)
 
@@ -278,11 +278,11 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Disruption`
 
-  `ResponseModel.content` contains `models.DisruptionArray` type.'
+  `ResponseModel.content` contains `models.DisruptionArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByPathIds'], params=[ids], endpoint_args=None)
 
@@ -292,11 +292,11 @@ class LineClient(Client):
 
   Query path: `/Line/Mode/{modes}/Disruption`
 
-  `ResponseModel.content` contains `models.DisruptionArray` type.'
+  `ResponseModel.content` contains `models.DisruptionArray` type.
 
 
   Parameters:
-    modes: str - A comma-separated list of modes e.g. tube,dlr. Example: tube
+    `modes`: str - A comma-separated list of modes e.g. tube,dlr. Example: `tube`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_DisruptionByModeByPathModes'], params=[modes], endpoint_args=None)
 
@@ -306,14 +306,14 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Arrivals/{stopPointId}`
 
-  `ResponseModel.content` contains `models.PredictionArray` type.'
+  `ResponseModel.content` contains `models.PredictionArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
-    stopPointId: str - Optional. Id of stop to get arrival predictions for (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: 940GZZLUVIC
-    direction: str - Optional. The direction of travel. Can be inbound or outbound or all. If left blank, and destinationStopId is set, will default to all. Example: None given
-    destinationStationId: str - Optional. Id of destination stop. Example: None given
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
+    `stopPointId`: str - Optional. Id of stop to get arrival predictions for (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUVIC`
+    `direction`: str - Optional. The direction of travel. Can be inbound or outbound or all. If left blank, and destinationStopId is set, will default to all. 
+    `destinationStationId`: str - Optional. Id of destination stop. 
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina'], params=[ids, stopPointId], endpoint_args={ 'direction': direction, 'destinationStationId': destinationStationId })
 
@@ -323,11 +323,11 @@ class LineClient(Client):
 
   Query path: `/Line/{ids}/Arrivals`
 
-  `ResponseModel.content` contains `models.PredictionArray` type.'
+  `ResponseModel.content` contains `models.PredictionArray` type.
 
 
   Parameters:
-    ids: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: victoria
+    `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsByPathIds'], params=[ids], endpoint_args=None)
 
@@ -337,7 +337,7 @@ class LineClient(Client):
 
   Query path: `/Line/*`
 
-  `ResponseModel.content` contains `models.ObjectResponse` type.'
+  `ResponseModel.content` contains `models.ObjectResponse` type.
 
 
   Parameters:

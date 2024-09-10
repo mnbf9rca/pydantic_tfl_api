@@ -9,11 +9,11 @@ class SearchClient(Client):
 
   Query path: `/Search/`
 
-  `ResponseModel.content` contains `models.SearchResponse` type.'
+  `ResponseModel.content` contains `models.SearchResponse` type.
 
 
   Parameters:
-    query: str - The search query. Example: Southwark
+    `query`: str - The search query. Example: `Southwark`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_GetByQueryQuery'], endpoint_args={ 'query': query })
 
@@ -23,11 +23,11 @@ class SearchClient(Client):
 
   Query path: `/Search/BusSchedules`
 
-  `ResponseModel.content` contains `models.SearchResponse` type.'
+  `ResponseModel.content` contains `models.SearchResponse` type.
 
 
   Parameters:
-    query: str - The search query. Example: Southwark
+    `query`: str - The search query. Example: `Southwark`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Search_BusSchedulesByQueryQuery'], endpoint_args={ 'query': query })
 
@@ -37,7 +37,7 @@ class SearchClient(Client):
 
   Query path: `/Search/Meta/SearchProviders`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:
@@ -51,7 +51,7 @@ class SearchClient(Client):
 
   Query path: `/Search/Meta/Categories`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:
@@ -65,7 +65,7 @@ class SearchClient(Client):
 
   Query path: `/Search/Meta/Sorts`
 
-  `ResponseModel.content` contains `models.StringsArray` type.'
+  `ResponseModel.content` contains `models.StringsArray` type.
 
 
   Parameters:

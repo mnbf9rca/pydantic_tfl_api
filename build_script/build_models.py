@@ -1114,11 +1114,11 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
 
                 docstring = f"{details.get("description", "No description in the OpenAPI spec.")}\n"
                 docstring = docstring + f"\n  Query path: `{full_path}`\n"
-                docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.'\n"
+                docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
-                            f"    {sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. Example: {param.get('example', 'None given')}"
+                            f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {f"Example: `{param.get('example', '')}`" if param.get('example') else ""}"
                             for param in parameters
                         ]
                     )

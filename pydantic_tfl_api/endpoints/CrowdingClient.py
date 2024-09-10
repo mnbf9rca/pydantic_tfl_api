@@ -9,11 +9,11 @@ class CrowdingClient(Client):
 
   Query path: `/crowding/{Naptan}`
 
-  `ResponseModel.content` contains `models.GenericResponseModel` type.'
+  `ResponseModel.content` contains `models.GenericResponseModel` type.
 
 
   Parameters:
-    Naptan: str - Naptan code. Example: 940GZZLUBND
+    `Naptan`: str - Naptan code. Example: `940GZZLUBND`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['naptan'], params=[Naptan], endpoint_args=None)
 
@@ -23,12 +23,12 @@ class CrowdingClient(Client):
 
   Query path: `/crowding/{Naptan}/{DayOfWeek}`
 
-  `ResponseModel.content` contains `models.GenericResponseModel` type.'
+  `ResponseModel.content` contains `models.GenericResponseModel` type.
 
 
   Parameters:
-    Naptan: str - Naptan code. Example: 940GZZLUBND
-    DayOfWeek: str - Day of week. Example: Wed
+    `Naptan`: str - Naptan code. Example: `940GZZLUBND`
+    `DayOfWeek`: str - Day of week. Example: `Wed`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['dayofweek'], params=[Naptan, DayOfWeek], endpoint_args=None)
 
@@ -38,11 +38,11 @@ class CrowdingClient(Client):
 
   Query path: `/crowding/{Naptan}/Live`
 
-  `ResponseModel.content` contains `models.GenericResponseModel` type.'
+  `ResponseModel.content` contains `models.GenericResponseModel` type.
 
 
   Parameters:
-    Naptan: str - Naptan code. Example: 940GZZLUBND
+    `Naptan`: str - Naptan code. Example: `940GZZLUBND`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['live'], params=[Naptan], endpoint_args=None)
 

@@ -10,7 +10,7 @@ class BikePointClient(Client):
 
   Query path: `/BikePoint/`
 
-  `ResponseModel.content` contains `models.PlaceArray` type.'
+  `ResponseModel.content` contains `models.PlaceArray` type.
 
 
   Parameters:
@@ -24,11 +24,11 @@ class BikePointClient(Client):
 
   Query path: `/BikePoint/{id}`
 
-  `ResponseModel.content` contains `models.Place` type.'
+  `ResponseModel.content` contains `models.Place` type.
 
 
   Parameters:
-    id: str - A bike point id (a list of ids can be obtained from the above BikePoint call). Example: BikePoints_583
+    `id`: str - A bike point id (a list of ids can be obtained from the above BikePoint call). Example: `BikePoints_583`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['BikePoint_Get'], params=[id], endpoint_args=None)
 
@@ -40,11 +40,11 @@ class BikePointClient(Client):
 
   Query path: `/BikePoint/Search`
 
-  `ResponseModel.content` contains `models.PlaceArray` type.'
+  `ResponseModel.content` contains `models.PlaceArray` type.
 
 
   Parameters:
-    query: str - The search term e.g. "St. James". Example: London
+    `query`: str - The search term e.g. "St. James". Example: `London`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['BikePoint_Search'], endpoint_args={ 'query': query })
 
