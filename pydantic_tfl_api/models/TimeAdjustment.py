@@ -8,5 +8,4 @@ class TimeAdjustment(BaseModel):
     timeIs: Optional[str] = Field(None, alias='timeIs')
     uri: Optional[str] = Field(None, alias='uri')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

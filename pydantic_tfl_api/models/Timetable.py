@@ -7,5 +7,4 @@ class Timetable(BaseModel):
     departureStopId: Optional[str] = Field(None, alias='departureStopId')
     routes: Optional[list[TimetableRoute]] = Field(None, alias='routes')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

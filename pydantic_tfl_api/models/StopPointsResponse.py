@@ -10,5 +10,4 @@ class StopPointsResponse(BaseModel):
     total: Optional[int] = Field(None, alias='total')
     page: Optional[int] = Field(None, alias='page')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

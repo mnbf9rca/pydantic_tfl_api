@@ -15,5 +15,4 @@ class Identifier(BaseModel):
     routeType: Optional[RouteTypeEnum] = Field(None, alias='routeType')
     status: Optional[StatusEnum] = Field(None, alias='status')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

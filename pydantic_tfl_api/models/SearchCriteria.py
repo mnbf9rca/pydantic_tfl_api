@@ -9,5 +9,4 @@ class SearchCriteria(BaseModel):
     dateTimeType: Optional[DateTimeTypeEnum] = Field(None, alias='dateTimeType')
     timeAdjustments: Optional[TimeAdjustments] = Field(None, alias='timeAdjustments')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -5,5 +5,4 @@ from typing import Optional
 class Vehicle(BaseModel):
     type: Optional[str] = Field(None, alias='type')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

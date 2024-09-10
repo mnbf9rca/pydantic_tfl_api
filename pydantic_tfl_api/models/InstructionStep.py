@@ -20,5 +20,4 @@ class InstructionStep(BaseModel):
     descriptionHeading: Optional[str] = Field(None, alias='descriptionHeading')
     trackType: Optional[TrackTypeEnum] = Field(None, alias='trackType')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -11,5 +11,4 @@ class VehicleMatch(BaseModel):
     colour: Optional[str] = Field(None, alias='colour')
     compliance: Optional[ComplianceEnum] = Field(None, alias='compliance')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

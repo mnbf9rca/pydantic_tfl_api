@@ -7,5 +7,4 @@ class FareTap(BaseModel):
     atcoCode: Optional[str] = Field(None, alias='atcoCode')
     tapDetails: Optional[FareTapDetails] = Field(None, alias='tapDetails')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

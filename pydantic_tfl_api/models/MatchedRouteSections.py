@@ -5,5 +5,4 @@ from typing import Optional
 class MatchedRouteSections(BaseModel):
     id: Optional[int] = Field(None, alias='id')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

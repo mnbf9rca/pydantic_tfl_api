@@ -10,5 +10,4 @@ class LiftDisruption(BaseModel):
     outageEndArea: Optional[str] = Field(None, alias='outageEndArea')
     message: Optional[str] = Field(None, alias='message')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

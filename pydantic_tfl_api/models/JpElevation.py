@@ -11,5 +11,4 @@ class JpElevation(BaseModel):
     heightFromPreviousPoint: Optional[int] = Field(None, alias='heightFromPreviousPoint')
     gradient: Optional[float] = Field(None, alias='gradient')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

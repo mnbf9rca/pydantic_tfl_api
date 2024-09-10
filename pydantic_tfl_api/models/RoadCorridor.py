@@ -14,5 +14,4 @@ class RoadCorridor(BaseModel):
     statusAggregationEndDate: Optional[str] = Field(None, alias='statusAggregationEndDate')
     url: Optional[str] = Field(None, alias='url')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

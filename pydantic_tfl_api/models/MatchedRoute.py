@@ -14,5 +14,4 @@ class MatchedRoute(BaseModel):
     validTo: Optional[str] = Field(None, alias='validTo')
     validFrom: Optional[str] = Field(None, alias='validFrom')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

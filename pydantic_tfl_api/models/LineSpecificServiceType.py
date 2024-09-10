@@ -7,5 +7,4 @@ class LineSpecificServiceType(BaseModel):
     serviceType: Optional[LineServiceTypeInfo] = Field(None, alias='serviceType')
     stopServesServiceType: Optional[bool] = Field(None, alias='stopServesServiceType')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

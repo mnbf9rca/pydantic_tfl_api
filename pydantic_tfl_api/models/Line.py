@@ -19,5 +19,4 @@ class Line(BaseModel):
     serviceTypes: Optional[list[LineServiceTypeInfo]] = Field(None, alias='serviceTypes')
     crowding: Optional[Crowding] = Field(None, alias='crowding')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

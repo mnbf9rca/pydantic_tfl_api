@@ -7,5 +7,4 @@ class DbGeographyWellKnownValue(BaseModel):
     wellKnownText: Optional[str] = Field(None, alias='wellKnownText')
     wellKnownBinary: Optional[str] = Field(None, alias='wellKnownBinary')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

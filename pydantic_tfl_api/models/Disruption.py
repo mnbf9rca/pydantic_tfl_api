@@ -18,5 +18,4 @@ class Disruption(BaseModel):
     affectedStops: Optional[list[StopPoint]] = Field(None, alias='affectedStops')
     closureText: Optional[str] = Field(None, alias='closureText')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

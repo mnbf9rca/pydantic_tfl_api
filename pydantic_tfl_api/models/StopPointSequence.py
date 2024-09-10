@@ -14,5 +14,4 @@ class StopPointSequence(BaseModel):
     stopPoint: Optional[list[MatchedStop]] = Field(None, alias='stopPoint')
     serviceType: Optional[ServiceTypeEnum] = Field(None, alias='serviceType')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -25,5 +25,4 @@ class Prediction(BaseModel):
     modeName: Optional[str] = Field(None, alias='modeName')
     timing: Optional[PredictionTiming] = Field(None, alias='timing')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

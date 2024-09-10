@@ -10,5 +10,4 @@ class FareTapDetails(BaseModel):
     nationalLocationCode: Optional[int] = Field(None, alias='nationalLocationCode')
     tapTimestamp: Optional[str] = Field(None, alias='tapTimestamp')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

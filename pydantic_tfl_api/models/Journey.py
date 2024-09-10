@@ -11,5 +11,4 @@ class Journey(BaseModel):
     legs: Optional[list[Leg]] = Field(None, alias='legs')
     fare: Optional[JourneyFare] = Field(None, alias='fare')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

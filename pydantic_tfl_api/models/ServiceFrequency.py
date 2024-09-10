@@ -6,5 +6,4 @@ class ServiceFrequency(BaseModel):
     lowestFrequency: Optional[float] = Field(None, alias='lowestFrequency')
     highestFrequency: Optional[float] = Field(None, alias='highestFrequency')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

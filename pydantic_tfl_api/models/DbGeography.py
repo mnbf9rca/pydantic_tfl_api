@@ -6,5 +6,4 @@ from typing import Optional
 class DbGeography(BaseModel):
     geography: Optional[DbGeographyWellKnownValue] = Field(None, alias='geography')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

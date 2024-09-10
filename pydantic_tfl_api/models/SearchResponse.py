@@ -13,5 +13,4 @@ class SearchResponse(BaseModel):
     matches: Optional[list[SearchMatch]] = Field(None, alias='matches')
     maxScore: Optional[float] = Field(None, alias='maxScore')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

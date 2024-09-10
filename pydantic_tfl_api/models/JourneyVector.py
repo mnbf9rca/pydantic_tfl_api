@@ -8,5 +8,4 @@ class JourneyVector(BaseModel):
     via: Optional[str] = Field(None, alias='via')
     uri: Optional[str] = Field(None, alias='uri')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

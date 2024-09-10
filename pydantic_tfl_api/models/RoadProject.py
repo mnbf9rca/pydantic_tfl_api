@@ -22,5 +22,4 @@ class RoadProject(BaseModel):
     externalPageUrl: Optional[str] = Field(None, alias='externalPageUrl')
     projectSummaryPageUrl: Optional[str] = Field(None, alias='projectSummaryPageUrl')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

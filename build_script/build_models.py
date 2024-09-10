@@ -519,8 +519,7 @@ def handle_regular_model(
         write_model_fields(model_file, model, models, circular_models)
 
     # Pydantic model config
-    model_file.write("\n    class Config:\n")
-    model_file.write("        from_attributes = True\n")
+    model_file.write("\n    model_config = {'from_attributes': True}\n")
 
     # Add model_rebuild() if circular dependencies exist
     if sanitized_model_name in circular_models:

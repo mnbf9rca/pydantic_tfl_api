@@ -7,5 +7,4 @@ class StatusSeverity(BaseModel):
     severityLevel: Optional[int] = Field(None, alias='severityLevel')
     description: Optional[str] = Field(None, alias='description')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

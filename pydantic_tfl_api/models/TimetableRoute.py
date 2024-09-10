@@ -8,5 +8,4 @@ class TimetableRoute(BaseModel):
     stationIntervals: Optional[list[StationInterval]] = Field(None, alias='stationIntervals')
     schedules: Optional[list[Schedule]] = Field(None, alias='schedules')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

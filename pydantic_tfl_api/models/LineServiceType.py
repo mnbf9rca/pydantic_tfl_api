@@ -7,5 +7,4 @@ class LineServiceType(BaseModel):
     lineName: Optional[str] = Field(None, alias='lineName')
     lineSpecificServiceTypes: Optional[list[LineSpecificServiceType]] = Field(None, alias='lineSpecificServiceTypes')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

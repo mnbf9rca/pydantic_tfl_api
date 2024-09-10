@@ -9,5 +9,4 @@ class CarParkOccupancy(BaseModel):
     name: Optional[str] = Field(None, alias='name')
     carParkDetailsUrl: Optional[str] = Field(None, alias='carParkDetailsUrl')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -10,5 +10,4 @@ class PredictionTiming(BaseModel):
     sent: Optional[str] = Field(None, alias='sent')
     received: Optional[str] = Field(None, alias='received')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

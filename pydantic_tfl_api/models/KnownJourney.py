@@ -7,5 +7,4 @@ class KnownJourney(BaseModel):
     minute: Optional[str] = Field(None, alias='minute')
     intervalId: Optional[int] = Field(None, alias='intervalId')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

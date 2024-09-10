@@ -9,5 +9,4 @@ class TimeAdjustments(BaseModel):
     later: Optional[TimeAdjustment] = Field(None, alias='later')
     latest: Optional[TimeAdjustment] = Field(None, alias='latest')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -11,5 +11,4 @@ class Period(BaseModel):
     toTime: Optional[TwentyFourHourClockTime] = Field(None, alias='toTime')
     frequency: Optional[ServiceFrequency] = Field(None, alias='frequency')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

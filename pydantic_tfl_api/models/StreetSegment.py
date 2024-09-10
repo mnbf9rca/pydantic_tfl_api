@@ -8,5 +8,4 @@ class StreetSegment(BaseModel):
     sourceSystemId: Optional[int] = Field(None, alias='sourceSystemId')
     sourceSystemKey: Optional[str] = Field(None, alias='sourceSystemKey')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -10,5 +10,4 @@ class JourneyPlannerCycleHireDockingStationData(BaseModel):
     originId: Optional[str] = Field(None, alias='originId')
     destinationId: Optional[str] = Field(None, alias='destinationId')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -8,5 +8,4 @@ class Obstacle(BaseModel):
     stopId: Optional[int] = Field(None, alias='stopId')
     position: Optional[str] = Field(None, alias='position')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

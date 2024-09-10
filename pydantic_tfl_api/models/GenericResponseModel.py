@@ -4,5 +4,4 @@ from typing import Any
 
 class GenericResponseModel(RootModel[Any]):
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

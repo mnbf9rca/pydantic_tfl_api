@@ -9,5 +9,4 @@ class RouteOption(BaseModel):
     directions: Optional[list[str]] = Field(None, alias='directions')
     lineIdentifier: Optional[Identifier] = Field(None, alias='lineIdentifier')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

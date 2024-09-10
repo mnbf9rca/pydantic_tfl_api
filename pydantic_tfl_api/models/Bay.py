@@ -8,5 +8,4 @@ class Bay(BaseModel):
     free: Optional[int] = Field(None, alias='free')
     occupied: Optional[int] = Field(None, alias='occupied')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

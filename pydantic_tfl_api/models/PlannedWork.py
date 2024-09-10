@@ -8,5 +8,4 @@ class PlannedWork(BaseModel):
     createdDateTime: Optional[str] = Field(None, alias='createdDateTime')
     lastUpdateDateTime: Optional[str] = Field(None, alias='lastUpdateDateTime')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

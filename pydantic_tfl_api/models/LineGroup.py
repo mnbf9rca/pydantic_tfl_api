@@ -7,5 +7,4 @@ class LineGroup(BaseModel):
     stationAtcoCode: Optional[str] = Field(None, alias='stationAtcoCode')
     lineIdentifier: Optional[list[str]] = Field(None, alias='lineIdentifier')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

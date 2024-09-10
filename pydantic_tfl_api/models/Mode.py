@@ -8,5 +8,4 @@ class Mode(BaseModel):
     isScheduledService: Optional[bool] = Field(None, alias='isScheduledService')
     modeName: Optional[str] = Field(None, alias='modeName')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -16,5 +16,4 @@ class ItineraryResult(BaseModel):
     searchCriteria: Optional[SearchCriteria] = Field(None, alias='searchCriteria')
     journeyVector: Optional[JourneyVector] = Field(None, alias='journeyVector')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

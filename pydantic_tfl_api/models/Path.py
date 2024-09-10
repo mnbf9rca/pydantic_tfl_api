@@ -9,5 +9,4 @@ class Path(BaseModel):
     stopPoints: Optional[list[Identifier]] = Field(None, alias='stopPoints')
     elevation: Optional[list[JpElevation]] = Field(None, alias='elevation')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

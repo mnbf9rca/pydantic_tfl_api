@@ -7,5 +7,4 @@ class ChargeConnectorOccupancy(BaseModel):
     sourceSystemPlaceId: Optional[str] = Field(None, alias='sourceSystemPlaceId')
     status: Optional[str] = Field(None, alias='status')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

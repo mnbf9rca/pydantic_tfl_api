@@ -15,5 +15,4 @@ class LineStatus(BaseModel):
     validityPeriods: Optional[list[ValidityPeriod]] = Field(None, alias='validityPeriods')
     disruption: Optional[Disruption] = Field(None, alias='disruption')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

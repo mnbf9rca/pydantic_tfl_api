@@ -12,5 +12,4 @@ class RoadDisruptionImpactArea(BaseModel):
     startTime: Optional[str] = Field(None, alias='startTime')
     endTime: Optional[str] = Field(None, alias='endTime')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

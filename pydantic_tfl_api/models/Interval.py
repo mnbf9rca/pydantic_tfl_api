@@ -6,5 +6,4 @@ class Interval(BaseModel):
     stopId: Optional[str] = Field(None, alias='stopId')
     timeToArrival: Optional[float] = Field(None, alias='timeToArrival')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

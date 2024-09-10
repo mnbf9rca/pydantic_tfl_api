@@ -11,5 +11,4 @@ class Schedule(BaseModel):
     lastJourney: Optional[KnownJourney] = Field(None, alias='lastJourney')
     periods: Optional[list[Period]] = Field(None, alias='periods')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

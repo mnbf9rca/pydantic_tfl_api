@@ -11,5 +11,4 @@ class LineRouteSection(BaseModel):
     serviceType: Optional[str] = Field(None, alias='serviceType')
     vehicleDestinationText: Optional[str] = Field(None, alias='vehicleDestinationText')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

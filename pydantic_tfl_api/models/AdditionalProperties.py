@@ -9,5 +9,4 @@ class AdditionalProperties(BaseModel):
     value: Optional[str] = Field(None, alias='value')
     modified: Optional[str] = Field(None, alias='modified')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

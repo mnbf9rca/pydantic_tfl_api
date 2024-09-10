@@ -16,5 +16,4 @@ class StopPointRouteSection(BaseModel):
     vehicleDestinationText: Optional[str] = Field(None, alias='vehicleDestinationText')
     destinationName: Optional[str] = Field(None, alias='destinationName')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

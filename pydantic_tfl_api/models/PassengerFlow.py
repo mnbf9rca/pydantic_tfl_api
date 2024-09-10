@@ -6,5 +6,4 @@ class PassengerFlow(BaseModel):
     timeSlice: Optional[str] = Field(None, alias='timeSlice')
     value: Optional[int] = Field(None, alias='value')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

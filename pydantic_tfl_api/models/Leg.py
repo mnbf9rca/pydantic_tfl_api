@@ -28,5 +28,4 @@ class Leg(BaseModel):
     isDisrupted: Optional[bool] = Field(None, alias='isDisrupted')
     hasFixedLocations: Optional[bool] = Field(None, alias='hasFixedLocations')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -6,5 +6,4 @@ class ActiveServiceType(BaseModel):
     mode: Optional[str] = Field(None, alias='mode')
     serviceType: Optional[str] = Field(None, alias='serviceType')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

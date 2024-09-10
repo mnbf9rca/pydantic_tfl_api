@@ -14,5 +14,4 @@ class DisruptedPoint(BaseModel):
     appearance: Optional[str] = Field(None, alias='appearance')
     additionalInformation: Optional[str] = Field(None, alias='additionalInformation')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

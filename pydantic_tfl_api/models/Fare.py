@@ -14,5 +14,4 @@ class Fare(BaseModel):
     offPeak: Optional[int] = Field(None, alias='offPeak')
     taps: Optional[list[FareTap]] = Field(None, alias='taps')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

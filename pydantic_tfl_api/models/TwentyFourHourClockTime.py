@@ -6,5 +6,4 @@ class TwentyFourHourClockTime(BaseModel):
     hour: Optional[str] = Field(None, alias='hour')
     minute: Optional[str] = Field(None, alias='minute')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

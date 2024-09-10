@@ -16,5 +16,4 @@ class RouteSection(BaseModel):
     validFrom: Optional[str] = Field(None, alias='validFrom')
     routeSectionNaptanEntrySequence: Optional[list[RouteSectionNaptanEntrySequence]] = Field(None, alias='routeSectionNaptanEntrySequence')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -7,5 +7,4 @@ class OrderedRoute(BaseModel):
     naptanIds: Optional[list[str]] = Field(None, alias='naptanIds')
     serviceType: Optional[str] = Field(None, alias='serviceType')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

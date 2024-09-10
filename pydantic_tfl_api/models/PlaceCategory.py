@@ -6,5 +6,4 @@ class PlaceCategory(BaseModel):
     category: Optional[str] = Field(None, alias='category')
     availableKeys: Optional[list[str]] = Field(None, alias='availableKeys')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

@@ -15,5 +15,4 @@ class AccidentDetail(BaseModel):
     casualties: Optional[list[Casualty]] = Field(None, alias='casualties')
     vehicles: Optional[list[Vehicle]] = Field(None, alias='vehicles')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

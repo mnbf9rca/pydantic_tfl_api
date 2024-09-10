@@ -9,5 +9,4 @@ class JourneyFare(BaseModel):
     fares: Optional[list[Fare]] = Field(None, alias='fares')
     caveats: Optional[list[FareCaveat]] = Field(None, alias='caveats')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

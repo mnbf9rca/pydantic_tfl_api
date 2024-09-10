@@ -6,5 +6,4 @@ class LineServiceTypeInfo(BaseModel):
     name: Optional[str] = Field(None, alias='name')
     uri: Optional[str] = Field(None, alias='uri')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

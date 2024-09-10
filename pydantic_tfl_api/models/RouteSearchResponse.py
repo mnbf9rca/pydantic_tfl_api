@@ -7,5 +7,4 @@ class RouteSearchResponse(BaseModel):
     input: Optional[str] = Field(None, alias='input')
     searchMatches: Optional[list[RouteSearchMatch]] = Field(None, alias='searchMatches')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

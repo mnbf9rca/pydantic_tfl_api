@@ -7,5 +7,4 @@ class RouteSectionNaptanEntrySequence(BaseModel):
     ordinal: Optional[int] = Field(None, alias='ordinal')
     stopPoint: Optional[StopPoint] = Field(None, alias='stopPoint')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

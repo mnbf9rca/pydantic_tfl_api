@@ -7,5 +7,4 @@ class ValidityPeriod(BaseModel):
     toDate: Optional[str] = Field(None, alias='toDate')
     isNow: Optional[bool] = Field(None, alias='isNow')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

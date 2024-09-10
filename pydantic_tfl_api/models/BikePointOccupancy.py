@@ -9,5 +9,4 @@ class BikePointOccupancy(BaseModel):
     emptyDocks: Optional[int] = Field(None, alias='emptyDocks')
     totalDocks: Optional[int] = Field(None, alias='totalDocks')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

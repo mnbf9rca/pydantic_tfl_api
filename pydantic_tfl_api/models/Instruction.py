@@ -8,5 +8,4 @@ class Instruction(BaseModel):
     detailed: Optional[str] = Field(None, alias='detailed')
     steps: Optional[list[InstructionStep]] = Field(None, alias='steps')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

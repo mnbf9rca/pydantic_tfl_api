@@ -6,5 +6,4 @@ class PathAttribute(BaseModel):
     name: Optional[str] = Field(None, alias='name')
     value: Optional[str] = Field(None, alias='value')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

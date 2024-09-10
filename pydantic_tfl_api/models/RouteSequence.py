@@ -16,5 +16,4 @@ class RouteSequence(BaseModel):
     stopPointSequences: Optional[list[StopPointSequence]] = Field(None, alias='stopPointSequences')
     orderedLineRoutes: Optional[list[OrderedRoute]] = Field(None, alias='orderedLineRoutes')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

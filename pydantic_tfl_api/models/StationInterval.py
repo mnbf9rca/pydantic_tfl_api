@@ -7,5 +7,4 @@ class StationInterval(BaseModel):
     id: Optional[str] = Field(None, alias='id')
     intervals: Optional[list[Interval]] = Field(None, alias='intervals')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

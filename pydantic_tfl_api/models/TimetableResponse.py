@@ -16,5 +16,4 @@ class TimetableResponse(BaseModel):
     disambiguation: Optional[Disambiguation] = Field(None, alias='disambiguation')
     statusErrorMessage: Optional[str] = Field(None, alias='statusErrorMessage')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

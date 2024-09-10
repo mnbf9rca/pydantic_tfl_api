@@ -41,5 +41,4 @@ class RoadDisruption(BaseModel):
     roadDisruptionImpactAreas: Optional[list[RoadDisruptionImpactArea]] = Field(None, alias='roadDisruptionImpactAreas')
     recurringSchedules: Optional[list[RoadDisruptionSchedule]] = Field(None, alias='recurringSchedules')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

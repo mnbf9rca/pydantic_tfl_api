@@ -20,5 +20,4 @@ class ArrivalDeparture(BaseModel):
     departureStatus: Optional[DepartureStatusEnum] = Field(None, alias='departureStatus')
     timing: Optional[PredictionTiming] = Field(None, alias='timing')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}

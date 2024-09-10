@@ -9,5 +9,4 @@ class Casualty(BaseModel):
     mode: Optional[str] = Field(None, alias='mode')
     ageBand: Optional[str] = Field(None, alias='ageBand')
 
-    class Config:
-        from_attributes = True
+    model_config = {'from_attributes': True}
