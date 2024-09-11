@@ -9,6 +9,7 @@ T = TypeVar('T', bound=BaseModel)
 class ResponseModel(BaseModel, Generic[T]):
     content_expires: Optional[datetime]
     shared_expires: Optional[datetime]
+    response_timestamp: Optional[datetime]
     content: T  # The content will now be of the specified type
 
     class Config:
