@@ -3,7 +3,7 @@ import json
 import os
 from unittest.mock import Mock, patch, MagicMock
 from requests.models import Response
-from email.utils import parsedate_to_datetime
+from email.utils import parsedate_to_datetime, format_datetime
 
 # from importlib import import_module
 # import pkgutil
@@ -135,19 +135,21 @@ def test_create_model_instance(
 ):
     # Act
     response_json_parsed = json.loads(json.dumps(response_json))
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
     if expected_name is None:
         with pytest.raises(ValidationError):
             Client._create_model_instance(
-                None, Model, response_json_parsed, result_expiry, shared_expiry
+                None, Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
             )
     else:
         instance = Client._create_model_instance(
-            None, Model, response_json_parsed, result_expiry, shared_expiry
+            None, Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
         )
 
         assert isinstance(instance, ResponseModel)
         assert instance.content_expires == expected_expiry
         assert instance.shared_expires == expected_shared_expiry
+        assert instance.response_timestamp == response_date_time
         instance_content = instance.content
         assert isinstance(instance_content, Model)
         assert instance_content.name == expected_name
@@ -349,8 +351,11 @@ def test_get_maxage_headers_from_cache_control_header(
 def test_deserialize(model_name, response_content, expected_result):
     # Mock Response
     Response_Object = MagicMock(Response)
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+    response_date_time_string = format_datetime(response_date_time)
     # json.dumps(response_content)
     Response_Object.json.return_value = response_content
+    Response_Object.headers = {"Date": response_date_time_string}
 
     # Act
 
@@ -373,7 +378,7 @@ def test_deserialize(model_name, response_content, expected_result):
     assert result == expected_result
     mock_get_model.assert_called_with(model_name)
     mock_create_model_instance.assert_called_with(
-        MockModel, Response_Object.json.return_value, return_datetime, return_datetime_2
+        MockModel, Response_Object.json.return_value, return_datetime, return_datetime_2, response_date_time
     )
 
 
@@ -724,4 +729,26 @@ class Test_TfL_connectivity:
         assert isinstance(result, ResponseModel)
         response_content = result.content
         assert isinstance(response_content, models.GenericResponseModel)
+
+
+@pytest.mark.parametrize(
+    "headers, expected_result",
+    [
+        ({"Date": "Tue, 15 Nov 1994 12:45:26 GMT"}, parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")),
+        ({}, None),
+        ({"Date": "Invalid Date"}, None),
+    ],
+    ids=["valid_date", "no_date", "invalid_date"],
+)
+def test_get_datetime_from_response_headers(headers, expected_result):
+    # Mock Response
+    response = Response()
+    response.headers.update(headers)
+
+    # Act
+    result = Client._get_datetime_from_response_headers(response)
+
+    # Assert
+    assert result == expected_result
+
     

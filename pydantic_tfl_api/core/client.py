@@ -99,14 +99,25 @@ class Client:
         maxage_expiry = Client._parse_timedelta(maxage, request_datetime)
 
         return s_maxage_expiry, maxage_expiry
+    
+    @staticmethod
+    def _get_datetime_from_response_headers(response: Response) -> datetime | None:
+        response_headers = response.headers 
+        try:
+            return parsedate_to_datetime(response_headers.get("Date")) if "Date" in response_headers else None
+        except (TypeError, ValueError):
+            return None
+        
+
 
     def _deserialize(self, model_name: str, response: Response) -> Any:
         shared_expiry, result_expiry = self._get_result_expiry(response)
+        response_date_time = self._get_datetime_from_response_headers(response)
         Model = self._get_model(model_name)
         data = response.json()
 
         result = self._create_model_instance(
-            Model, data, result_expiry, shared_expiry)
+            Model, data, result_expiry, shared_expiry, response_date_time)
 
         return result
 
@@ -117,7 +128,11 @@ class Client:
         return Model
 
     def _create_model_instance(
-        self, Model: BaseModel, response_json: Any, result_expiry: Optional[datetime], shared_expiry: Optional[datetime]
+        self, Model: BaseModel, 
+        response_json: Any, 
+        result_expiry: Optional[datetime], 
+        shared_expiry: Optional[datetime],
+        response_date_time: Optional[datetime],
     ) -> ResponseModel:
         is_root_model = isinstance(Model, type) and issubclass(Model, RootModel)
         
@@ -137,7 +152,7 @@ class Client:
             else:
                 content = Model(response_json)
 
-        return ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content)
+        return ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content, response_timestamp=response_date_time)
 
     def _deserialize_error(self, response: Response) -> ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
