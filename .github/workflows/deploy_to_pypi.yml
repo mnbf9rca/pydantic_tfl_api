@@ -26,6 +26,18 @@ jobs:
     environment: 
       name: ${{ inputs.target-environment }}
     steps:
+      # - name: Checkout actions-oidc-debugger
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: github/actions-oidc-debugger
+      #     ref: main
+      #     token: ${{ github.token }}
+      #     path: ./.github/actions/actions-oidc-debugger
+      # - name: Debug OIDC Claims
+      #   uses: ./.github/actions/actions-oidc-debugger
+      #   with:
+      #     audience: '${{ github.server_url }}/${{ github.repository_owner }}'
+
       - name: get workspacedir
         # see https://github.com/actions/runner/issues/2058#issuecomment-1308554566
         shell: bash
@@ -52,7 +64,7 @@ jobs:
           packages-dir: ${{ steps.download-artifact.outputs.download-path }}
           verbose: true
           print-hash: true
-          attestations: true
+          # attestations: true  # https://github.com/pypi/warehouse/issues/11096
 
 
     

@@ -1,6 +1,6 @@
 name: build artifact and publish to PyPi
+
 on: 
-  # whenever version is bumped, or allow manual runs
   workflow_dispatch:
     inputs:
       deploy_to_test:
@@ -8,6 +8,7 @@ on:
         description: 'Deploy to PyPi test'
         required: false
         default: false
+
   workflow_run: 
     workflows: ["bump version"]
     types:
@@ -16,23 +17,28 @@ on:
 jobs:
   build_artifacts:
     uses: ./.github/workflows/deploy_build_artifact.yaml
-    # output:
-      # artifact-url:
-      # artifact-id:
-      # package-version:
-      # artifact-name:
 
   deploy_to_pypi_test:
     needs: [build_artifacts]
-    if: ${{ github.event.inputs.deploy_to_test == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_test == 'true' }}
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
       target-environment: 'pypi-test'
       artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
 
-  deploy_to_pypi_prod:
+  deploy_to_pypi_prod_after_test:
+    needs: [build_artifacts, deploy_to_pypi_test]
+    if: ${{ github.event.inputs.deploy_to_test == 'true' }}
+    uses: ./.github/workflows/deploy_to_pypi.yml
+    with:
+      package-version: ${{ needs.build_artifacts.outputs.package-version }}
+      target-environment: 'pypi-prod'
+      artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
+
+  deploy_to_pypi_prod_direct:
     needs: [build_artifacts]
+    if: ${{ github.event.inputs.deploy_to_test != 'true' }}
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
