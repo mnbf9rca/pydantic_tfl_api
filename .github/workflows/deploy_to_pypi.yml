@@ -26,6 +26,16 @@ jobs:
     environment: 
       name: ${{ inputs.target-environment }}
     steps:
+      - name: Checkout actions-oidc-debugger
+        uses: actions/checkout@v3
+        with:
+          repository: github/actions-oidc-debugger
+          ref: main
+          token: ${{ secrets.your-checkout-token }}
+          path: ./.github/actions/actions-oidc-debugger
+      - name: Debug OIDC Claims
+        uses: ./.github/actions/actions-oidc-debugger
+
       - name: get workspacedir
         # see https://github.com/actions/runner/issues/2058#issuecomment-1308554566
         shell: bash
@@ -40,11 +50,6 @@ jobs:
       - name: show files
         run: |
           find ${{ env.GITHUB_WORKSPACE }}/dist -type f
-      # - name: extract version from pyproject.toml
-      #   run: |
-      #     version=$(grep 'version =' pyproject.toml | awk '{print $3}' | sed 's/"//g')
-      #     echo "VERSION=$version" >> $GITHUB_ENV
-      #     echo "extracted version '{{ $env.VERSION }}' from pyproject.toml"
       - name: Publish package distributions to ${{ inputs.target-environment }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
