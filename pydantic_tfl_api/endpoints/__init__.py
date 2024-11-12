@@ -1,30 +1,49 @@
-from .LineClient import LineClient
-from .OccupancyClient import OccupancyClient
-from .VehicleClient import VehicleClient
-from .ModeClient import ModeClient
-from .CrowdingClient import CrowdingClient
-from .PlaceClient import PlaceClient
+from typing import Literal
+from .AccidentStatsClient import AccidentStatsClient
 from .AirQualityClient import AirQualityClient
+from .BikePointClient import BikePointClient
+from .CrowdingClient import CrowdingClient
+from .JourneyClient import JourneyClient
+from .LiftDisruptionsClient import LiftDisruptionsClient
+from .LineClient import LineClient
+from .ModeClient import ModeClient
+from .OccupancyClient import OccupancyClient
+from .PlaceClient import PlaceClient
+from .RoadClient import RoadClient
 from .SearchClient import SearchClient
 from .StopPointClient import StopPointClient
-from .JourneyClient import JourneyClient
-from .BikePointClient import BikePointClient
-from .AccidentStatsClient import AccidentStatsClient
-from .LiftDisruptionsClient import LiftDisruptionsClient
-from .RoadClient import RoadClient
-__all__ = [
-    'LineClient',
-    'OccupancyClient',
-    'VehicleClient',
-    'ModeClient',
-    'CrowdingClient',
-    'PlaceClient',
+from .VehicleClient import VehicleClient
+
+TfLEndpoint = Literal[
+    'AccidentStatsClient',
     'AirQualityClient',
+    'BikePointClient',
+    'CrowdingClient',
+    'JourneyClient',
+    'LiftDisruptionsClient',
+    'LineClient',
+    'ModeClient',
+    'OccupancyClient',
+    'PlaceClient',
+    'RoadClient',
     'SearchClient',
     'StopPointClient',
-    'JourneyClient',
-    'BikePointClient',
+    'VehicleClient'
+]
+
+__all__ = [
     'AccidentStatsClient',
+    'AirQualityClient',
+    'BikePointClient',
+    'CrowdingClient',
+    'JourneyClient',
     'LiftDisruptionsClient',
-    'RoadClient'
+    'LineClient',
+    'ModeClient',
+    'OccupancyClient',
+    'PlaceClient',
+    'RoadClient',
+    'SearchClient',
+    'StopPointClient',
+    'VehicleClient'
 ]
