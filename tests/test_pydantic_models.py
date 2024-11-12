@@ -4,15 +4,12 @@
 from .config_for_tests import response_to_request_mapping
 from requests.models import Response
 import json
-import os
 from pydantic import BaseModel, TypeAdapter, RootModel
-from typing import List
-import pytest
+from typing import List, get_args
+import unittest
 
 from pydantic_tfl_api import models
-from pydantic_tfl_api.core import Client, RestClient, ResponseModel
-
-
+from pydantic_tfl_api.core import Client, ResponseModel
 
 
 def create_response_from_json(json_file) -> Response:
@@ -24,6 +21,7 @@ def create_response_from_json(json_file) -> Response:
     response.url = serialised_response['url']
     response._content = serialised_response['content'].encode("utf-8")
     return response
+
 
 def get_and_save_response(response: BaseModel | List[BaseModel], file_name: str):
     '''
@@ -41,6 +39,7 @@ def get_and_save_response(response: BaseModel | List[BaseModel], file_name: str)
     with open(file_name, "w") as file:
         file.write(json.dumps(content))
 
+
 def load_and_validate_expected_response(file_name: str, model: type[BaseModel]):
     with open(file_name, "r") as file:
         content = json.load(file)
@@ -50,6 +49,14 @@ def load_and_validate_expected_response(file_name: str, model: type[BaseModel]):
 
     return model.model_validate(content)
 
+
+class TestTypeHints(unittest.TestCase):
+    def test_model_literal(self):
+        # models.ResponseModelName is a Literal which should contain the names of all the models in the package
+        # this test checks that the names are correct, none are missing.
+        # we do this by comparing the __all__ attribute of the models module with the literal
+
+        self.assertListEqual(list(get_args(models.ResponseModelName)), models.__all__)
 
 
 for resp in response_to_request_mapping:
