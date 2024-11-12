@@ -64,7 +64,7 @@ jobs:
           packages-dir: ${{ steps.download-artifact.outputs.download-path }}
           verbose: true
           print-hash: true
-          # attestations: true  # https://github.com/pypi/warehouse/issues/11096
+          attestations: false  # https://github.com/pypi/warehouse/issues/11096
 
 
     
