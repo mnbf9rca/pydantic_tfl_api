@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# Display help message if --help, -h, or no arguments are provided
+if [[ "$1" == "--help" || "$1" == "-h" || $# -eq 0 ]]; then
+    echo "Usage: ./script.sh <BUILD_FOLDER> [SPEC_FOLDER] [RUN_BUILDSCRIPT]"
+    echo
+    echo "Arguments:"
+    echo "  BUILD_FOLDER     Required. The path to the build folder."
+    echo "  SPEC_FOLDER      Optional. The path to the spec folder. Required if RUN_BUILDSCRIPT is 'true'."
+    echo "  RUN_BUILDSCRIPT  Optional. Boolean value ('true' or 'false') to indicate whether to run the build script."
+    echo
+    echo "Description:"
+    echo "  This script performs the following tasks:"
+    echo "    1. Deletes the 'models' and 'endpoints' folders in the specified BUILD_FOLDER, if they exist."
+    echo "    2. Creates the 'models' and 'endpoints' directories inside BUILD_FOLDER."
+    echo "    3. Optionally runs the build_models.py script with SPEC_FOLDER and BUILD_FOLDER arguments if RUN_BUILDSCRIPT is 'true'."
+    echo
+    echo "Example:"
+    echo "  ./script.sh build_output specs true"
+    echo
+    exit 0
+fi
+
 # Set variables
 # Take the first argument as the build folder
 BUILD_FOLDER=$1

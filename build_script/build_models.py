@@ -329,6 +329,7 @@ def save_models(
     base_path: str,
     dependency_graph: Dict[str, Set[str]],
     circular_models: Set[str],
+    model_order: List[str],
 ):
     models_dir = os.path.join(base_path, "models")
     os.makedirs(models_dir, exist_ok=True)
@@ -339,21 +340,39 @@ def save_models(
     init_file = os.path.join(models_dir, "__init__.py")
     with open(init_file, "w") as init_f:
         # Write import statements for existing models
+        init_f.write("from typing import Literal\n")
+        # sort models by name alphabetically
         write_import_statements(init_f, models, models_dir)
+        for model_name in model_order:
+            model = models.get(model_name)
+            if model:
+                save_model_file(
+                    model_name,
+                    model,
+                    models,
+                    models_dir,
+                    dependency_graph,
+                    circular_models,
+                    init_f,
+                )
 
-        for model_name, model in models.items():
-            save_model_file(
-                model_name,
-                model,
-                models,
-                models_dir,
-                dependency_graph,
-                circular_models,
-                init_f,
-            )
+        # for model_name, model in models.items():
+        #     save_model_file(
+        #         model_name,
+        #         model,
+        #         models,
+        #         models_dir,
+        #         dependency_graph,
+        #         circular_models,
+        #         init_f,
+        #     )
 
         init_f.write(
-            f"\n__all__ = [\n    {',\n    '.join(f'\"{key}\"' for key in models.keys())}\n]\n"
+            f"\nResponseModelName = Literal[\n    {',\n    '.join(f'\"{key}\"' for key in model_order)}\n]\n"
+        )
+
+        init_f.write(
+            f"\n__all__ = [\n    {',\n    '.join(f'\"{key}\"' for key in model_order)}\n]\n"
         )
 
     # Write enums after saving the models
@@ -1225,7 +1244,7 @@ def create_function_parameters(parameters: List[Dict[str, Any]]) -> str:
 def save_classes(specs: List[Dict[str, Any]], base_path: str, base_url: str) -> None:
     """Create config and class files for each spec in the specs list."""
 
-    class_names = [f"{sanitize_name(get_api_name(spec))}Client" for spec in specs]
+    class_names = sorted([f"{sanitize_name(get_api_name(spec))}Client" for spec in specs])
     init_file_path = os.path.join(base_path, "__init__.py")
     with open(init_file_path, "w") as init_file:
         # init_file.write(f"# {init_file_path}\n")
@@ -1248,9 +1267,13 @@ def save_classes(specs: List[Dict[str, Any]], base_path: str, base_url: str) -> 
     endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
     with open(endpoint_init_file, "w") as endpoint_init:
         # endpoint_init.write(f"# {endpoint_init_file}\n")
+        endpoint_init.write("from typing import Literal\n")
         endpoint_init.write(
             "\n".join([f"from .{name} import {name}" for name in class_names])
         )
+        endpoint_init.write("\n\nTfLEndpoint = Literal[\n")
+        endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
+        endpoint_init.write("\n]\n")
         endpoint_init.write("\n__all__ = [\n")
         endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
         endpoint_init.write("\n]\n")
@@ -1363,7 +1386,7 @@ def main(spec_path: str, output_path: str):
 
     # Now save the deduplicated models
     logging.info("Saving models to files...")
-    save_models(models, output_path, dependency_graph, circular_models)
+    save_models(models, output_path, dependency_graph, circular_models, sorted_models)
 
     # Create config and class
     logging.info("Creating config and class files...")
