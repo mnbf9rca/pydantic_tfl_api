@@ -1,44 +1,65 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "schedule:automergeDaily"
-  ],
-  "rangeStrategy": "widen",
-  
-  "packageRules": [
-      {
-          "depTypeList": ["dependencies"],
-          "updateTypes": ["patch", "minor", "major"],
-          "automerge": false
-      },
-      {
-          "depTypeList": ["devDependencies"],
-          "automerge": false
-      },
-      {
-          "vulnerabilityAlerts": true,
-          "matchUpdateTypes": ["patch", "minor", "major"],
-          "automerge": true
-      },
-      {
-          "matchManagers": ["dockerfile", "github-actions"],
-          "pinDigests": false
-      },
-      {
-          "matchPackageNames": ["pydantic", "requests"],
-          "rangeStrategy": "bump",
-          "automerge": false,
-          "separateMinorPatch": true,
-          "labels": ["renovate-pydantic-requests"],
-          "commitMessageAction": "Test update",
-          "commitMessageTopic": "{{depName}}",
-          "commitMessageExtra": "to {{newVersion}}"
-      }
-  ],
-  "lockFileMaintenance": {
-    "enabled": false
-  },
-  "rebaseWhen": "behind-base-branch",
-  "updateNotScheduled": true
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "schedule:automergeDaily"
+    ],
+    "rangeStrategy": "widen",
+    "packageRules": [
+        {
+            "matchDepTypes": [
+                "dependencies"
+            ],
+            "matchUpdateTypes": [
+                "patch",
+                "minor",
+                "major"
+            ],
+            "automerge": false
+        },
+        {
+            "matchDepTypes": [
+                "devDependencies"
+            ],
+            "automerge": false
+        },
+        {
+            "vulnerabilityAlerts": {
+                "enabled": true
+            },
+            "matchUpdateTypes": [
+                "patch",
+                "minor",
+                "major"
+            ],
+            "automerge": true
+        },
+        {
+            "matchManagers": [
+                "dockerfile",
+                "github-actions"
+            ],
+            "pinDigests": false
+        },
+        {
+            "matchPackageNames": [
+                "pydantic",
+                "requests"
+            ],
+            "rangeStrategy": "bump",
+            "automerge": false,
+            "separateMinorPatch": true,
+            "labels": [
+                "renovate-pydantic-requests"
+            ],
+            "commitMessageAction": "Test update",
+            "commitMessageTopic": "{{depName}}",
+            "commitMessageExtra": "to {{newVersion}}"
+        }
+    ],
+    "lockFileMaintenance": {
+        "enabled": false
+    },
+    "rebaseWhen": "behind-base-branch",
+    "updateNotScheduled": true
 }
