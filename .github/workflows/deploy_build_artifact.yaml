@@ -36,7 +36,8 @@ jobs:
       - name: install poetry
         uses: snok/install-poetry@v1 # v1
         with:
-          version: 1.8.3 # pin the version as they keep changing their APIs
+          # use latest poetry version
+          # version: 1.8.3 # pin the version as they keep changing their APIs
           virtualenvs-create: false
           virtualenvs-in-project: false
 
