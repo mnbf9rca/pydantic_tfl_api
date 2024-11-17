@@ -27,15 +27,6 @@ jobs:
       target-environment: 'pypi-test'
       artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
 
-  deploy_to_pypi_prod_after_test:
-    needs: [build_artifacts, deploy_to_pypi_test]
-    if: ${{ github.event.inputs.deploy_to_test == 'true' }}
-    uses: ./.github/workflows/deploy_to_pypi.yml
-    with:
-      package-version: ${{ needs.build_artifacts.outputs.package-version }}
-      target-environment: 'pypi-prod'
-      artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
-
   deploy_to_pypi_prod_direct:
     needs: [build_artifacts]
     if: ${{ github.event.inputs.deploy_to_test != 'true' }}
