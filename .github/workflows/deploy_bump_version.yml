@@ -42,7 +42,7 @@ jobs:
             echo "BUMP_TYPE=patch" >> "$GITHUB_ENV"
           fi
       - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v1 # v1
+        uses: actions/create-github-app-token@v2
         # Create GitHub App Token to let us push changes to main
         id: app-token
         with:
