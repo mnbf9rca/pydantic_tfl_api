@@ -1231,8 +1231,9 @@ def save_classes(specs: List[Dict[str, Any]], base_path: str, base_url: str) -> 
     init_file_path = os.path.join(base_path, "__init__.py")
     with open(init_file_path, "w") as init_file:
         # init_file.write(f"# {init_file_path}\n")
+        class_names_joined = ',\n    '.join(class_names)
         init_file.write(
-            f"from .endpoints import (\n    {',\n    '.join(class_names)}\n)\n"
+            f"from .endpoints import (\n    {class_names_joined}\n)\n"
         )
         # init_file.write("\n".join([f"from .endpoints.{name} import {name}" for name in class_names]))
         # init_file.write("from ..core import Client\n")
