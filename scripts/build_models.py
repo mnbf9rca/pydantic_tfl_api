@@ -1118,7 +1118,7 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
-                            f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {f"Example: `{param.get('example', '')}`" if param.get('example') else ""}"
+                            f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + param.get('example', '') + '`') if param.get('example') else ''}"
                             for param in parameters
                         ]
                     )
