@@ -30,7 +30,7 @@ from typing import (
     ForwardRef,
     Tuple,
 )
-from pydantic import BaseModel, RootModel, create_model, Field
+from pydantic import BaseModel, RootModel, create_model, Field, ConfigDict
 from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
@@ -297,8 +297,7 @@ def create_generic_response_model() -> Type[RootModel]:
     class GenericResponseModel(RootModel):
         root: Any
 
-        class Config:
-            arbitrary_types_allowed = True
+        model_config = ConfigDict(arbitrary_types_allowed=True)
 
     return GenericResponseModel
 
@@ -400,7 +399,10 @@ def save_model_file(
 
     with open(model_file, "w") as mf:
         if is_list_or_dict_model(model):
-            mf.write("from pydantic import RootModel\n")
+            if sanitized_model_name == "GenericResponseModel":
+                mf.write("from pydantic import RootModel, ConfigDict\n")
+            else:
+                mf.write("from pydantic import RootModel\n")
             handle_list_or_dict_model(
                 mf,
                 model,
@@ -512,7 +514,11 @@ def handle_list_or_dict_model(
     # Write class definition
     model_file.write(f"\n\n{class_definition}")
 
-    model_file.write("\n    model_config = {'from_attributes': True}\n")
+    # Use different model_config for GenericResponseModel
+    if sanitized_model_name == "GenericResponseModel":
+        model_file.write("\n    model_config = ConfigDict(arbitrary_types_allowed=True)\n")
+    else:
+        model_file.write("\n    model_config = {'from_attributes': True}\n")
 
 
 def handle_regular_model(
@@ -536,9 +542,15 @@ def handle_regular_model(
 
     # Add RootModel import if necessary
     if is_root_model:
-        import_set.add("from pydantic import RootModel")
+        if sanitized_model_name == "GenericResponseModel":
+            import_set.add("from pydantic import RootModel, ConfigDict")
+        else:
+            import_set.add("from pydantic import RootModel")
     else:
-        import_set.add("from pydantic import BaseModel, Field")
+        if sanitized_model_name == "GenericResponseModel":
+            import_set.add("from pydantic import BaseModel, Field, ConfigDict")
+        else:
+            import_set.add("from pydantic import BaseModel, Field")
 
     # Write imports for referenced models
     referenced_models = dependency_graph.get(sanitized_model_name, set())
@@ -566,7 +578,11 @@ def handle_regular_model(
         write_model_fields(model_file, model, models, circular_models)
 
     # Pydantic model config
-    model_file.write("\n    model_config = {'from_attributes': True}\n")
+    # Use different model_config for GenericResponseModel
+    if sanitized_model_name == "GenericResponseModel":
+        model_file.write("\n    model_config = ConfigDict(arbitrary_types_allowed=True)\n")
+    else:
+        model_file.write("\n    model_config = {'from_attributes': True}\n")
 
     # Add model_rebuild() if circular dependencies exist
     if sanitized_model_name in circular_models:
@@ -624,9 +640,15 @@ def write_model_fields(
         # Resolve the field's annotation to get the type string, including handling ForwardRefs
         field_type = resolve_forward_refs_in_annotation(field.annotation, models, circular_models)
 
-        model_file.write(
-            f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
-        )
+        # Only include alias if it differs from the original field name
+        if field.alias and field.alias != field_name:
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
+            )
+        else:
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None)\n"
+            )
 
 def write_enum_files(models: Dict[str, Type[BaseModel]], models_dir: str):
     """Write enum files directly from the model's fields."""
