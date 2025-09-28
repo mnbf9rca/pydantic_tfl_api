@@ -35,9 +35,12 @@ from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
 try:
-    from .mappings import tfl_mappings
+    from .mapping_loader import load_tfl_mappings
 except ImportError:
-    from mappings import tfl_mappings
+    from mapping_loader import load_tfl_mappings
+
+# Load mappings from JSON
+tfl_mappings = load_tfl_mappings()
 
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.insert(0, src_path)

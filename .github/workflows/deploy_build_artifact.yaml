@@ -29,12 +29,12 @@ jobs:
 
 
       - name: check out code
-        uses: actions/checkout@v4 # v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v3.2.0
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
@@ -57,6 +57,46 @@ jobs:
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
           uv build
+
+      - name: Validate built package
+        run: |
+          # Create isolated environment for testing
+          python -m venv test_env
+          source test_env/bin/activate
+
+          # Install the built wheel (explicitly specify the wheel file)
+          WHEEL_FILE=$(ls dist/*.whl | head -n 1)
+          pip install "$WHEEL_FILE"
+
+          # Test basic imports
+          python -c "
+          import pydantic_tfl_api
+          from pydantic_tfl_api import LineClient
+          from pydantic_tfl_api.core import ResponseModel, ApiError
+          from pydantic_tfl_api.models import Line, LineArray
+          print('✓ Package imports successfully')
+          print(f'✓ Package version: {pydantic_tfl_api.__version__}')
+          "
+
+          # Test basic API functionality
+          python -c "
+          import time
+          from pydantic_tfl_api import LineClient
+          from pydantic_tfl_api.core import ResponseModel, ApiError
+
+          client = LineClient()
+          time.sleep(1)  # Rate limiting
+          result = client.MetaModes()
+
+          if isinstance(result, ResponseModel):
+              print(f'✓ TfL API test successful: {len(result.content.root)} modes found')
+          elif isinstance(result, ApiError):
+              print(f'⚠ TfL API returned error (expected for unauthenticated): {result.http_status_code}')
+          else:
+              raise Exception(f'Unexpected result type: {type(result)}')
+
+          print('✓ Built package validation completed successfully')
+          "
 
       - name: attest artifacts
         id: attest-artifacts

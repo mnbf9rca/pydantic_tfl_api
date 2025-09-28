@@ -1,19 +1,14 @@
 """
 Tests for the build_models.py script functionality.
 """
-import os
-import sys
 import tempfile
 import json
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
-# Add scripts directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-
-from build_models import sanitize_name, update_refs, get_api_name
+# Import from scripts package
+from scripts.build_models import sanitize_name, update_refs, get_api_name
 
 
 class TestSanitizeName:
@@ -255,31 +250,45 @@ class TestBuildModelsIntegration:
 class TestMappingsImport:
     """Test that mappings can be imported successfully."""
 
+    def _load_tfl_mappings_or_skip(self):
+        """Helper to load TfL mappings or skip test if not available."""
+        try:
+            from scripts.mapping_loader import load_tfl_mappings
+            return load_tfl_mappings()
+        except ImportError as e:
+            pytest.skip(f"mapping_loader module not available: {e}")
+
+    def _validate_mapping_structure(self, api_mappings, api_name):
+        """Helper to validate mapping structure without loops in test."""
+        # Validate all mapping keys are strings
+        invalid_keys = [k for k in api_mappings.keys() if not isinstance(k, str)]
+        assert not invalid_keys, f"Non-string keys found in {api_name}: {invalid_keys}"
+
+        # Validate all mapping values are strings
+        invalid_values = [v for v in api_mappings.values() if not isinstance(v, str)]
+        assert not invalid_values, f"Non-string values found in {api_name}: {invalid_values}"
+
     def test_mappings_import(self):
         """Test that mappings module imports successfully."""
-        try:
-            from mappings import tfl_mappings
-            assert isinstance(tfl_mappings, dict)
-            assert len(tfl_mappings) > 0
-        except ImportError:
-            pytest.skip("mappings module not available")
+        tfl_mappings = self._load_tfl_mappings_or_skip()
+        assert isinstance(tfl_mappings, dict)
+        assert len(tfl_mappings) > 0
 
-    def test_mappings_import_availability(self):
-        """Test that mappings module can be imported."""
-        try:
-            from mappings import tfl_mappings
-            assert isinstance(tfl_mappings, dict)
-            assert len(tfl_mappings) > 0
-        except ImportError:
-            pytest.skip("mappings module not available")
 
     @pytest.mark.parametrize("api_name", ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"])
     def test_known_api_mappings_structure(self, api_name):
         """Test the structure of specific TfL API mappings."""
-        pytest.importorskip("mappings", reason="mappings module not available")
-        from mappings import tfl_mappings
+        tfl_mappings = self._load_tfl_mappings_or_skip()
 
-        # Skip test if API not in mappings rather than using conditional
+        # Validate API exists and get its mappings
+        api_mappings = self._get_api_mappings_or_skip(tfl_mappings, api_name)
+        assert isinstance(api_mappings, dict)
+
+        # Test that all keys and values are strings using helper method
+        self._validate_mapping_structure(api_mappings, api_name)
+
+    def _get_api_mappings_or_skip(self, tfl_mappings, api_name):
+        """Helper to get API mappings or skip test if not found."""
         if api_name not in tfl_mappings:
             pytest.skip(f"API '{api_name}' not found in mappings")
-        assert isinstance(tfl_mappings[api_name], dict)
+        return tfl_mappings[api_name]
