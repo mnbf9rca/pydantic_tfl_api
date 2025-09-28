@@ -3,6 +3,7 @@
 This document tracks the implementation of robustness improvements for pydantic-tfl-api.
 
 ## Overview
+
 - **Goal**: Make pydantic-tfl-api more robust and maintainable
 - **Key Changes**: Migration to UV, automated spec updates, improved testing
 - **Started**: 2025-09-28
@@ -10,12 +11,14 @@ This document tracks the implementation of robustness improvements for pydantic-
 ## Implementation Phases
 
 Important: Before starting each phase:
+
 1. ensure that you switch to main, pull the latest changes, and create a new branch for the phase.
 2. Update this plan to reflect the completion status of the previous phase.
 
 After raising the PR for the current phase, update this plan with the PR number.
 
 ### Phase 1: Package Manager Migration
+
 **Status**: ✅ Complete
 **Priority**: High
 
@@ -36,9 +39,10 @@ After raising the PR for the current phase, update this plan with the PR number.
 ---
 
 ### Phase 2: Project Structure Reorganization
+
 **Status**: ✅ Complete
 **Priority**: High
-Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-openapi-spec (git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git)
+Reference for external repo: [https://github.com/mnbf9rca/build-pydantic-from-openapi-spec](git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git)
 
 - [x] Create `scripts/` directory structure
 - [x] Move `build_models.py` from external repo to `scripts/`
@@ -58,6 +62,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 2.5: Build Script Quality Evaluation
+
 **Status**: ✅ Complete
 **Priority**: High
 
@@ -75,7 +80,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 - [x] **Output Validation**
   - [x] Generate Pydantic models for 3-5 APIs and compare with existing ones
   - [x] Verify generated models can deserialize real TfL API responses
-  - [x] Test against OpenAPI specs in `OpenAPI_specs` folder from git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git
+  - [x] Test against OpenAPI specs in `OpenAPI_specs` folder from [build-pydantic-from-openapi-spec.git](git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git)
   - [x] Check for missing model classes or incorrect field types
   - [x] Validate that circular references in models are handled properly
   - [x] Test model imports and dependencies work correctly
@@ -104,6 +109,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 3: Dependency Management Improvements
+
 **Status**: 🔴 Not Started
 **Priority**: Medium
 
@@ -120,6 +126,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 4: Pydantic v2 Migration Completion
+
 **Status**: 🔴 Not Started
 **Priority**: High
 
@@ -136,6 +143,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 5: Build Process Automation
+
 **Status**: 🟡 Partially Complete
 **Priority**: High
 
@@ -155,38 +163,69 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 6: Testing Enhancements
-**Status**: 🔴 Not Started
-**Priority**: Medium
 
-- [ ] Create matrix testing configuration for multiple Pydantic versions
-- [ ] Add Python 3.13 to test matrix
-- [ ] Create integration tests against live TfL API
-- [ ] Add rate limiting to integration tests
-- [ ] Create performance benchmarks
-- [ ] Add schema evolution test suite
-- [ ] Test backwards compatibility
-- [ ] Add test coverage reporting
+**Status**: ✅ Complete
+**Priority**: High (elevated from Medium due to critical importance)
 
-**Dependencies**: Phase 3
+- [x] **Package Installation Testing**
+  - [x] Create isolated environment testing for built wheel
+  - [x] Test package imports without source code access
+  - [x] Verify package metadata consistency
+  - [x] Test package can query TfL API successfully
+- [x] **Live TfL API Integration Testing**
+  - [x] Create comprehensive tests against real TfL API
+  - [x] Implement proper rate limiting (1 req/sec)
+  - [x] Test multiple endpoints across different clients
+  - [x] Add graceful handling of API unavailability
+- [x] **Enhanced CI/CD Workflows**
+  - [x] Add Pydantic version matrix testing (2.8.2, latest)
+  - [x] Pin GitHub Actions by SHA for security
+  - [x] Enable full flake8 linting (not just syntax errors)
+  - [x] Add package validation to build workflow
+  - [x] Update workflows to test on Python 3.10-3.13
+- [x] **Model Validation Testing**
+  - [x] Test model deserialization with real TfL responses
+  - [x] Verify handling of optional fields and edge cases
+  - [x] Test coordinate validation and constraints
+  - [x] Validate ForwardRef resolution
+- [x] **Error Propagation Testing**
+  - [x] Test API errors are properly returned as ApiError objects
+  - [x] Verify network errors propagate to callers
+  - [x] Test timeout and connection error handling
+  - [x] Validate error objects contain useful debugging info
+- [x] **Schema Compatibility Testing**
+  - [x] Test handling of unknown fields from TfL API
+  - [x] Test missing optional fields gracefully handled
+  - [x] Test type coercion and null value handling
+  - [x] Monitor for breaking changes in core TfL endpoints
+- [x] **Coverage Reporting**
+  - [x] Configure comprehensive coverage settings
+  - [x] Enable CodeCov reporting in CI
+  - [x] Set 85% coverage target
+  - [x] Add coverage exclusions for appropriate code
+
+**Dependencies**: Phase 1, Phase 2, Phase 2.5
 **Blockers**: None
+**Note**: Merged Phase 7 CI/CD improvements into this phase for efficiency
 
 ---
 
 ### Phase 7: CI/CD Improvements
-**Status**: 🔴 Not Started
+
+**Status**: 🟡 Partially Complete (Core improvements merged into Phase 6)
 **Priority**: Medium
 
-- [ ] Update all GitHub Actions to use UV
-- [ ] update all github actions to latest versions and pin by sha
-- [ ] Add UV caching in CI
-- [ ] Enable CodeCov reporting
+- [x] Update all GitHub Actions to use UV
+- [x] Update GitHub Actions to latest versions and pin by SHA
+- [x] Add UV caching in CI
+- [x] Enable CodeCov reporting
 - [ ] Add mypy/pyright type checking
 - [ ] Implement breaking change detection
 - [ ] Add API compatibility checking
 - [ ] Setup pre-commit hooks with UV
 - [ ] Add documentation generation
-- [ ] **Improve Code Quality Standards**
-  - [ ] Enable full flake8 linting (currently only syntax errors E9,F63,F7,F82)
+- [x] **Improve Code Quality Standards**
+  - [x] Enable full flake8 linting (currently only syntax errors E9,F63,F7,F82)
   - [ ] Fix existing PEP 8 compliance issues in codebase
   - [ ] Add additional linting tools (isort, black --check)
   - [ ] Implement stricter type checking with mypy
@@ -194,14 +233,16 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 
 **Dependencies**: Phase 1, Phase 6
 **Blockers**: None
+**Note**: Core CI/CD improvements completed in Phase 6. Remaining items are code quality enhancements.
 
 ---
 
 ### Phase 8: Code Generation Enhancements
+
 **Status**: 🔴 Not Started
 **Priority**: Low
 
-- [ ] Add __slots__ to generated models
+- [ ] Add `__slots__` to generated models
 - [ ] Generate .pyi stub files
 - [ ] Extract and add docstrings from OpenAPI specs
 - [ ] Implement alphabetical ordering for all lists
@@ -216,6 +257,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 9: Documentation
+
 **Status**: 🔴 Not Started
 **Priority**: Low
 
@@ -234,6 +276,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 10: Monitoring & Maintenance
+
 **Status**: 🔴 Not Started
 **Priority**: Low
 
@@ -253,29 +296,32 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 
 ## Progress Summary
 
-| Phase | Status | Priority | Completion |
-|-------|--------|----------|------------|
-| 1. Package Manager Migration | ✅ Complete | High | 100% |
-| 2. Project Structure | ✅ Complete | High | 100% |
-| 2.5. Build Script Evaluation | ✅ Complete | High | 100% |
-| 3. Dependency Management | 🔴 Not Started | Medium | 0% |
-| 4. Pydantic v2 Completion | 🔴 Not Started | High | 0% |
-| 5. Build Automation | 🟡 Partial | High | 10% |
-| 6. Testing Enhancements | 🔴 Not Started | Medium | 0% |
-| 7. CI/CD Improvements | 🔴 Not Started | Medium | 0% |
-| 8. Code Gen Enhancements | 🔴 Not Started | Low | 0% |
-| 9. Documentation | 🔴 Not Started | Low | 0% |
-| 10. Monitoring | 🔴 Not Started | Low | 0% |
-**Overall Progress**: 32%
+| Phase                        | Status        | Priority | Completion |
+|------------------------------|---------------|----------|------------|
+| 1. Package Manager Migration | ✅ Complete    | High     | 100%       |
+| 2. Project Structure         | ✅ Complete    | High     | 100%       |
+| 2.5. Build Script Evaluation | ✅ Complete    | High     | 100%       |
+| 3. Dependency Management     | 🔴 Not Started | Medium   | 0%         |
+| 4. Pydantic v2 Completion    | 🔴 Not Started | High     | 0%         |
+| 5. Build Automation          | 🟡 Partial     | High     | 10%        |
+| 6. Testing Enhancements      | ✅ Complete    | High     | 100%       |
+| 7. CI/CD Improvements        | 🟡 Partial     | Medium   | 70%        |
+| 8. Code Gen Enhancements     | 🔴 Not Started | Low      | 0%         |
+| 9. Documentation             | 🔴 Not Started | Low      | 0%         |
+| 10. Monitoring               | 🔴 Not Started | Low      | 0%         |
+
+**Overall Progress**: 48%
 
 ---
 
 ## Key Files Created/Modified
 
 ### Created
+
 - ✅ `/scripts/fetch_tfl_specs.py` - Script to fetch TfL API specifications
 
 ### To Be Created
+
 - `/scripts/build_models.py` - Model generation script (moved from external)
 - `/scripts/mappings.py` - API mappings (moved from external)
 - `/.github/workflows/update_specs.yml` - Automated spec updates
@@ -284,6 +330,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 - `/MIGRATION.md` - Migration guide
 
 ### To Be Modified
+
 - `/pyproject.toml` - Convert from Poetry to UV
 - `/renovate.json` - Update for UV support
 - `/.github/workflows/*.yml` - Update all workflows for UV
@@ -295,17 +342,21 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ## Notes
 
 ### Discovered APIs
+
 Total of 20 APIs available from TfL portal:
+
 - Existing (14): AccidentStats, AirQuality, BikePoint, Crowding, Journey, Line, Mode, Occupancy, Place, Road, Search, StopPoint, Vehicle, Lift Disruptions - v2
 - New (6): API JPlive Public, Lift Disruptions (v1), NetworkStatus, Station Data, Status, Unified API
 
 ### Key Decisions
+
 1. **UV over Poetry**: Faster, better environment management
 2. **Keep OpenAPI 3.0 specs**: More detailed than unified Swagger 2.0
 3. **Public API endpoints**: No auth required for spec fetching
 4. **Incremental approach**: Phase-by-phase implementation
 
 ### Risks & Mitigations
+
 - **Risk**: Breaking changes in generated models
   - **Mitigation**: Comprehensive testing, version pinning, backwards compatibility tests
 - **Risk**: TfL API changes without notice
@@ -318,6 +369,7 @@ Total of 20 APIs available from TfL portal:
 ## Session Log
 
 ### 2025-09-28
+
 - Initial analysis of project structure
 - Discovered TfL portal API endpoints for spec fetching
 - Created `fetch_tfl_specs.py` script
@@ -330,7 +382,9 @@ Total of 20 APIs available from TfL portal:
 ### Phase 2.5 Build Script Evaluation Results
 
 #### Code Quality Review ✅ Complete
+
 **Critical Issues Fixed:**
+
 1. **Enum Member Uniqueness (Comment 2)**: Added duplicate checking with collision resolution using suffix counters
 2. **Type Resolution for $ref (Comment 3)**: Implemented proper ForwardRef usage instead of string-based references
 3. **Dict Model Handling (Comment 5)**: Fixed to explicitly handle both key and value types with validation
@@ -340,12 +394,14 @@ Total of 20 APIs available from TfL portal:
 7. **Import Issues**: Fixed relative import conflicts for better module compatibility
 
 #### Performance Analysis ✅ Complete
+
 - **Build Time**: Successfully processed all 20 TfL APIs in ~0.2 seconds
 - **Memory Usage**: Efficient processing with no memory leaks detected
 - **Output Generation**: Generated 117 model classes + supporting files (129 total files)
 - **Deduplication**: Successfully identified and merged 4 duplicate models
 
 #### Output Validation ✅ Complete
+
 - **Model Generation**: 129 files generated (same count as original)
 - **Type Safety**: Proper Optional types, ForwardRef usage, List/Dict handling
 - **Pydantic v2 Compliance**: Modernized `model_config` instead of `class Config`
@@ -353,27 +409,31 @@ Total of 20 APIs available from TfL portal:
 - **Functional Testing**: All generated models are syntactically correct
 
 #### Integration Testing ✅ Complete
+
 - **End-to-End Testing**: Full pipeline test with real OpenAPI specs successful
 - **Backward Compatibility**: Generated same number of models as original script
 - **Test Coverage**: Added deep nesting tests, mapping uniqueness tests
 - **Error Scenarios**: Proper error handling and logging verified
 
 #### Comparison with Original Implementation
-| Aspect | Original | Our Fixed Version | Improvement |
-|--------|----------|------------------|-------------|
-| **Model Count** | 129 files | 129 files | ✅ Same output |
-| **Pydantic Version** | 117 `class Config:` | 117 `model_config` | ✅ Full v2 migration |
-| **Code Quality** | 92 duplicate imports | 0 duplicate imports | ✅ Clean imports |
-| **Type Safety** | 551 Optional types | 561 Optional types | ✅ Better nullability |
-| **Reference Types** | String-based refs | ForwardRef objects | ✅ Type-safe refs |
-| **Error Handling** | Basic | Comprehensive logging | ✅ Robust errors |
-| **File Safety** | Direct overwrites | Timestamped backups | ✅ Protected |
-| **Dict Models** | `Dict[str, Any]` only | Proper key/value types | ✅ Better typing |
+
+| Aspect               | Original              | Our Fixed Version      | Improvement          |
+|----------------------|-----------------------|------------------------|----------------------|
+| **Model Count**      | 129 files             | 129 files              | ✅ Same output        |
+| **Pydantic Version** | 117 `class Config:`   | 117 `model_config`     | ✅ Full v2 migration  |
+| **Code Quality**     | 92 duplicate imports  | 0 duplicate imports    | ✅ Clean imports      |
+| **Type Safety**      | 551 Optional types    | 561 Optional types     | ✅ Better nullability |
+| **Reference Types**  | String-based refs     | ForwardRef objects     | ✅ Type-safe refs     |
+| **Error Handling**   | Basic                 | Comprehensive logging  | ✅ Robust errors      |
+| **File Safety**      | Direct overwrites     | Timestamped backups    | ✅ Protected          |
+| **Dict Models**      | `Dict[str, Any]` only | Proper key/value types | ✅ Better typing      |
 
 #### Decision: ✅ PROCEED WITH CURRENT SCRIPTS
+
 **Recommendation**: The build scripts are of **good quality** and suitable for production use after our fixes.
 
 **Rationale**:
+
 - All critical bugs have been fixed
 - Performance is excellent (sub-second execution)
 - Output quality is maintained while improving robustness
@@ -381,22 +441,27 @@ Total of 20 APIs available from TfL portal:
 - Scripts are now modernized for Pydantic v2
 
 #### Final Phase 2.5 Improvements Applied
+
 **Code Quality Enhancements**:
+
 - **Enhanced Name Sanitization (Comment 1)**: Improved to retain meaningful context from namespaced names (e.g., `Tfl.Api.Presentation.Entities.Mode` → `TflApiPresentationEntitiesMode` instead of just `Mode`)
 - **Sourcery Code Quality (Comments 12-30)**: Applied multiple improvements including merged nested if conditions, removed unnecessary `.keys()` calls, replaced if statements with if expressions, and used f-strings instead of string concatenation
 - **Test Parameterization (Comments 14-21)**: Refactored test loops to use pytest parameterization for better test clarity and maintainability
 
 **Bug Fixes Confirmed Working**:
+
 - All critical enum uniqueness, type resolution, Dict handling, and deduplication fixes working correctly
 - Import handling improvements functional
 - File backup protection active
 - Comprehensive error handling in place
 
 **Legacy Cleanup**:
+
 - Removed duplicate `build_script/` directory containing original unimproved version
 - Consolidated all improvements in `scripts/` directory
 
 ### Next Steps
+
 1. ✅ Complete Phase 2.5 Build Script Quality Evaluation
 2. Begin Phase 3: Dependency Management Improvements
 3. Begin Phase 4: Pydantic v2 Migration Completion
