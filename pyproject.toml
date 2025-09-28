@@ -1,6 +1,6 @@
 [project]
 name = "pydantic-tfl-api"
-version = "1.2.2"
+version = "1.2.3"
 description = "A Pydantic-based wrapper for the TfL Unified API https://api-portal.tfl.gov.uk/. Not associated with or endorsed by TfL."
 authors = [
     {name = "Rob Aleck", email = "mnbf9rca@users.noreply.github.com"}
@@ -80,7 +80,7 @@ exclude = [
 ]
 
 [tool.bumpversion]
-current_version = "1.2.2"
+current_version = "1.2.3"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
