@@ -8,7 +8,7 @@ from email.utils import parsedate_to_datetime, format_datetime
 # from importlib import import_module
 # import pkgutil
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, ConfigDict
 from datetime import datetime, timedelta, timezone
 from pydantic_tfl_api import models
 from pydantic_tfl_api.core import Client, RestClient, ApiError, ResponseModel
@@ -25,8 +25,7 @@ class PydanticTestModel(BaseModel):
     content_expires: datetime | None = None
     shared_expires: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 def test_create_client_with_api_token():

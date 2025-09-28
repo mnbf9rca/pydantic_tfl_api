@@ -30,7 +30,7 @@ from typing import (
     ForwardRef,
     Tuple,
 )
-from pydantic import BaseModel, RootModel, create_model, Field
+from pydantic import BaseModel, RootModel, create_model, Field, ConfigDict
 from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
@@ -297,10 +297,27 @@ def create_generic_response_model() -> Type[RootModel]:
     class GenericResponseModel(RootModel):
         root: Any
 
-        class Config:
-            arbitrary_types_allowed = True
+        model_config = ConfigDict(arbitrary_types_allowed=True)
 
     return GenericResponseModel
+
+
+def get_pydantic_imports(sanitized_model_name: str, is_root_model: bool) -> str:
+    """Get the appropriate pydantic imports based on model type and name."""
+    base_imports = ["RootModel"] if is_root_model else ["BaseModel", "Field"]
+
+    # Always include ConfigDict for consistent v2 patterns
+    imports = base_imports + ["ConfigDict"]
+
+    return f"from pydantic import {', '.join(imports)}"
+
+
+def get_model_config(sanitized_model_name: str) -> str:
+    """Get the appropriate model_config for the model."""
+    if sanitized_model_name == "GenericResponseModel":
+        return "model_config = ConfigDict(arbitrary_types_allowed=True)"
+    else:
+        return "model_config = ConfigDict(from_attributes=True)"
 
 
 # Save models and config to files
@@ -400,7 +417,7 @@ def save_model_file(
 
     with open(model_file, "w") as mf:
         if is_list_or_dict_model(model):
-            mf.write("from pydantic import RootModel\n")
+            mf.write(f"{get_pydantic_imports(sanitized_model_name, is_root_model=True)}\n")
             handle_list_or_dict_model(
                 mf,
                 model,
@@ -410,7 +427,6 @@ def save_model_file(
                 sanitized_model_name,
             )
         else:
-            # mf.write("from pydantic import BaseModel, Field\n")
             handle_regular_model(
                 mf,
                 model,
@@ -512,7 +528,8 @@ def handle_list_or_dict_model(
     # Write class definition
     model_file.write(f"\n\n{class_definition}")
 
-    model_file.write("\n    model_config = {'from_attributes': True}\n")
+    # Write model config using helper function
+    model_file.write(f"\n    {get_model_config(sanitized_model_name)}\n")
 
 
 def handle_regular_model(
@@ -534,11 +551,8 @@ def handle_regular_model(
 
     import_set = {f"from typing import {', '.join(typing_imports)}"}
 
-    # Add RootModel import if necessary
-    if is_root_model:
-        import_set.add("from pydantic import RootModel")
-    else:
-        import_set.add("from pydantic import BaseModel, Field")
+    # Add pydantic imports using helper function
+    import_set.add(get_pydantic_imports(sanitized_model_name, is_root_model))
 
     # Write imports for referenced models
     referenced_models = dependency_graph.get(sanitized_model_name, set())
@@ -566,7 +580,7 @@ def handle_regular_model(
         write_model_fields(model_file, model, models, circular_models)
 
     # Pydantic model config
-    model_file.write("\n    model_config = {'from_attributes': True}\n")
+    model_file.write(f"\n    {get_model_config(sanitized_model_name)}\n")
 
     # Add model_rebuild() if circular dependencies exist
     if sanitized_model_name in circular_models:
@@ -624,9 +638,15 @@ def write_model_fields(
         # Resolve the field's annotation to get the type string, including handling ForwardRefs
         field_type = resolve_forward_refs_in_annotation(field.annotation, models, circular_models)
 
-        model_file.write(
-            f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
-        )
+        # Only include alias if it differs from the original field name
+        if field.alias and field.alias != field_name:
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
+            )
+        else:
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None)\n"
+            )
 
 def write_enum_files(models: Dict[str, Type[BaseModel]], models_dir: str):
     """Write enum files directly from the model's fields."""
