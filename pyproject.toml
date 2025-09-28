@@ -76,6 +76,7 @@ exclude = [
     "venv",
     ".venv",
     "build_script",
+    "scripts",
 ]
 
 [tool.bumpversion]
