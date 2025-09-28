@@ -276,6 +276,7 @@ Total of 20 APIs available from TfL portal:
 ## Next Steps
 
 **Current Priority**: Continue with remaining high-priority phases:
+
 - Phase 3: Dependency Management Improvements
 - Phase 4: Pydantic v2 Migration Completion
 - Phase 5: Build Process Automation

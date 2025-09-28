@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "tfl_mappings_schema.json",
+  "title": "TfL API Mappings Schema",
+  "description": "Schema for TfL API type mappings used in model generation",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this JSON schema"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the mappings format"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when mappings were last updated"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Source URL for the mappings information"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the mappings source"
+        }
+      },
+      "required": ["url", "description"],
+      "additionalProperties": false
+    },
+    "apis": {
+      "type": "object",
+      "description": "Mapping configurations for each TfL API",
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9\\s]*$": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of this API"
+            },
+            "base_url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Base URL for this API"
+            },
+            "mappings": {
+              "type": "object",
+              "description": "Type mappings for this API",
+              "patternProperties": {
+                "^.+$": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Target type name for the source type"
+                }
+              },
+              "additionalProperties": false
+            },
+            "response_mappings": {
+              "type": "object",
+              "description": "Response type mappings for specific endpoints",
+              "patternProperties": {
+                ".*Get\\d{3}.*Response.*": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Response type for specific HTTP method and content type"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["mappings"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1
+    }
+  },
+  "required": ["version", "last_updated", "source", "apis"],
+  "additionalProperties": false
+}

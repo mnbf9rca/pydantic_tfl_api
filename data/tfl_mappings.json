@@ -1,22 +1,33 @@
-# mappings from https://techforum.tfl.gov.uk/t/swagger-file-outdated/2085/8
-# modified to be a dictionary of dictionaries
-# I then added specific response codes e.g. ids-Get200ApplicationJsonResponse as keys
-# previously PlaceCategory and StopPointCategory were both listed for each (as an array)
-# the TfL api does seem to differentiate them now
-
-
-tfl_mappings = {
+{
+  "$schema": "../schemas/tfl_mappings_schema.json",
+  "version": "1.0.0",
+  "last_updated": "2025-09-28T18:32:38.586085Z",
+  "source": {
+    "url": "https://techforum.tfl.gov.uk/t/swagger-file-outdated/2085/8",
+    "description": "TfL API type mappings from community forum, modified for response codes and differentiated categories"
+  },
+  "apis": {
     "AccidentStats": {
+      "description": "TfL accident statistics and casualty data",
+      "mappings": {
         "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray": "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray",
         "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-1": "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-1",
         "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-2": "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-2",
         "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-3": "Tfl-Api-Presentation-Entities-AccidentStats-AccidentDetailArray-3",
         "Tfl.Api.Presentation.Entities.AccidentStats.AccidentDetail": "Tfl.Api.Presentation.Entities.AccidentStats.AccidentDetail",
         "Tfl.Api.Presentation.Entities.AccidentStats.Casualty": "Tfl.Api.Presentation.Entities.AccidentStats.Casualty",
-        "Tfl.Api.Presentation.Entities.AccidentStats.Vehicle": "Tfl.Api.Presentation.Entities.AccidentStats.Vehicle",
+        "Tfl.Api.Presentation.Entities.AccidentStats.Vehicle": "Tfl.Api.Presentation.Entities.AccidentStats.Vehicle"
+      }
     },
-    "AirQuality": {"System.Object": "Tfl.Api.Presentation.Entities.LondonAirForecast"},
+    "AirQuality": {
+      "description": "London air quality forecasts and current data",
+      "mappings": {
+        "System.Object": "Tfl.Api.Presentation.Entities.LondonAirForecast"
+      }
+    },
     "BikePoint": {
+      "description": "Santander Cycles docking stations and bike availability",
+      "mappings": {
         "Tfl-Api-Presentation-Entities-PlaceArray": "PlaceArray",
         "Tfl.Api.Presentation.Entities.Place": "Tfl.Api.Presentation.Entities.Place",
         "Tfl.Api.Presentation.Entities.AdditionalProperties": "Tfl.Api.Presentation.Entities.AdditionalProperties",
@@ -26,13 +37,21 @@ tfl_mappings = {
         "Tfl-Api-Presentation-Entities-PlaceArray-4": "PlaceArray",
         "Tfl-Api-Presentation-Entities-PlaceArray-5": "PlaceArray",
         "Tfl-Api-Presentation-Entities-PlaceArray-6": "PlaceArray",
-        "Tfl-Api-Presentation-Entities-PlaceArray-7": "PlaceArray",
+        "Tfl-Api-Presentation-Entities-PlaceArray-7": "PlaceArray"
+      }
     },
     "Lift Disruptions": {
-        "LiftDisruption": "LiftDisruption",
-        "Get200ApplicationJsonResponse": "LiftDisruptionsArray",
+      "description": "Lift and escalator disruption information",
+      "mappings": {
+        "LiftDisruption": "LiftDisruption"
+      },
+      "response_mappings": {
+        "Get200ApplicationJsonResponse": "LiftDisruptionsArray"
+      }
     },
     "Journey": {
+      "description": "Journey planning and route calculation services",
+      "mappings": {
         "Tfl": "Tfl.Api.Presentation.Entities.Mode",
         "Tfl-10": "Tfl.Api.Presentation.Entities.Identifier",
         "Tfl-11": "Tfl.Api.Common.JourneyPlanner.JpElevation",
@@ -72,14 +91,62 @@ tfl_mappings = {
         "Tfl-6": "Tfl.Api.Presentation.Entities.Point",
         "Tfl-7": "Tfl.Api.Presentation.Entities.PassengerFlow",
         "Tfl-8": "Tfl.Api.Presentation.Entities.TrainLoading",
-        "Tfl-9": "Tfl.Api.Presentation.Entities.Crowding",
+        "Tfl-9": "Tfl.Api.Presentation.Entities.Crowding"
+      },
+      "response_mappings": {
         "MetaModesGet200ApplicationJsonResponse": "ModeArray",
         "MetaModesGet200TextJsonResponse": "ModeArray",
         "MetaModesGet200ApplicationXmlResponse": "ModeArray",
         "MetaModesGet200TextXmlResponse": "ModeArray",
-        "Get200ApplicationJsonResponse": "ObjectResponse",
+        "Get200ApplicationJsonResponse": "ObjectResponse"
+      }
     },
     "Line": {
+      "description": "Transport line information, status, and routes",
+      "mappings": {
+        "Tfl": "Tfl.Api.Presentation.Entities.Mode",
+        "Tfl-10": "Tfl.Api.Presentation.Entities.Place",
+        "Tfl-11": "Tfl.Api.Presentation.Entities.StopPoint",
+        "Tfl-12": "Tfl.Api.Presentation.Entities.RouteSectionNaptanEntrySequence",
+        "Tfl-13": "Tfl.Api.Presentation.Entities.RouteSection",
+        "Tfl-14": "Tfl.Api.Presentation.Entities.Disruption",
+        "Tfl-15": "Tfl.Api.Presentation.Entities.ValidityPeriod",
+        "Tfl-16": "Tfl.Api.Presentation.Entities.LineStatus",
+        "Tfl-17": "Tfl.Api.Presentation.Entities.MatchedRoute",
+        "Tfl-18": "Tfl.Api.Presentation.Entities.LineServiceTypeInfo",
+        "Tfl-19": "Tfl.Api.Presentation.Entities.Line",
+        "Tfl-2": "Tfl.Api.Presentation.Entities.StatusSeverity",
+        "Tfl-20": "Tfl.Api.Presentation.Entities.MatchedStop",
+        "Tfl-21": "Tfl.Api.Presentation.Entities.StopPointSequence",
+        "Tfl-22": "Tfl.Api.Presentation.Entities.OrderedRoute",
+        "Tfl-23": "Tfl.Api.Presentation.Entities.RouteSequence",
+        "Tfl-24": "Tfl.Api.Presentation.Entities.LineRouteSection",
+        "Tfl-25": "Tfl.Api.Presentation.Entities.MatchedRouteSections",
+        "Tfl-26": "Tfl.Api.Presentation.Entities.RouteSearchMatch",
+        "Tfl-27": "Tfl.Api.Presentation.Entities.RouteSearchResponse",
+        "Tfl-28": "Tfl.Api.Presentation.Entities.Interval",
+        "Tfl-29": "Tfl.Api.Presentation.Entities.StationInterval",
+        "Tfl-3": "Tfl.Api.Presentation.Entities.PassengerFlow",
+        "Tfl-30": "Tfl.Api.Presentation.Entities.KnownJourney",
+        "Tfl-31": "Tfl.Api.Presentation.Entities.TwentyFourHourClockTime",
+        "Tfl-32": "Tfl.Api.Presentation.Entities.ServiceFrequency",
+        "Tfl-33": "Tfl.Api.Presentation.Entities.Period",
+        "Tfl-34": "Tfl.Api.Presentation.Entities.Schedule",
+        "Tfl-35": "Tfl.Api.Presentation.Entities.TimetableRoute",
+        "Tfl-36": "Tfl.Api.Presentation.Entities.Timetable",
+        "Tfl-37": "Tfl.Api.Presentation.Entities.Timetables.DisambiguationOption",
+        "Tfl-38": "Tfl.Api.Presentation.Entities.Timetables.Disambiguation",
+        "Tfl-39": "Tfl.Api.Presentation.Entities.TimetableResponse",
+        "Tfl-4": "Tfl.Api.Presentation.Entities.TrainLoading",
+        "Tfl-40": "Tfl.Api.Presentation.Entities.PredictionTiming",
+        "Tfl-41": "Tfl.Api.Presentation.Entities.Prediction",
+        "Tfl-5": "Tfl.Api.Presentation.Entities.Crowding",
+        "Tfl-6": "Tfl.Api.Presentation.Entities.Identifier",
+        "Tfl-7": "Tfl.Api.Presentation.Entities.LineGroup",
+        "Tfl-8": "Tfl.Api.Presentation.Entities.LineModeGroup",
+        "Tfl-9": "Tfl.Api.Presentation.Entities.AdditionalProperties"
+      },
+      "response_mappings": {
         "MetaModesGet200ApplicationJsonResponse": "ModeArray",
         "MetaModesGet200TextJsonResponse": "ModeArray",
         "MetaModesGet200ApplicationXmlResponse": "ModeArray",
@@ -152,50 +219,12 @@ tfl_mappings = {
         "ids-ArrivalsGet200ApplicationJsonResponse": "PredictionArray",
         "ids-ArrivalsGet200TextJsonResponse": "PredictionArray",
         "ids-ArrivalsGet200ApplicationXmlResponse": "PredictionArray",
-        "ids-ArrivalsGet200TextXmlResponse": "PredictionArray",
-        "Tfl": "Tfl.Api.Presentation.Entities.Mode",
-        "Tfl-10": "Tfl.Api.Presentation.Entities.Place",
-        "Tfl-11": "Tfl.Api.Presentation.Entities.StopPoint",
-        "Tfl-12": "Tfl.Api.Presentation.Entities.RouteSectionNaptanEntrySequence",
-        "Tfl-13": "Tfl.Api.Presentation.Entities.RouteSection",
-        "Tfl-14": "Tfl.Api.Presentation.Entities.Disruption",
-        "Tfl-15": "Tfl.Api.Presentation.Entities.ValidityPeriod",
-        "Tfl-16": "Tfl.Api.Presentation.Entities.LineStatus",
-        "Tfl-17": "Tfl.Api.Presentation.Entities.MatchedRoute",
-        "Tfl-18": "Tfl.Api.Presentation.Entities.LineServiceTypeInfo",
-        "Tfl-19": "Tfl.Api.Presentation.Entities.Line",
-        "Tfl-2": "Tfl.Api.Presentation.Entities.StatusSeverity",
-        "Tfl-20": "Tfl.Api.Presentation.Entities.MatchedStop",
-        "Tfl-21": "Tfl.Api.Presentation.Entities.StopPointSequence",
-        "Tfl-22": "Tfl.Api.Presentation.Entities.OrderedRoute",
-        "Tfl-23": "Tfl.Api.Presentation.Entities.RouteSequence",
-        "Tfl-24": "Tfl.Api.Presentation.Entities.LineRouteSection",
-        "Tfl-25": "Tfl.Api.Presentation.Entities.MatchedRouteSections",
-        "Tfl-26": "Tfl.Api.Presentation.Entities.RouteSearchMatch",
-        "Tfl-27": "Tfl.Api.Presentation.Entities.RouteSearchResponse",
-        "Tfl-28": "Tfl.Api.Presentation.Entities.Interval",
-        "Tfl-29": "Tfl.Api.Presentation.Entities.StationInterval",
-        "Tfl-3": "Tfl.Api.Presentation.Entities.PassengerFlow",
-        "Tfl-30": "Tfl.Api.Presentation.Entities.KnownJourney",
-        "Tfl-31": "Tfl.Api.Presentation.Entities.TwentyFourHourClockTime",
-        "Tfl-32": "Tfl.Api.Presentation.Entities.ServiceFrequency",
-        "Tfl-33": "Tfl.Api.Presentation.Entities.Period",
-        "Tfl-34": "Tfl.Api.Presentation.Entities.Schedule",
-        "Tfl-35": "Tfl.Api.Presentation.Entities.TimetableRoute",
-        "Tfl-36": "Tfl.Api.Presentation.Entities.Timetable",
-        "Tfl-37": "Tfl.Api.Presentation.Entities.Timetables.DisambiguationOption",
-        "Tfl-38": "Tfl.Api.Presentation.Entities.Timetables.Disambiguation",
-        "Tfl-39": "Tfl.Api.Presentation.Entities.TimetableResponse",
-        "Tfl-4": "Tfl.Api.Presentation.Entities.TrainLoading",
-        "Tfl-40": "Tfl.Api.Presentation.Entities.PredictionTiming",
-        "Tfl-41": "Tfl.Api.Presentation.Entities.Prediction",
-        "Tfl-5": "Tfl.Api.Presentation.Entities.Crowding",
-        "Tfl-6": "Tfl.Api.Presentation.Entities.Identifier",
-        "Tfl-7": "Tfl.Api.Presentation.Entities.LineGroup",
-        "Tfl-8": "Tfl.Api.Presentation.Entities.LineModeGroup",
-        "Tfl-9": "Tfl.Api.Presentation.Entities.AdditionalProperties",
+        "ids-ArrivalsGet200TextXmlResponse": "PredictionArray"
+      }
     },
     "Mode": {
+      "description": "Transport mode definitions and service types",
+      "mappings": {
         "Tfl-Api-Presentation-Entities-ActiveServiceTypeArray": "ActiveServiceTypesArray",
         "Tfl.Api.Presentation.Entities.ActiveServiceType": "Tfl.Api.Presentation.Entities.ActiveServiceType",
         "Tfl-Api-Presentation-Entities-ActiveServiceTypeArray-1": "ActiveServiceTypesArray",
@@ -206,10 +235,25 @@ tfl_mappings = {
         "Tfl.Api.Presentation.Entities.PredictionTiming": "Tfl.Api.Presentation.Entities.PredictionTiming",
         "Tfl-Api-Presentation-Entities-PredictionArray-5": "PredictionArray",
         "Tfl-Api-Presentation-Entities-PredictionArray-6": "PredictionArray",
-        "Tfl-Api-Presentation-Entities-PredictionArray-7": "PredictionArray",
+        "Tfl-Api-Presentation-Entities-PredictionArray-7": "PredictionArray"
+      }
     },
     "Place": {
+      "description": "Points of interest and location services",
+      "mappings": {
         "System": "System.Object",
+        "Tfl": "Tfl.Api.Presentation.Entities.PlaceCategory",
+        "Tfl-10": "Tfl.Api.Presentation.Entities.StopPoint",
+        "Tfl-2": "Tfl.Api.Presentation.Entities.AdditionalProperties",
+        "Tfl-3": "Tfl.Api.Presentation.Entities.Place",
+        "Tfl-4": "Tfl.Api.Presentation.Entities.PassengerFlow",
+        "Tfl-5": "Tfl.Api.Presentation.Entities.TrainLoading",
+        "Tfl-6": "Tfl.Api.Presentation.Entities.Crowding",
+        "Tfl-7": "Tfl.Api.Presentation.Entities.Identifier",
+        "Tfl-8": "Tfl.Api.Presentation.Entities.LineGroup",
+        "Tfl-9": "Tfl.Api.Presentation.Entities.LineModeGroup"
+      },
+      "response_mappings": {
         "MetaCategoriesGet200ApplicationJsonResponse": "PlaceCategoryArray",
         "MetaCategoriesGet200TextJsonResponse": "PlaceCategoryArray",
         "MetaCategoriesGet200ApplicationXmlResponse": "PlaceCategoryArray",
@@ -234,19 +278,12 @@ tfl_mappings = {
         "SearchGet200ApplicationJsonResponse": "PlaceArray",
         "SearchGet200TextJsonResponse": "PlaceArray",
         "SearchGet200ApplicationXmlResponse": "PlaceArray",
-        "SearchGet200TextXmlResponse": "PlaceArray",
-        "Tfl": "Tfl.Api.Presentation.Entities.PlaceCategory",
-        "Tfl-10": "Tfl.Api.Presentation.Entities.StopPoint",
-        "Tfl-2": "Tfl.Api.Presentation.Entities.AdditionalProperties",
-        "Tfl-3": "Tfl.Api.Presentation.Entities.Place",
-        "Tfl-4": "Tfl.Api.Presentation.Entities.PassengerFlow",
-        "Tfl-5": "Tfl.Api.Presentation.Entities.TrainLoading",
-        "Tfl-6": "Tfl.Api.Presentation.Entities.Crowding",
-        "Tfl-7": "Tfl.Api.Presentation.Entities.Identifier",
-        "Tfl-8": "Tfl.Api.Presentation.Entities.LineGroup",
-        "Tfl-9": "Tfl.Api.Presentation.Entities.LineModeGroup",
+        "SearchGet200TextXmlResponse": "PlaceArray"
+      }
     },
     "Road": {
+      "description": "Road network status and traffic information",
+      "mappings": {
         "System": "System.Data.Spatial.DbGeographyWellKnownValue",
         "System-2": "System.Data.Spatial.DbGeography",
         "System-3": "System.Object",
@@ -258,7 +295,9 @@ tfl_mappings = {
         "Tfl-6": "Tfl.Api.Presentation.Entities.RoadDisruptionImpactArea",
         "Tfl-7": "Tfl.Api.Presentation.Entities.RoadDisruptionSchedule",
         "Tfl-8": "Tfl.Api.Presentation.Entities.RoadDisruption",
-        "Tfl-9": "Tfl.Api.Presentation.Entities.StatusSeverity",
+        "Tfl-9": "Tfl.Api.Presentation.Entities.StatusSeverity"
+      },
+      "response_mappings": {
         "Get200ApplicationJsonResponse": "RoadCorridorsArray",
         "Get200TextJsonResponse": "RoadCorridorsArray",
         "Get200ApplicationXmlResponse": "RoadCorridorsArray",
@@ -283,11 +322,16 @@ tfl_mappings = {
         "MetaSeveritiesGet200ApplicationJsonResponse": "StatusSeveritiesArray",
         "MetaSeveritiesGet200TextJsonResponse": "StatusSeveritiesArray",
         "MetaSeveritiesGet200ApplicationXmlResponse": "StatusSeveritiesArray",
-        "MetaSeveritiesGet200TextXmlResponse": "StatusSeveritiesArray",
+        "MetaSeveritiesGet200TextXmlResponse": "StatusSeveritiesArray"
+      }
     },
     "Search": {
+      "description": "Unified search across TfL services",
+      "mappings": {
         "Tfl": "Tfl.Api.Presentation.Entities.SearchMatch",
-        "Tfl-2": "Tfl.Api.Presentation.Entities.SearchResponse",
+        "Tfl-2": "Tfl.Api.Presentation.Entities.SearchResponse"
+      },
+      "response_mappings": {
         "MetaSearchProvidersGet200ApplicationJsonResponse": "StringsArray",
         "MetaSearchProvidersGet200TextJsonResponse": "StringsArray",
         "MetaSearchProvidersGet200ApplicationXmlResponse": "StringsArray",
@@ -299,9 +343,12 @@ tfl_mappings = {
         "MetaSortsGet200ApplicationJsonResponse": "StringsArray",
         "MetaSortsGet200TextJsonResponse": "StringsArray",
         "MetaSortsGet200ApplicationXmlResponse": "StringsArray",
-        "MetaSortsGet200TextXmlResponse": "StringsArray",
+        "MetaSortsGet200TextXmlResponse": "StringsArray"
+      }
     },
     "StopPoint": {
+      "description": "Bus stops, stations, and transport hubs",
+      "mappings": {
         "System": "System.Object",
         "Tfl": "Tfl.Api.Presentation.Entities.StopPointCategory",
         "Tfl-10": "Tfl.Api.Presentation.Entities.Place",
@@ -324,22 +371,35 @@ tfl_mappings = {
         "Tfl-6": "Tfl.Api.Presentation.Entities.Identifier",
         "Tfl-7": "Tfl.Api.Presentation.Entities.LineGroup",
         "Tfl-8": "Tfl.Api.Presentation.Entities.LineModeGroup",
-        "Tfl-9": "Tfl.Api.Presentation.Entities.AdditionalProperties",
+        "Tfl-9": "Tfl.Api.Presentation.Entities.AdditionalProperties"
+      }
     },
     "Vehicle": {
+      "description": "Vehicle position and real-time tracking",
+      "mappings": {
         "Tfl": "Tfl.Api.Presentation.Entities.PredictionTiming",
         "Tfl-2": "Tfl.Api.Presentation.Entities.Prediction",
-        "Tfl-3": "Tfl.Api.Presentation.Entities.VehicleMatch",
+        "Tfl-3": "Tfl.Api.Presentation.Entities.VehicleMatch"
+      },
+      "response_mappings": {
         "ids-ArrivalsGet200ApplicationJsonResponse": "PredictionArray",
         "ids-ArrivalsGet200TextJsonResponse": "PredictionArray",
         "ids-ArrivalsGet200ApplicationXmlResponse": "PredictionArray",
-        "ids-ArrivalsGet200TextXmlResponse": "PredictionArray",
+        "ids-ArrivalsGet200TextXmlResponse": "PredictionArray"
+      }
     },
-    "crowding": {},
+    "crowding": {
+      "description": "Platform and vehicle crowding information",
+      "mappings": {}
+    },
     "occupancy": {
+      "description": "Car park and bike point occupancy data",
+      "mappings": {
         "Tfl": "Tfl.Api.Presentation.Entities.Bay",
         "Tfl-2": "Tfl.Api.Presentation.Entities.CarParkOccupancy",
         "Tfl-3": "Tfl.Api.Presentation.Entities.ChargeConnectorOccupancy",
-        "Tfl-4": "Tfl.Api.Presentation.Entities.BikePointOccupancy",
-    },
+        "Tfl-4": "Tfl.Api.Presentation.Entities.BikePointOccupancy"
+      }
+    }
+  }
 }
