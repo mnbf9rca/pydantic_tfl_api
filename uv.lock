@@ -693,15 +693,15 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "black", specifier = ">=24.4.2" },
-    { name = "bump-my-version", specifier = ">=0.15.0" },
-    { name = "coverage", extras = ["toml"], specifier = ">=7.5.4" },
-    { name = "flake8", specifier = ">=7.1.0" },
+    { name = "black", specifier = ">=25.9.0" },
+    { name = "bump-my-version", specifier = ">=1.2.0" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.10.0" },
+    { name = "flake8", specifier = ">=7.3.0" },
     { name = "flake8-pyproject", specifier = ">=1.2.3" },
-    { name = "pre-commit", specifier = ">=3.8.0" },
-    { name = "pytest", specifier = ">=8.2.2" },
-    { name = "pytest-asyncio", specifier = ">=0.23.7" },
-    { name = "pytest-cov", specifier = ">=5.0.0" },
+    { name = "pre-commit", specifier = ">=4.3.0" },
+    { name = "pytest", specifier = ">=8.4.0" },
+    { name = "pytest-asyncio", specifier = ">=1.2.0" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
 ]
 
 [[package]]
