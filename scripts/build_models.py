@@ -34,7 +34,10 @@ from pydantic import BaseModel, RootModel, create_model, Field
 from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
-from mappings import tfl_mappings
+try:
+    from .mappings import tfl_mappings
+except ImportError:
+    from mappings import tfl_mappings
 
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.insert(0, src_path)
@@ -368,7 +371,7 @@ def save_models(
                 init_f,
             )
 
-        model_names = ',\n    '.join(f'"{key}"' for key in models.keys())
+        model_names = ',\n    '.join(f'"{key}"' for key in models)
         init_f.write(
             f"\n__all__ = [\n    {model_names}\n]\n"
         )
@@ -656,8 +659,7 @@ def sanitize_field_name(field_name: str) -> str:
     """Sanitize field names that are Python reserved keywords."""
     if keyword.iskeyword(field_name):
         logging.info(f"Field name '{field_name}' is a Python keyword, sanitizing to '{field_name}_field'")
-        return f"{field_name}_field"  # Append '_field' to reserved keywords
-    return field_name
+    return f"{field_name}_field" if keyword.iskeyword(field_name) else field_name
 
 
 def get_type_str(annotation: Any, models: Dict[str, Type[BaseModel]]) -> str:
@@ -803,7 +805,7 @@ def build_dependency_graph(
             )
 
     # finally, add any models which have zero dependencies
-    for model_name in models.keys():
+    for model_name in models:
         if model_name not in graph:
             graph[model_name] = set()
     return graph
@@ -960,14 +962,14 @@ def combine_components_and_paths(
 
     for spec in specs:
         api_name = get_api_name(spec)
-        api_path = "/" + spec.get("servers", [{}])[0].get("url", "").split("/", 3)[3]
+        api_path = f"/{spec.get('servers', [{}])[0].get('url', '').split('/', 3)[3]}"
         logging.info(f"Processing {api_name}")
         update_entities(spec, api_name, pydantic_names)
         combined_components.update(spec.get("components", {}).get("schemas", {}))
         these_paths = spec.get("paths", {})
         # add /api_path to the paths
         for path, methods in these_paths.items():
-            new_path = urljoin(api_path + "/", path.lstrip("/"))
+            new_path = urljoin(f"{api_path}/", path.lstrip("/"))
             combined_paths[new_path] = methods
         # combined_paths.update(spec.get("paths", {}))
 
@@ -1022,15 +1024,13 @@ def deduplicate_models(
 
         # Compare with already deduplicated models
         for dedup_model_name, dedup_model in deduplicated_models.items():
-            if isinstance(model, type) and isinstance(dedup_model, type):
-                # Compare Pydantic models
-                if are_models_equal(model, dedup_model):
-                    reference_map[model_name] = dedup_model_name
-                    found_duplicate = True
-                    logging.info(
-                        f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
-                    )
-                    break
+            if isinstance(model, type) and isinstance(dedup_model, type) and are_models_equal(model, dedup_model):
+                reference_map[model_name] = dedup_model_name
+                found_duplicate = True
+                logging.info(
+                    f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
+                )
+                break
 
             # Handle List models separately by comparing their inner types
             model_origin = get_origin(model)
@@ -1355,6 +1355,13 @@ def update_specs_with_model_changes(
     reference_map: Dict[str, str],
 ) -> List[Dict[str, Any]]:
     updated_specs = []
+
+    # Create reverse mapping from sanitized names back to original schema names
+    schema_name_mapping = {}
+    for schema_name in combined_components.keys():
+        sanitized = sanitize_name(schema_name)
+        schema_name_mapping[sanitized] = schema_name
+
     for spec in specs:
         updated_spec = spec.copy()
         if "components" in updated_spec and "schemas" in updated_spec["components"]:
@@ -1362,8 +1369,15 @@ def update_specs_with_model_changes(
             for schema_name, schema in updated_spec["components"]["schemas"].items():
                 sanitized_name = sanitize_name(schema_name)
                 if sanitized_name in reference_map:
-                    new_name = reference_map[sanitized_name]
-                    updated_schemas[new_name] = combined_components[new_name]
+                    # This is a duplicate, use the canonical model's schema
+                    canonical_name = reference_map[sanitized_name]
+                    # Find the original schema name for the canonical model
+                    if canonical_name in schema_name_mapping:
+                        original_schema_name = schema_name_mapping[canonical_name]
+                        updated_schemas[canonical_name] = combined_components[original_schema_name]
+                    else:
+                        # Fallback: use the current schema but with canonical name
+                        updated_schemas[canonical_name] = schema
                 else:
                     updated_schemas[sanitized_name] = schema
             updated_spec["components"]["schemas"] = updated_schemas

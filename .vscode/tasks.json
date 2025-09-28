@@ -4,7 +4,7 @@
     {
       "label": "clean up the pydantic_tfl_api folder",
       "type": "shell",
-      "command": "${workspaceFolder}/build_scripts/build.sh",
+      "command": "${workspaceFolder}/scripts/build.sh",
       "args": [
         "${workspaceFolder}/pydantic_tfl_api",
         "${workspaceFolder}/TfL_OpenAPI_specs",

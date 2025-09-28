@@ -19,40 +19,49 @@ class TestTflMappings:
         assert isinstance(tfl_mappings, dict)
         assert len(tfl_mappings) > 0
 
-    def test_known_apis_exist(self):
+    @pytest.mark.parametrize("api_name", [
+        "AccidentStats",
+        "AirQuality",
+        "BikePoint",
+        "Journey",
+        "Line",
+        "Mode",
+        "Place",
+        "Road",
+        "Search",
+        "StopPoint",
+        "Vehicle"
+    ])
+    def test_known_apis_exist(self, api_name):
         """Test that expected APIs have mappings."""
         from mappings import tfl_mappings
+        assert api_name in tfl_mappings, f"Expected API '{api_name}' not found in mappings"
 
-        expected_apis = [
-            "AccidentStats",
-            "AirQuality",
-            "BikePoint",
-            "Journey",
-            "Line",
-            "Mode",
-            "Place",
-            "Road",
-            "Search",
-            "StopPoint",
-            "Vehicle"
-        ]
-
-        for api in expected_apis:
-            assert api in tfl_mappings, f"Expected API '{api}' not found in mappings"
-
-    def test_mapping_structure(self):
-        """Test the structure of individual API mappings."""
+    def test_all_mappings_are_dictionaries(self):
+        """Test that all API mappings are dictionaries."""
         from mappings import tfl_mappings
 
         for api_name, mapping in tfl_mappings.items():
             assert isinstance(mapping, dict), f"Mapping for {api_name} should be a dictionary"
 
-            # Some APIs may have empty mappings (like 'crowding'), which is valid
-            if len(mapping) > 0:
-                # Check that all keys and values are strings
+    def test_mapping_keys_and_values_are_strings(self):
+        """Test that all mapping keys and values are strings."""
+        from mappings import tfl_mappings
+
+        for api_name, mapping in tfl_mappings.items():
+            if len(mapping) > 0:  # Some APIs may have empty mappings (like 'crowding'), which is valid
                 for old_name, new_name in mapping.items():
                     assert isinstance(old_name, str), f"Mapping key should be string in {api_name}"
                     assert isinstance(new_name, str), f"Mapping value should be string in {api_name}"
+
+    def test_mapping_names_are_non_empty(self):
+        """Test that mapping keys and values are non-empty."""
+        from mappings import tfl_mappings
+
+        for api_name, mapping in tfl_mappings.items():
+            for old_name, new_name in mapping.items():
+                assert old_name.strip(), f"Empty old name found in {api_name}"
+                assert new_name.strip(), f"Empty new name found in {api_name}"
 
     def test_specific_mappings(self):
         """Test specific known mappings."""

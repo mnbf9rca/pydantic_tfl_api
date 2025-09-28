@@ -76,6 +76,56 @@ class TestUpdateRefs:
         assert obj["items"][0]["$ref"] == "#/components/schemas/NewName"
         assert obj["items"][1]["other"] == "value"
 
+    def test_deeply_nested_array_ref_update(self):
+        """Test reference updates in deeply nested arrays."""
+        obj = {
+            "items": [
+                [
+                    {"$ref": "#/components/schemas/OldName"},
+                    [
+                        {"$ref": "#/components/schemas/OldName"},
+                        {"other": "value"}
+                    ]
+                ],
+                {"$ref": "#/components/schemas/OldName"}
+            ]
+        }
+        entity_mapping = {"OldName": "NewName"}
+        update_refs(obj, entity_mapping)
+        assert obj["items"][0][0]["$ref"] == "#/components/schemas/NewName"
+        assert obj["items"][0][1][0]["$ref"] == "#/components/schemas/NewName"
+        assert obj["items"][0][1][1]["other"] == "value"
+        assert obj["items"][1]["$ref"] == "#/components/schemas/NewName"
+
+    def test_mixed_type_structures_ref_update(self):
+        """Test reference updates in mixed-type structures (dicts, lists, primitives)."""
+        obj = {
+            "properties": {
+                "array": [
+                    {"$ref": "#/components/schemas/OldName"},
+                    123,
+                    "string",
+                    {"nested": [{"$ref": "#/components/schemas/OldName"}]}
+                ],
+                "dict": {
+                    "key": {"$ref": "#/components/schemas/OldName"},
+                    "list": [
+                        {"$ref": "#/components/schemas/OldName"},
+                        {"other": "value"}
+                    ]
+                }
+            }
+        }
+        entity_mapping = {"OldName": "NewName"}
+        update_refs(obj, entity_mapping)
+        assert obj["properties"]["array"][0]["$ref"] == "#/components/schemas/NewName"
+        assert obj["properties"]["array"][1] == 123
+        assert obj["properties"]["array"][2] == "string"
+        assert obj["properties"]["array"][3]["nested"][0]["$ref"] == "#/components/schemas/NewName"
+        assert obj["properties"]["dict"]["key"]["$ref"] == "#/components/schemas/NewName"
+        assert obj["properties"]["dict"]["list"][0]["$ref"] == "#/components/schemas/NewName"
+        assert obj["properties"]["dict"]["list"][1]["other"] == "value"
+
 
 class TestGetApiName:
     """Test the get_api_name function."""
@@ -186,16 +236,12 @@ class TestMappingsImport:
         except ImportError:
             pytest.skip("mappings module not available")
 
-    def test_mappings_structure(self):
-        """Test the structure of TfL mappings."""
+    @pytest.mark.parametrize("api_name", ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"])
+    def test_mappings_structure(self, api_name):
+        """Test the structure of specific TfL API mappings."""
         try:
             from mappings import tfl_mappings
-
-            # Check that known APIs have mappings
-            expected_apis = ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"]
-            for api in expected_apis:
-                if api in tfl_mappings:
-                    assert isinstance(tfl_mappings[api], dict)
-
+            if api_name in tfl_mappings:
+                assert isinstance(tfl_mappings[api_name], dict)
         except ImportError:
             pytest.skip("mappings module not available")
