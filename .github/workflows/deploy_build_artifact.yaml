@@ -64,8 +64,9 @@ jobs:
           python -m venv test_env
           source test_env/bin/activate
 
-          # Install the built wheel
-          pip install dist/*.whl
+          # Install the built wheel (explicitly specify the wheel file)
+          WHEEL_FILE=$(ls dist/*.whl | head -n 1)
+          pip install "$WHEEL_FILE"
 
           # Test basic imports
           python -c "

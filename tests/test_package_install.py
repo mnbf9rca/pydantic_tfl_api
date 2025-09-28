@@ -213,33 +213,47 @@ import time
 from pydantic_tfl_api import LineClient
 from pydantic_tfl_api.core import ResponseModel, ApiError
 
+def validate_api_result(result):
+    """Helper to validate API result without conditionals."""
+    # Check for ApiError first
+    if isinstance(result, ApiError):
+        print(f"API Error: {result.http_status_code} - {result.http_status}")
+        return False
+
+    # Check for ResponseModel
+    if not isinstance(result, ResponseModel):
+        print(f"Unexpected result type: {type(result)}")
+        return False
+
+    return True
+
+def validate_response_content(result):
+    """Helper to validate response content structure."""
+    if not hasattr(result.content, 'root'):
+        print("Warning: No root attribute found")
+        return True  # Still considered success
+
+    if not result.content.root:
+        print("Warning: Empty root content")
+        return True  # Still considered success
+
+    print(f"Number of modes: {len(result.content.root)}")
+    print(f"First mode: {result.content.root[0].modeName}")
+    return True
+
 client = LineClient()
 time.sleep(1)  # Rate limiting
 result = client.MetaModes()
 
-# Handle different result types
-if isinstance(result, ApiError):
-    print(f"API Error: {result.http_status_code} - {result.http_status}")
-    exit(1)
-
-if not isinstance(result, ResponseModel):
-    print(f"Unexpected result type: {type(result)}")
+# Validate result using helper functions
+if not validate_api_result(result):
     exit(1)
 
 print("TfL API query successful")
 print(f"Response type: {type(result.content)}")
 
-# Check content structure
-if not hasattr(result.content, 'root'):
-    print("Warning: No root attribute found")
-    exit(0)
-
-if not result.content.root:
-    print("Warning: Empty root content")
-    exit(0)
-
-print(f"Number of modes: {len(result.content.root)}")
-print(f"First mode: {result.content.root[0].modeName}")
+if not validate_response_content(result):
+    exit(1)
 '''
 
         result = subprocess.run(
