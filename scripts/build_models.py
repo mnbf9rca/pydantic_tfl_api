@@ -250,7 +250,7 @@ def create_pydantic_models(
         if model_spec.get("type") == "array":
             # Handle array models
             items_spec = model_spec.get("items")
-            if "$ref" in items_spec:
+            if items_spec and "$ref" in items_spec:
                 # Handle reference in 'items'
                 ref_model_name = sanitize_name(items_spec["$ref"].split("/")[-1])
                 if ref_model_name not in models:
