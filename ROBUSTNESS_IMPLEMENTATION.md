@@ -13,7 +13,7 @@ This document tracks the implementation of robustness improvements for pydantic-
 ✅ **Phase 1**: Package Manager Migration (100%) - UV migration complete
 ✅ **Phase 2**: Project Structure Reorganization (100%) - Scripts moved to proper locations
 ✅ **Phase 2.5**: Build Script Quality Evaluation (100%) - Scripts validated and improved
-✅ **Phase 6**: Testing Enhancements (100%) - Comprehensive test suite implemented
+✅ **Phase 6**: Testing Enhancements (100%) - Comprehensive test suite and mappings modernization
 
 ## Active Development Phases
 
@@ -112,10 +112,16 @@ This document tracks the implementation of robustness improvements for pydantic-
   - [x] Enable CodeCov reporting in CI
   - [x] Set 85% coverage target
   - [x] Add coverage exclusions for appropriate code
+- [x] **Mappings Architecture Modernization**
+  - [x] Replace hardcoded scripts/mappings.py with structured data/tfl_mappings.json
+  - [x] Add JSON Schema validation (schemas/tfl_mappings_schema.json)
+  - [x] Create modern mapping loader (scripts/mapping_loader.py) with backward compatibility
+  - [x] Replace 650+ brittle string tests with 28 schema-based tests
+  - [x] Fix all linting violations and apply modern Python patterns
 
 **Dependencies**: Phase 1, Phase 2, Phase 2.5
 **Blockers**: None
-**Note**: Merged Phase 7 CI/CD improvements into this phase for efficiency
+**Note**: Merged some Phase 7 CI/CD improvements and mappings modernization into this phase for efficiency
 
 ---
 
@@ -228,15 +234,27 @@ This document tracks the implementation of robustness improvements for pydantic-
 ### Created
 
 - ✅ `/scripts/fetch_tfl_specs.py` - Script to fetch TfL API specifications
+- ✅ `/data/tfl_mappings.json` - Structured mappings data
+- ✅ `/schemas/tfl_mappings_schema.json` - JSON Schema validation
+- ✅ `/scripts/mapping_loader.py` - Modern mapping loader
+- ✅ `/tests/test_mappings_schema.py` - Schema-based tests
+- ✅ `/tests/test_mappings_compatibility.py` - Backward compatibility tests
+
+### Removed/Replaced
+
+- 🗑️ `/scripts/mappings.py` - Replaced with JSON data
+- 🗑️ `/tests/test_mappings.py` - Replaced with schema tests
+
+### Modified
+
+- ✅ `/scripts/build_models.py` - Updated to use new mapping loader
+- ✅ `/tests/test_build_models.py` - Refactored for code quality
 
 ### To Be Created
 
 - `/scripts/build_models.py` - Model generation script (moved from external)
-- `/scripts/mappings.py` - API mappings (moved from external)
 - `/.github/workflows/update_specs.yml` - Automated spec updates
-- `/.github/workflows/test_matrix.yml` - Matrix testing
 - `/CONTRIBUTING.md` - Contribution guidelines
-- `/MIGRATION.md` - Migration guide
 
 ### To Be Modified
 
