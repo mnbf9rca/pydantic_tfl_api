@@ -13,7 +13,7 @@ pip install pydantic-tfl-api
 or
 
 ```bash
-poetry add pydantic-tfl-api
+uv add pydantic-tfl-api
 ```
 
 ## Usage
@@ -91,6 +91,13 @@ Here's a Mermaid visualisation of the Pydantic models (or [view online](https://
 
 # Development environment
 
-The devcontainer is set up to use the `poetry` package manager. You can use the `poetry` commands to manage the environment. The `poetry.lock` file is checked in, so you can use `poetry install --with dev --no-interaction --sync --no-root` to install the dependencies (which the devcontainer does on the `postCreateCommand` command).
+The devcontainer is set up to use the `uv` package manager. You can use the `uv` commands to manage the environment. The `uv.lock` file is checked in, so you can use `uv sync --all-extras --dev` to install the dependencies (which the devcontainer does on the `postCreateCommand` command).
 
-You can test the build by running `./build.sh "/workspaces/pydantic_tfl_api/pydantic_tfl_api" "/workspaces/pydantic_tfl_api/TfL_OpenAPI_specs" True` in the devcontainer. This will build the package and install it in the devcontainer. You can then run the tests with `pytest` in the `tests` directory.
+Common development commands:
+- `uv sync` - Install dependencies
+- `uv run pytest` - Run tests
+- `uv run black .` - Format code
+- `uv run flake8 .` - Lint code
+- `uv build` - Build the package
+
+You can test the build by running `./build.sh "/workspaces/pydantic_tfl_api/pydantic_tfl_api" "/workspaces/pydantic_tfl_api/TfL_OpenAPI_specs" True` in the devcontainer. This will build the package and install it in the devcontainer. You can then run the tests with `uv run pytest` in the `tests` directory.

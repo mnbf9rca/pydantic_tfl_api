@@ -28,35 +28,27 @@ jobs:
     steps:
 
 
-      - name: Set up Python
-        uses: actions/setup-python@v5 # v5
-        with:
-          python-version: 3.12
-
-      - name: install poetry
-        uses: snok/install-poetry@v1 # v1
-        with:
-          # use latest poetry version
-          # version: 1.8.3 # pin the version as they keep changing their APIs
-          virtualenvs-create: false
-          virtualenvs-in-project: false
-
       - name: check out code
         uses: actions/checkout@v4 # v4
         with:
           fetch-depth: 1
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
       - name: Install dependencies
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          poetry install --with dev --no-interaction --sync
-          python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
+        run: uv sync --all-extras --dev
 
       - name: Build
         id: Build
         run: |
-          version=$(poetry version | awk '{print $2}')
+          version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version is $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
@@ -64,7 +56,7 @@ jobs:
           echo "artifact_name is $artifact_name"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
-          poetry build
+          uv build
 
       - name: attest artifacts
         id: attest-artifacts
