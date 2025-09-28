@@ -125,6 +125,7 @@ exclude = [
     "venv",
     ".venv",
     "build_script",
+    "pydantic_tfl_api/",
 ]
 
 [tool.ruff.lint]
@@ -148,10 +149,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Generated model files can be more lenient with naming conventions
-"pydantic_tfl_api/models/*.py" = ["N801", "N815", "F401", "N999"]
-# Generated endpoint files maintain TfL API naming conventions
-"pydantic_tfl_api/endpoints/*.py" = ["N802", "N999", "N803"]
 # Test files can use assert statements and non-standard naming
 "tests/*.py" = ["S101", "N801", "N999", "N802", "N803"]
 # Scripts can be more lenient
