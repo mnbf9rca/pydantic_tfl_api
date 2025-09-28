@@ -1,10 +1,10 @@
-from requests import Response
 import json
 
-from pydantic_tfl_api import Client
-# from pydantic_tfl_api.config import endpoints
-from tests.config_for_tests import response_to_request_mapping
+from requests import Response
 
+from pydantic_tfl_api.core import Client
+
+# from pydantic_tfl_api.config import endpoints
 
 app_key = "APPLICATION KEY"
 

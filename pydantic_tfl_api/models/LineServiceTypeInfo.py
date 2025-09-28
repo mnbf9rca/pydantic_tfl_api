@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineServiceTypeInfo(BaseModel):
-    name: Optional[str] = Field(None, alias='name')
-    uri: Optional[str] = Field(None, alias='uri')
+    name: str | None = Field(None)
+    uri: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

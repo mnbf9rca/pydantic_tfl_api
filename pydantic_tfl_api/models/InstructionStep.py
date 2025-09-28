@@ -1,23 +1,22 @@
 from .PathAttribute import PathAttribute
 from .SkyDirectionDescriptionEnum import SkyDirectionDescriptionEnum
 from .TrackTypeEnum import TrackTypeEnum
-from pydantic import BaseModel, Field
-from typing import Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class InstructionStep(BaseModel):
-    description: Optional[str] = Field(None, alias='description')
-    turnDirection: Optional[str] = Field(None, alias='turnDirection')
-    streetName: Optional[str] = Field(None, alias='streetName')
-    distance: Optional[int] = Field(None, alias='distance')
-    cumulativeDistance: Optional[int] = Field(None, alias='cumulativeDistance')
-    skyDirection: Optional[int] = Field(None, alias='skyDirection')
-    skyDirectionDescription: Optional[SkyDirectionDescriptionEnum] = Field(None, alias='skyDirectionDescription')
-    cumulativeTravelTime: Optional[int] = Field(None, alias='cumulativeTravelTime')
-    latitude: Optional[float] = Field(None, alias='latitude')
-    longitude: Optional[float] = Field(None, alias='longitude')
-    pathAttribute: Optional[PathAttribute] = Field(None, alias='pathAttribute')
-    descriptionHeading: Optional[str] = Field(None, alias='descriptionHeading')
-    trackType: Optional[TrackTypeEnum] = Field(None, alias='trackType')
+    description: str | None = Field(None)
+    turnDirection: str | None = Field(None)
+    streetName: str | None = Field(None)
+    distance: int | None = Field(None)
+    cumulativeDistance: int | None = Field(None)
+    skyDirection: int | None = Field(None)
+    skyDirectionDescription: SkyDirectionDescriptionEnum | None = Field(None)
+    cumulativeTravelTime: int | None = Field(None)
+    latitude: float | None = Field(None)
+    longitude: float | None = Field(None)
+    pathAttribute: PathAttribute | None = Field(None)
+    descriptionHeading: str | None = Field(None)
+    trackType: TrackTypeEnum | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

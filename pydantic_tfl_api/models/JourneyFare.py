@@ -1,12 +1,11 @@
 from .Fare import Fare
 from .FareCaveat import FareCaveat
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class JourneyFare(BaseModel):
-    totalCost: Optional[int] = Field(None, alias='totalCost')
-    fares: Optional[list[Fare]] = Field(None, alias='fares')
-    caveats: Optional[list[FareCaveat]] = Field(None, alias='caveats')
+    totalCost: int | None = Field(None)
+    fares: list[Fare] | None = Field(None)
+    caveats: list[FareCaveat] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

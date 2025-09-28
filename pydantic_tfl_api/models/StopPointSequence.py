@@ -1,17 +1,17 @@
 from .MatchedStop import MatchedStop
 from .ServiceTypeEnum import ServiceTypeEnum
-from pydantic import BaseModel, Field
-from typing import List, Match, Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Match
 
 
 class StopPointSequence(BaseModel):
-    lineId: Optional[str] = Field(None, alias='lineId')
-    lineName: Optional[str] = Field(None, alias='lineName')
-    direction: Optional[str] = Field(None, alias='direction')
-    branchId: Optional[int] = Field(None, alias='branchId')
-    nextBranchIds: Optional[list[int]] = Field(None, alias='nextBranchIds')
-    prevBranchIds: Optional[list[int]] = Field(None, alias='prevBranchIds')
-    stopPoint: Optional[list[MatchedStop]] = Field(None, alias='stopPoint')
-    serviceType: Optional[ServiceTypeEnum] = Field(None, alias='serviceType')
+    lineId: str | None = Field(None)
+    lineName: str | None = Field(None)
+    direction: str | None = Field(None)
+    branchId: int | None = Field(None)
+    nextBranchIds: list[int] | None = Field(None)
+    prevBranchIds: list[int] | None = Field(None)
+    stopPoint: list[MatchedStop] | None = Field(None)
+    serviceType: ServiceTypeEnum | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

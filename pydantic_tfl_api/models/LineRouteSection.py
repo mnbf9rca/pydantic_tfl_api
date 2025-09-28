@@ -1,14 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineRouteSection(BaseModel):
-    routeId: Optional[int] = Field(None, alias='routeId')
-    direction: Optional[str] = Field(None, alias='direction')
-    destination: Optional[str] = Field(None, alias='destination')
-    fromStation: Optional[str] = Field(None, alias='fromStation')
-    toStation: Optional[str] = Field(None, alias='toStation')
-    serviceType: Optional[str] = Field(None, alias='serviceType')
-    vehicleDestinationText: Optional[str] = Field(None, alias='vehicleDestinationText')
+    routeId: int | None = Field(None)
+    direction: str | None = Field(None)
+    destination: str | None = Field(None)
+    fromStation: str | None = Field(None)
+    toStation: str | None = Field(None)
+    serviceType: str | None = Field(None)
+    vehicleDestinationText: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

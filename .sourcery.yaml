@@ -1,0 +1,5 @@
+# Sourcery configuration
+# Ignore auto-generated files that shouldn't be manually edited
+
+ignore:
+  - pydantic_tfl_api/*  # Auto-generated Pydantic models and client code

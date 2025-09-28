@@ -1,19 +1,18 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StopPointRouteSection(BaseModel):
-    naptanId: Optional[str] = Field(None, alias='naptanId')
-    lineId: Optional[str] = Field(None, alias='lineId')
-    mode: Optional[str] = Field(None, alias='mode')
-    validFrom: Optional[str] = Field(None, alias='validFrom')
-    validTo: Optional[str] = Field(None, alias='validTo')
-    direction: Optional[str] = Field(None, alias='direction')
-    routeSectionName: Optional[str] = Field(None, alias='routeSectionName')
-    lineString: Optional[str] = Field(None, alias='lineString')
-    isActive: Optional[bool] = Field(None, alias='isActive')
-    serviceType: Optional[str] = Field(None, alias='serviceType')
-    vehicleDestinationText: Optional[str] = Field(None, alias='vehicleDestinationText')
-    destinationName: Optional[str] = Field(None, alias='destinationName')
+    naptanId: str | None = Field(None)
+    lineId: str | None = Field(None)
+    mode: str | None = Field(None)
+    validFrom: str | None = Field(None)
+    validTo: str | None = Field(None)
+    direction: str | None = Field(None)
+    routeSectionName: str | None = Field(None)
+    lineString: str | None = Field(None)
+    isActive: bool | None = Field(None)
+    serviceType: str | None = Field(None)
+    vehicleDestinationText: str | None = Field(None)
+    destinationName: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

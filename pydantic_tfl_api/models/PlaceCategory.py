@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class PlaceCategory(BaseModel):
-    category: Optional[str] = Field(None, alias='category')
-    availableKeys: Optional[list[str]] = Field(None, alias='availableKeys')
+    category: str | None = Field(None)
+    availableKeys: list[str] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

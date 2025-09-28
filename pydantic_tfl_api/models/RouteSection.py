@@ -1,19 +1,19 @@
 from .RouteSectionNaptanEntrySequence import RouteSectionNaptanEntrySequence
-from pydantic import BaseModel, Field
-from typing import List, Optional, Sequence
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Sequence
 
 
 class RouteSection(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    lineId: Optional[str] = Field(None, alias='lineId')
-    routeCode: Optional[str] = Field(None, alias='routeCode')
-    name: Optional[str] = Field(None, alias='name')
-    lineString: Optional[str] = Field(None, alias='lineString')
-    direction: Optional[str] = Field(None, alias='direction')
-    originationName: Optional[str] = Field(None, alias='originationName')
-    destinationName: Optional[str] = Field(None, alias='destinationName')
-    validTo: Optional[str] = Field(None, alias='validTo')
-    validFrom: Optional[str] = Field(None, alias='validFrom')
-    routeSectionNaptanEntrySequence: Optional[list[RouteSectionNaptanEntrySequence]] = Field(None, alias='routeSectionNaptanEntrySequence')
+    id: str | None = Field(None)
+    lineId: str | None = Field(None)
+    routeCode: str | None = Field(None)
+    name: str | None = Field(None)
+    lineString: str | None = Field(None)
+    direction: str | None = Field(None)
+    originationName: str | None = Field(None)
+    destinationName: str | None = Field(None)
+    validTo: str | None = Field(None)
+    validFrom: str | None = Field(None)
+    routeSectionNaptanEntrySequence: list[RouteSectionNaptanEntrySequence] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

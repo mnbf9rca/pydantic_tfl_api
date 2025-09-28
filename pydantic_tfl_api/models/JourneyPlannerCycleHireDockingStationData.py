@@ -1,13 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class JourneyPlannerCycleHireDockingStationData(BaseModel):
-    originNumberOfBikes: Optional[int] = Field(None, alias='originNumberOfBikes')
-    destinationNumberOfBikes: Optional[int] = Field(None, alias='destinationNumberOfBikes')
-    originNumberOfEmptySlots: Optional[int] = Field(None, alias='originNumberOfEmptySlots')
-    destinationNumberOfEmptySlots: Optional[int] = Field(None, alias='destinationNumberOfEmptySlots')
-    originId: Optional[str] = Field(None, alias='originId')
-    destinationId: Optional[str] = Field(None, alias='destinationId')
+    originNumberOfBikes: int | None = Field(None)
+    destinationNumberOfBikes: int | None = Field(None)
+    originNumberOfEmptySlots: int | None = Field(None)
+    destinationNumberOfEmptySlots: int | None = Field(None)
+    originId: str | None = Field(None)
+    destinationId: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

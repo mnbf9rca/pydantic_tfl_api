@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TimeAdjustment(BaseModel):
-    date: Optional[str] = Field(None, alias='date')
-    time: Optional[str] = Field(None, alias='time')
-    timeIs: Optional[str] = Field(None, alias='timeIs')
-    uri: Optional[str] = Field(None, alias='uri')
+    date: str | None = Field(None)
+    time: str | None = Field(None)
+    timeIs: str | None = Field(None)
+    uri: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -5,9 +5,10 @@ This replaces the brittle string-based tests with robust schema validation.
 """
 
 import json
-import pytest
 from pathlib import Path
-from jsonschema import validate, ValidationError, Draft7Validator
+
+import pytest
+from jsonschema import Draft7Validator, ValidationError, validate
 
 
 class TestTflMappingsSchema:
@@ -17,14 +18,14 @@ class TestTflMappingsSchema:
     def schema(self):
         """Load the JSON schema for TfL mappings."""
         schema_path = Path(__file__).parent.parent / "schemas" / "tfl_mappings_schema.json"
-        with open(schema_path, 'r', encoding='utf-8') as f:
+        with open(schema_path, encoding='utf-8') as f:
             return json.load(f)
 
     @pytest.fixture(scope="class")
     def mappings_data(self):
         """Load the TfL mappings JSON data."""
         mappings_path = Path(__file__).parent.parent / "data" / "tfl_mappings.json"
-        with open(mappings_path, 'r', encoding='utf-8') as f:
+        with open(mappings_path, encoding='utf-8') as f:
             return json.load(f)
 
     def test_schema_is_valid(self, schema):
@@ -157,7 +158,7 @@ class TestTflMappingsSchema:
             f"{api_name}.{response_key}"
             for api_name, api_data in apis.items()
             if "response_mappings" in api_data
-            for response_key in api_data["response_mappings"].keys()
+            for response_key in api_data["response_mappings"]
             if "Get" not in response_key
         ]
 

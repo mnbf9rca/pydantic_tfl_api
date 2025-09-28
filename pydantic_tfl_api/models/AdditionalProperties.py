@@ -1,12 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class AdditionalProperties(BaseModel):
-    category: Optional[str] = Field(None, alias='category')
-    key: Optional[str] = Field(None, alias='key')
-    sourceSystemKey: Optional[str] = Field(None, alias='sourceSystemKey')
-    value: Optional[str] = Field(None, alias='value')
-    modified: Optional[str] = Field(None, alias='modified')
+    category: str | None = Field(None)
+    key: str | None = Field(None)
+    sourceSystemKey: str | None = Field(None)
+    value: str | None = Field(None)
+    modified: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

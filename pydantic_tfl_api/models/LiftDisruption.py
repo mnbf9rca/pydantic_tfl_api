@@ -1,13 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LiftDisruption(BaseModel):
-    icsCode: Optional[str] = Field(None, alias='icsCode')
-    naptanCode: Optional[str] = Field(None, alias='naptanCode')
-    stopPointName: Optional[str] = Field(None, alias='stopPointName')
-    outageStartArea: Optional[str] = Field(None, alias='outageStartArea')
-    outageEndArea: Optional[str] = Field(None, alias='outageEndArea')
-    message: Optional[str] = Field(None, alias='message')
+    icsCode: str | None = Field(None)
+    naptanCode: str | None = Field(None)
+    stopPointName: str | None = Field(None)
+    outageStartArea: str | None = Field(None)
+    outageEndArea: str | None = Field(None)
+    message: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

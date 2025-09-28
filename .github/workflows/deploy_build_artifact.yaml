@@ -45,6 +45,16 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
+      - name: Lint with ruff
+        run: |
+          # Check for syntax errors and style issues - fail build if issues found
+          uv run ruff check . --output-format=github
+
+      - name: Type check with mypy
+        run: |
+          # Type check the codebase - fail build if type errors found
+          uv run mypy
+
       - name: Build
         id: Build
         run: |

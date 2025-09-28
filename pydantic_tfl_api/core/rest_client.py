@@ -21,15 +21,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import requests
 # try:
 from urllib.parse import urlencode, urljoin
+
+import requests
 from requests import Response
+
 # except ImportError:
 #     from urllib import urlencode
 # from config import base_url
 
-class RestClient():
+class RestClient:
     """RestClient.
 
     :param str app_key: App key to access TfL unified API
@@ -58,4 +60,4 @@ class RestClient():
             params = {}
         # drop params that are None
         return urlencode({k: v for k, v in params.items() if v is not None})
-    
+

@@ -1,12 +1,11 @@
 from .TimeAdjustment import TimeAdjustment
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TimeAdjustments(BaseModel):
-    earliest: Optional[TimeAdjustment] = Field(None, alias='earliest')
-    earlier: Optional[TimeAdjustment] = Field(None, alias='earlier')
-    later: Optional[TimeAdjustment] = Field(None, alias='later')
-    latest: Optional[TimeAdjustment] = Field(None, alias='latest')
+    earliest: TimeAdjustment | None = Field(None)
+    earlier: TimeAdjustment | None = Field(None)
+    later: TimeAdjustment | None = Field(None)
+    latest: TimeAdjustment | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

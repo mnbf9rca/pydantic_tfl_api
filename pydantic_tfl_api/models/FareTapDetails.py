@@ -1,13 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class FareTapDetails(BaseModel):
-    modeType: Optional[str] = Field(None, alias='modeType')
-    validationType: Optional[str] = Field(None, alias='validationType')
-    hostDeviceType: Optional[str] = Field(None, alias='hostDeviceType')
-    busRouteId: Optional[str] = Field(None, alias='busRouteId')
-    nationalLocationCode: Optional[int] = Field(None, alias='nationalLocationCode')
-    tapTimestamp: Optional[str] = Field(None, alias='tapTimestamp')
+    modeType: str | None = Field(None)
+    validationType: str | None = Field(None)
+    hostDeviceType: str | None = Field(None)
+    busRouteId: str | None = Field(None)
+    nationalLocationCode: int | None = Field(None)
+    tapTimestamp: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

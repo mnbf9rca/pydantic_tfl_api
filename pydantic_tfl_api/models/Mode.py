@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Mode(BaseModel):
-    isTflService: Optional[bool] = Field(None, alias='isTflService')
-    isFarePaying: Optional[bool] = Field(None, alias='isFarePaying')
-    isScheduledService: Optional[bool] = Field(None, alias='isScheduledService')
-    modeName: Optional[str] = Field(None, alias='modeName')
+    isTflService: bool | None = Field(None)
+    isFarePaying: bool | None = Field(None)
+    isScheduledService: bool | None = Field(None)
+    modeName: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

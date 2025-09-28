@@ -9,12 +9,12 @@ This module tests that the built pydantic-tfl-api package:
 5. Can successfully query the TfL API
 """
 
-import os
+import shutil
 import subprocess
 import sys
 import tempfile
-import shutil
 from pathlib import Path
+
 import pytest
 
 
@@ -189,8 +189,7 @@ class TestPackageInstallation:
 
         # Read version from pyproject.toml
         project_root = Path(__file__).parent.parent
-        with open(project_root / "pyproject.toml", "r") as f:
-            content = f.read()
+        content = (project_root / "pyproject.toml").read_text()
 
         # Extract version from pyproject.toml
         import re
@@ -264,7 +263,7 @@ if not validate_response_content(result):
         )
 
         print(f"API test output: {result.stdout}")
-        if result.stderr:
+        if result.stderr:  # sourcery skip: no-conditionals-in-tests
             print(f"API test errors: {result.stderr}")
 
         assert result.returncode == 0, f"TfL API query failed: {result.stderr}"

@@ -1,12 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class BikePointOccupancy(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    name: Optional[str] = Field(None, alias='name')
-    bikesCount: Optional[int] = Field(None, alias='bikesCount')
-    emptyDocks: Optional[int] = Field(None, alias='emptyDocks')
-    totalDocks: Optional[int] = Field(None, alias='totalDocks')
+    id: str | None = Field(None)
+    name: str | None = Field(None)
+    bikesCount: int | None = Field(None)
+    emptyDocks: int | None = Field(None)
+    totalDocks: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

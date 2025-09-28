@@ -1,15 +1,14 @@
 from .DbGeography import DbGeography
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadDisruptionImpactArea(BaseModel):
-    id: Optional[int] = Field(None, alias='id')
-    roadDisruptionId: Optional[str] = Field(None, alias='roadDisruptionId')
-    polygon: Optional[DbGeography] = Field(None, alias='polygon')
-    startDate: Optional[str] = Field(None, alias='startDate')
-    endDate: Optional[str] = Field(None, alias='endDate')
-    startTime: Optional[str] = Field(None, alias='startTime')
-    endTime: Optional[str] = Field(None, alias='endTime')
+    id: int | None = Field(None)
+    roadDisruptionId: str | None = Field(None)
+    polygon: DbGeography | None = Field(None)
+    startDate: str | None = Field(None)
+    endDate: str | None = Field(None)
+    startTime: str | None = Field(None)
+    endTime: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

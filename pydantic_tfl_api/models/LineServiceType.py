@@ -1,10 +1,9 @@
 from .LineSpecificServiceType import LineSpecificServiceType
-from pydantic import BaseModel, Field
-from typing import List, Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineServiceType(BaseModel):
-    lineName: Optional[str] = Field(None, alias='lineName')
-    lineSpecificServiceTypes: Optional[list[LineSpecificServiceType]] = Field(None, alias='lineSpecificServiceTypes')
+    lineName: str | None = Field(None)
+    lineSpecificServiceTypes: list[LineSpecificServiceType] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

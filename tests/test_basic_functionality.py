@@ -11,13 +11,12 @@ models work with real TfL responses. No mocks or samples needed.
 """
 
 import time
+from contextlib import suppress
+
 import pytest
 
-from pydantic_tfl_api.core import ResponseModel, ApiError
-from pydantic_tfl_api.endpoints import (
-    LineClient, StopPointClient, BikePointClient,
-    JourneyClient, ModeClient
-)
+from pydantic_tfl_api.core import ApiError, ResponseModel
+from pydantic_tfl_api.endpoints import BikePointClient, JourneyClient, LineClient, ModeClient, StopPointClient
 
 
 class TestBasicFunctionality:
@@ -28,16 +27,29 @@ class TestBasicFunctionality:
         """Respect TfL rate limiting between tests."""
         time.sleep(1.1)
 
+    def _validate_response_model(self, result, expected_type=ResponseModel):
+        """Helper to validate ResponseModel content consistently."""
+        assert isinstance(result, expected_type), f"Expected {expected_type.__name__}, got {type(result)}"
+        assert result.content is not None, "Response should have content"
+
+    def _validate_journey_result(self, result):
+        """Helper to validate journey results which can be ResponseModel or ApiError."""
+        if isinstance(result, ResponseModel):
+            assert result.content is not None, "ResponseModel should have content"
+        elif isinstance(result, ApiError):
+            # ApiError is also valid - indicates parsing worked but API returned an error
+            assert result.http_status_code is not None, "ApiError should have status code"
+        else:
+            pytest.fail(f"Unexpected result type: {type(result)}")
+
     @pytest.fixture(scope="class")
     def api_health_check(self):
         """Skip tests if TfL API is unavailable."""
         import requests
-        try:
+        with suppress(Exception):
             response = requests.get("https://api.tfl.gov.uk/", timeout=10)
             if response.status_code == 200:
                 return True
-        except Exception:
-            pass
         pytest.skip("TfL API unavailable - skipping basic functionality tests")
 
     def test_line_client_basic_query(self, api_health_check):
@@ -46,8 +58,7 @@ class TestBasicFunctionality:
         result = client.MetaModes()
 
         # Should get ResponseModel, not ApiError
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_line_client_tube_status(self, api_health_check):
         """Test LineClient can get tube line status."""
@@ -55,8 +66,7 @@ class TestBasicFunctionality:
         result = client.StatusByModeByPathModesQueryDetailQuerySeverityLevel("tube")
 
         # Should parse without errors
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_stoppoint_client_basic_query(self, api_health_check):
         """Test StopPointClient can query TfL and parse response."""
@@ -64,8 +74,7 @@ class TestBasicFunctionality:
         result = client.MetaModes()
 
         # Should parse without errors
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_stoppoint_client_by_type(self, api_health_check):
         """Test StopPointClient can get stops by type."""
@@ -73,8 +82,7 @@ class TestBasicFunctionality:
         result = client.GetByTypeByPathTypes("NaptanMetroStation")
 
         # Should parse without errors
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_bikepoint_client_basic_query(self, api_health_check):
         """Test BikePointClient can query TfL and parse response."""
@@ -82,8 +90,7 @@ class TestBasicFunctionality:
         result = client.GetAll()
 
         # Should parse without errors
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_mode_client_basic_query(self, api_health_check):
         """Test ModeClient can query TfL and parse response."""
@@ -91,8 +98,7 @@ class TestBasicFunctionality:
         result = client.GetActiveServiceTypes()
 
         # Should parse without errors
-        assert isinstance(result, ResponseModel), f"Expected ResponseModel, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        self._validate_response_model(result)
 
     def test_journey_client_basic_query(self, api_health_check):
         """Test JourneyClient can query TfL and parse response."""
@@ -103,8 +109,10 @@ class TestBasicFunctionality:
         # Should parse without errors (ResponseModel or ApiError both indicate parsing worked)
         assert isinstance(result, (ResponseModel, ApiError)), f"Expected ResponseModel or ApiError, got {type(result)}"
 
-        # Additional validation for ResponseModel is moved to helper method
-        self._validate_response_if_successful(result)
+        # If we got a ResponseModel, validate it has content
+        # If we got an ApiError, that's also valid (could be network/API issue)
+        # Both outcomes indicate successful parsing, which is what we're testing here
+        self._validate_journey_result(result)
 
     def test_journey_client_invalid_station_codes(self, api_health_check):
         """Test JourneyClient returns ApiError for ambiguous or invalid station codes."""
@@ -125,9 +133,3 @@ class TestBasicFunctionality:
         assert hasattr(result, 'http_status_code'), "ApiError should have status code"
         assert hasattr(result, 'http_status'), "ApiError should have status message"
 
-    def _validate_response_if_successful(self, result):
-        """Helper to validate ResponseModel content without conditionals in main test."""
-        # Only validates if it's a ResponseModel (avoid conditional logic in tests)
-        if not isinstance(result, ResponseModel):
-            return  # Skip validation for ApiError cases
-        assert result.content is not None, "Response should have content"

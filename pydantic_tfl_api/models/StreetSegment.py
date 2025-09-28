@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StreetSegment(BaseModel):
-    toid: Optional[str] = Field(None, alias='toid')
-    lineString: Optional[str] = Field(None, alias='lineString')
-    sourceSystemId: Optional[int] = Field(None, alias='sourceSystemId')
-    sourceSystemKey: Optional[str] = Field(None, alias='sourceSystemKey')
+    toid: str | None = Field(None)
+    lineString: str | None = Field(None)
+    sourceSystemId: int | None = Field(None)
+    sourceSystemKey: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

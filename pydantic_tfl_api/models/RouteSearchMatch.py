@@ -1,21 +1,21 @@
 from .LineRouteSection import LineRouteSection
 from .MatchedRouteSections import MatchedRouteSections
 from .MatchedStop import MatchedStop
-from pydantic import BaseModel, Field
-from typing import List, Match, Optional
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Match
 
 
 class RouteSearchMatch(BaseModel):
-    lineId: Optional[str] = Field(None, alias='lineId')
-    mode: Optional[str] = Field(None, alias='mode')
-    lineName: Optional[str] = Field(None, alias='lineName')
-    lineRouteSection: Optional[list[LineRouteSection]] = Field(None, alias='lineRouteSection')
-    matchedRouteSections: Optional[list[MatchedRouteSections]] = Field(None, alias='matchedRouteSections')
-    matchedStops: Optional[list[MatchedStop]] = Field(None, alias='matchedStops')
-    id: Optional[str] = Field(None, alias='id')
-    url: Optional[str] = Field(None, alias='url')
-    name: Optional[str] = Field(None, alias='name')
-    lat: Optional[float] = Field(None, alias='lat')
-    lon: Optional[float] = Field(None, alias='lon')
+    lineId: str | None = Field(None)
+    mode: str | None = Field(None)
+    lineName: str | None = Field(None)
+    lineRouteSection: list[LineRouteSection] | None = Field(None)
+    matchedRouteSections: list[MatchedRouteSections] | None = Field(None)
+    matchedStops: list[MatchedStop] | None = Field(None)
+    id: str | None = Field(None)
+    url: str | None = Field(None)
+    name: str | None = Field(None)
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

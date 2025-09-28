@@ -4,9 +4,10 @@ Script to fetch TfL API specifications from the API portal and reconstruct OpenA
 """
 
 import json
-import requests
-from typing import Dict, List, Any
 from pathlib import Path
+from typing import Any
+
+import requests
 
 
 class TfLAPIFetcher:
@@ -18,7 +19,7 @@ class TfLAPIFetcher:
     def __init__(self):
         self.session = requests.Session()
 
-    def get_all_apis(self) -> List[Dict[str, Any]]:
+    def get_all_apis(self) -> list[dict[str, Any]]:
         """Get list of all available APIs."""
         url = f"{self.BASE_URL}/developer/apis"
         params = {"api-version": self.API_VERSION}
@@ -29,7 +30,7 @@ class TfLAPIFetcher:
         data = response.json()
         return data.get("value", [])
 
-    def get_api_details(self, api_id: str) -> Dict[str, Any]:
+    def get_api_details(self, api_id: str) -> dict[str, Any]:
         """Get detailed information about a specific API."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}"
         params = {
@@ -42,7 +43,7 @@ class TfLAPIFetcher:
 
         return response.json()
 
-    def get_api_operations(self, api_id: str) -> List[Dict[str, Any]]:
+    def get_api_operations(self, api_id: str) -> list[dict[str, Any]]:
         """Get all operations for a specific API."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}/operations"
         params = {
@@ -56,7 +57,7 @@ class TfLAPIFetcher:
         data = response.json()
         return data.get("value", [])
 
-    def get_operation_details(self, api_id: str, operation_id: str) -> Dict[str, Any]:
+    def get_operation_details(self, api_id: str, operation_id: str) -> dict[str, Any]:
         """Get detailed information about a specific operation."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}/operations/{operation_id}"
         params = {"api-version": self.API_VERSION}
@@ -66,7 +67,7 @@ class TfLAPIFetcher:
 
         return response.json()
 
-    def get_schema(self, api_id: str, schema_id: str) -> Dict[str, Any]:
+    def get_schema(self, api_id: str, schema_id: str) -> dict[str, Any]:
         """Get schema definition."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}/schemas/{schema_id}"
         params = {"api-version": self.API_VERSION}
@@ -76,7 +77,7 @@ class TfLAPIFetcher:
 
         return response.json()
 
-    def build_openapi_spec(self, api_id: str) -> Dict[str, Any]:
+    def build_openapi_spec(self, api_id: str) -> dict[str, Any]:
         """Build a complete OpenAPI 3.0 specification for an API."""
         print(f"Building OpenAPI spec for {api_id}...")
 
@@ -87,7 +88,7 @@ class TfLAPIFetcher:
         operations = self.get_api_operations(api_id)
 
         # Initialize OpenAPI spec structure
-        openapi_spec = {
+        openapi_spec: dict[str, Any] = {
             "openapi": "3.0.1",
             "info": {
                 "title": api_details.get("name", api_id),

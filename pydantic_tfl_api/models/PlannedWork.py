@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class PlannedWork(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    description: Optional[str] = Field(None, alias='description')
-    createdDateTime: Optional[str] = Field(None, alias='createdDateTime')
-    lastUpdateDateTime: Optional[str] = Field(None, alias='lastUpdateDateTime')
+    id: str | None = Field(None)
+    description: str | None = Field(None)
+    createdDateTime: str | None = Field(None)
+    lastUpdateDateTime: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -52,13 +52,13 @@ class TestMappingsBackwardCompatibility:
         assert len(line_mappings) > 0
 
         # All values should be strings
-        non_string_keys = [k for k in line_mappings.keys() if not isinstance(k, str)]
+        non_string_keys = [k for k in line_mappings if not isinstance(k, str)]
         assert not non_string_keys, f"Non-string keys found: {non_string_keys}"
 
         non_string_values = [v for v in line_mappings.values() if not isinstance(v, str)]
         assert not non_string_values, f"Non-string values found: {non_string_values}"
 
-        empty_keys = [k for k in line_mappings.keys() if len(k.strip()) == 0]
+        empty_keys = [k for k in line_mappings if len(k.strip()) == 0]
         assert not empty_keys, f"Empty keys found: {empty_keys}"
 
         empty_values = [v for v in line_mappings.values() if len(v.strip()) == 0]

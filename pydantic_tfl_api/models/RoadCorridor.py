@@ -1,17 +1,16 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadCorridor(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    displayName: Optional[str] = Field(None, alias='displayName')
-    group: Optional[str] = Field(None, alias='group')
-    statusSeverity: Optional[str] = Field(None, alias='statusSeverity')
-    statusSeverityDescription: Optional[str] = Field(None, alias='statusSeverityDescription')
-    bounds: Optional[str] = Field(None, alias='bounds')
-    envelope: Optional[str] = Field(None, alias='envelope')
-    statusAggregationStartDate: Optional[str] = Field(None, alias='statusAggregationStartDate')
-    statusAggregationEndDate: Optional[str] = Field(None, alias='statusAggregationEndDate')
-    url: Optional[str] = Field(None, alias='url')
+    id: str | None = Field(None)
+    displayName: str | None = Field(None)
+    group: str | None = Field(None)
+    statusSeverity: str | None = Field(None)
+    statusSeverityDescription: str | None = Field(None)
+    bounds: str | None = Field(None)
+    envelope: str | None = Field(None)
+    statusAggregationStartDate: str | None = Field(None)
+    statusAggregationEndDate: str | None = Field(None)
+    url: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

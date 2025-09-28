@@ -1,21 +1,20 @@
 from .CategoryEnum import CategoryEnum
 from .RouteSection import RouteSection
 from .StopPoint import StopPoint
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Disruption(BaseModel):
-    category: Optional[CategoryEnum] = Field(None, alias='category')
-    type: Optional[str] = Field(None, alias='type')
-    categoryDescription: Optional[str] = Field(None, alias='categoryDescription')
-    description: Optional[str] = Field(None, alias='description')
-    summary: Optional[str] = Field(None, alias='summary')
-    additionalInfo: Optional[str] = Field(None, alias='additionalInfo')
-    created: Optional[str] = Field(None, alias='created')
-    lastUpdate: Optional[str] = Field(None, alias='lastUpdate')
-    affectedRoutes: Optional[list[RouteSection]] = Field(None, alias='affectedRoutes')
-    affectedStops: Optional[list[StopPoint]] = Field(None, alias='affectedStops')
-    closureText: Optional[str] = Field(None, alias='closureText')
+    category: CategoryEnum | None = Field(None)
+    type: str | None = Field(None)
+    categoryDescription: str | None = Field(None)
+    description: str | None = Field(None)
+    summary: str | None = Field(None)
+    additionalInfo: str | None = Field(None)
+    created: str | None = Field(None)
+    lastUpdate: str | None = Field(None)
+    affectedRoutes: list[RouteSection] | None = Field(None)
+    affectedStops: list[StopPoint] | None = Field(None)
+    closureText: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

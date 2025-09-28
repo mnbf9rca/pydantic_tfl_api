@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ChargeConnectorOccupancy(BaseModel):
-    id: Optional[int] = Field(None, alias='id')
-    sourceSystemPlaceId: Optional[str] = Field(None, alias='sourceSystemPlaceId')
-    status: Optional[str] = Field(None, alias='status')
+    id: int | None = Field(None)
+    sourceSystemPlaceId: str | None = Field(None)
+    status: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

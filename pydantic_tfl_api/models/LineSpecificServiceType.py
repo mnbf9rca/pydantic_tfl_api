@@ -1,10 +1,9 @@
 from .LineServiceTypeInfo import LineServiceTypeInfo
-from pydantic import BaseModel, Field
-from typing import Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineSpecificServiceType(BaseModel):
-    serviceType: Optional[LineServiceTypeInfo] = Field(None, alias='serviceType')
-    stopServesServiceType: Optional[bool] = Field(None, alias='stopServesServiceType')
+    serviceType: LineServiceTypeInfo | None = Field(None)
+    stopServesServiceType: bool | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

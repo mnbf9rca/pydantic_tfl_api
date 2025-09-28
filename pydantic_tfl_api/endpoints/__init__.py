@@ -1,49 +1,50 @@
 from typing import Literal
-from .AccidentStatsClient import AccidentStatsClient
-from .AirQualityClient import AirQualityClient
-from .BikePointClient import BikePointClient
-from .CrowdingClient import CrowdingClient
-from .JourneyClient import JourneyClient
-from .LiftDisruptionsClient import LiftDisruptionsClient
+
 from .LineClient import LineClient
-from .ModeClient import ModeClient
+from .AirQualityClient import AirQualityClient
 from .OccupancyClient import OccupancyClient
-from .PlaceClient import PlaceClient
-from .RoadClient import RoadClient
-from .SearchClient import SearchClient
-from .StopPointClient import StopPointClient
 from .VehicleClient import VehicleClient
+from .CrowdingClient import CrowdingClient
+from .BikePointClient import BikePointClient
+from .SearchClient import SearchClient
+from .AccidentStatsClient import AccidentStatsClient
+from .JourneyClient import JourneyClient
+from .RoadClient import RoadClient
+from .PlaceClient import PlaceClient
+from .ModeClient import ModeClient
+from .StopPointClient import StopPointClient
+from .LiftDisruptionsClient import LiftDisruptionsClient
 
 TfLEndpoint = Literal[
-    'AccidentStatsClient',
-    'AirQualityClient',
-    'BikePointClient',
-    'CrowdingClient',
-    'JourneyClient',
-    'LiftDisruptionsClient',
     'LineClient',
-    'ModeClient',
+    'AirQualityClient',
     'OccupancyClient',
-    'PlaceClient',
-    'RoadClient',
+    'VehicleClient',
+    'CrowdingClient',
+    'BikePointClient',
     'SearchClient',
+    'AccidentStatsClient',
+    'JourneyClient',
+    'RoadClient',
+    'PlaceClient',
+    'ModeClient',
     'StopPointClient',
-    'VehicleClient'
+    'LiftDisruptionsClient'
 ]
 
 __all__ = [
-    'AccidentStatsClient',
-    'AirQualityClient',
-    'BikePointClient',
-    'CrowdingClient',
-    'JourneyClient',
-    'LiftDisruptionsClient',
     'LineClient',
-    'ModeClient',
+    'AirQualityClient',
     'OccupancyClient',
-    'PlaceClient',
-    'RoadClient',
+    'VehicleClient',
+    'CrowdingClient',
+    'BikePointClient',
     'SearchClient',
+    'AccidentStatsClient',
+    'JourneyClient',
+    'RoadClient',
+    'PlaceClient',
+    'ModeClient',
     'StopPointClient',
-    'VehicleClient'
+    'LiftDisruptionsClient'
 ]

@@ -1,14 +1,13 @@
 from .ComplianceEnum import ComplianceEnum
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class VehicleMatch(BaseModel):
-    vrm: Optional[str] = Field(None, alias='vrm')
-    type: Optional[str] = Field(None, alias='type')
-    make: Optional[str] = Field(None, alias='make')
-    model: Optional[str] = Field(None, alias='model')
-    colour: Optional[str] = Field(None, alias='colour')
-    compliance: Optional[ComplianceEnum] = Field(None, alias='compliance')
+    vrm: str | None = Field(None)
+    type: str | None = Field(None)
+    make: str | None = Field(None)
+    model: str | None = Field(None)
+    colour: str | None = Field(None)
+    compliance: ComplianceEnum | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -1,10 +1,9 @@
 from .FareTapDetails import FareTapDetails
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class FareTap(BaseModel):
-    atcoCode: Optional[str] = Field(None, alias='atcoCode')
-    tapDetails: Optional[FareTapDetails] = Field(None, alias='tapDetails')
+    atcoCode: str | None = Field(None)
+    tapDetails: FareTapDetails | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

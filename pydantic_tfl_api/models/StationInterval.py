@@ -1,10 +1,9 @@
 from .Interval import Interval
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StationInterval(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    intervals: Optional[list[Interval]] = Field(None, alias='intervals')
+    id: str | None = Field(None)
+    intervals: list[Interval] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

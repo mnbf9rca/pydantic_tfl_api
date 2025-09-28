@@ -1,17 +1,16 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class DisruptedPoint(BaseModel):
-    atcoCode: Optional[str] = Field(None, alias='atcoCode')
-    fromDate: Optional[str] = Field(None, alias='fromDate')
-    toDate: Optional[str] = Field(None, alias='toDate')
-    description: Optional[str] = Field(None, alias='description')
-    commonName: Optional[str] = Field(None, alias='commonName')
-    type: Optional[str] = Field(None, alias='type')
-    mode: Optional[str] = Field(None, alias='mode')
-    stationAtcoCode: Optional[str] = Field(None, alias='stationAtcoCode')
-    appearance: Optional[str] = Field(None, alias='appearance')
-    additionalInformation: Optional[str] = Field(None, alias='additionalInformation')
+    atcoCode: str | None = Field(None)
+    fromDate: str | None = Field(None)
+    toDate: str | None = Field(None)
+    description: str | None = Field(None)
+    commonName: str | None = Field(None)
+    type: str | None = Field(None)
+    mode: str | None = Field(None)
+    stationAtcoCode: str | None = Field(None)
+    appearance: str | None = Field(None)
+    additionalInformation: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class DisambiguationOption(BaseModel):
-    description: Optional[str] = Field(None, alias='description')
-    uri: Optional[str] = Field(None, alias='uri')
+    description: str | None = Field(None)
+    uri: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

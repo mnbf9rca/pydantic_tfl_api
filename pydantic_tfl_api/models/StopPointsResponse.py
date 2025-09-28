@@ -1,13 +1,12 @@
 from .StopPoint import StopPoint
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StopPointsResponse(BaseModel):
-    centrePoint: Optional[list[float]] = Field(None, alias='centrePoint')
-    stopPoints: Optional[list[StopPoint]] = Field(None, alias='stopPoints')
-    pageSize: Optional[int] = Field(None, alias='pageSize')
-    total: Optional[int] = Field(None, alias='total')
-    page: Optional[int] = Field(None, alias='page')
+    centrePoint: list[float] | None = Field(None)
+    stopPoints: list[StopPoint] | None = Field(None)
+    pageSize: int | None = Field(None)
+    total: int | None = Field(None)
+    page: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

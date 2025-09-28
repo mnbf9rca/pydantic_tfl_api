@@ -1,18 +1,17 @@
 from .Disruption import Disruption
 from .ValidityPeriod import ValidityPeriod
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineStatus(BaseModel):
-    id: Optional[int] = Field(None, alias='id')
-    lineId: Optional[str] = Field(None, alias='lineId')
-    statusSeverity: Optional[int] = Field(None, alias='statusSeverity')
-    statusSeverityDescription: Optional[str] = Field(None, alias='statusSeverityDescription')
-    reason: Optional[str] = Field(None, alias='reason')
-    created: Optional[str] = Field(None, alias='created')
-    modified: Optional[str] = Field(None, alias='modified')
-    validityPeriods: Optional[list[ValidityPeriod]] = Field(None, alias='validityPeriods')
-    disruption: Optional[Disruption] = Field(None, alias='disruption')
+    id: int | None = Field(None)
+    lineId: str | None = Field(None)
+    statusSeverity: int | None = Field(None)
+    statusSeverityDescription: str | None = Field(None)
+    reason: str | None = Field(None)
+    created: str | None = Field(None)
+    modified: str | None = Field(None)
+    validityPeriods: list[ValidityPeriod] | None = Field(None)
+    disruption: Disruption | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

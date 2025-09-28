@@ -1,11 +1,10 @@
 from .Schedule import Schedule
 from .StationInterval import StationInterval
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TimetableRoute(BaseModel):
-    stationIntervals: Optional[list[StationInterval]] = Field(None, alias='stationIntervals')
-    schedules: Optional[list[Schedule]] = Field(None, alias='schedules')
+    stationIntervals: list[StationInterval] | None = Field(None)
+    schedules: list[Schedule] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

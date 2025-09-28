@@ -1,22 +1,22 @@
-import pytest
 import json
-import os
-from unittest.mock import Mock, patch, MagicMock
-from requests.models import Response
-from email.utils import parsedate_to_datetime, format_datetime
+from datetime import datetime, timedelta, timezone
+from email.utils import format_datetime, parsedate_to_datetime
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # from importlib import import_module
 # import pkgutil
+from pydantic import BaseModel, ConfigDict, ValidationError
+from requests.models import Response
 
-from pydantic import BaseModel, ValidationError, ConfigDict
-from datetime import datetime, timedelta, timezone
 from pydantic_tfl_api import models
-from pydantic_tfl_api.core import Client, RestClient, ApiError, ResponseModel
+from pydantic_tfl_api.core import ApiError, Client, ResponseModel, RestClient
 
 
 # Mock models module
 class MockModel(BaseModel):
-    pass
+    key: str
 
 
 class PydanticTestModel(BaseModel):
@@ -32,7 +32,7 @@ def test_create_client_with_api_token():
     # checks that the API key is being passed to the RestClient
     api_token = "your_app_key"
     test_client = Client(api_token)
-    assert test_client.client.app_key["app_key"] == api_token
+    assert test_client.client.app_key is not None and test_client.client.app_key["app_key"] == api_token
 
 
 @pytest.mark.parametrize(
@@ -80,46 +80,12 @@ def test_create_client_with_api_token():
             None,
             None,
         ),
-        # Error cases
-        (
-            PydanticTestModel,
-            {"name": "Alice"},
-            datetime(2023, 12, 31),
-            datetime(2024, 12, 31, 23, 59, 59),
-            None,
-            None,
-            None,
-            None,
-        ),  # Missing age
-        (
-            PydanticTestModel,
-            {"age": 30},
-            datetime(2023, 12, 31),
-            datetime(2024, 12, 31, 23, 59, 59),
-            None,
-            None,
-            None,
-            None,
-        ),  # Missing name
-        (
-            PydanticTestModel,
-            {"name": "Alice", "age": "thirty"},
-            datetime(2023, 12, 31),
-            datetime(2024, 12, 31, 23, 59, 59),
-            None,
-            None,
-            None,
-            None,
-        ),  # Invalid age type
     ],
     ids=[
         "happy_path_with_expiry",
         "happy_path_without_expiry",
         "edge_case_empty_name_and_zero_age",
         "edge_case_negative_age",
-        "error_case_missing_age",
-        "error_case_missing_name",
-        "error_case_invalid_age_type",
     ],
 )
 def test_create_model_instance(
@@ -133,26 +99,70 @@ def test_create_model_instance(
     expected_shared_expiry,
 ):
     # Act
+    client = Client()
     response_json_parsed = json.loads(json.dumps(response_json))
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
-    if expected_name is None:
-        with pytest.raises(ValidationError):
-            Client._create_model_instance(
-                None, Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
-            )
-    else:
-        instance = Client._create_model_instance(
-            None, Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
-        )
 
-        assert isinstance(instance, ResponseModel)
-        assert instance.content_expires == expected_expiry
-        assert instance.shared_expires == expected_shared_expiry
-        assert instance.response_timestamp == response_date_time
-        instance_content = instance.content
-        assert isinstance(instance_content, Model)
-        assert instance_content.name == expected_name
-        assert instance_content.age == expected_age
+    # Create model instance
+    instance = client._create_model_instance(
+        Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
+    )
+
+    # Assertions
+    assert isinstance(instance, ResponseModel)
+    assert instance.content_expires == expected_expiry
+    assert instance.shared_expires == expected_shared_expiry
+    assert instance.response_timestamp == response_date_time
+    instance_content = instance.content
+    assert isinstance(instance_content, Model)
+    assert instance_content.name == expected_name
+    assert instance_content.age == expected_age
+
+
+# Error cases for model instance creation
+@pytest.mark.parametrize(
+    "Model, response_json, result_expiry, shared_expiry",
+    [
+        (
+            PydanticTestModel,
+            {"name": "Alice"},  # Missing age
+            datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+        ),
+        (
+            PydanticTestModel,
+            {"age": 30},  # Missing name
+            datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+        ),
+        (
+            PydanticTestModel,
+            {"name": "Alice", "age": "thirty"},  # Invalid age type
+            datetime(2023, 12, 31),
+            datetime(2024, 12, 31, 23, 59, 59),
+        ),
+    ],
+    ids=[
+        "error_case_missing_age",
+        "error_case_missing_name",
+        "error_case_invalid_age_type",
+    ],
+)
+def test_create_model_instance_validation_errors(
+    Model,
+    response_json,
+    result_expiry,
+    shared_expiry,
+):
+    # Act & Assert
+    client = Client()
+    response_json_parsed = json.loads(json.dumps(response_json))
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+
+    with pytest.raises(ValidationError):
+        client._create_model_instance(
+            Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
+        )
 
 
 @pytest.mark.parametrize(
@@ -214,7 +224,7 @@ def test_load_models(models_dict, expected_result):
         # Mock pkgutil.iter_modules
         with patch("pydantic_tfl_api.core.client.pkgutil.iter_modules") as mock_iter_modules:
             mock_iter_modules.return_value = [
-                (None, name, None) for name in models_dict.keys()
+                (None, name, None) for name in models_dict
             ]
 
             # Act
@@ -316,10 +326,11 @@ def test_get_maxage_headers_from_cache_control_header(
 ):
     # Mock Response
     response = Response()
-    if cache_control_header is not None:
-        response.headers = {"Cache-Control": cache_control_header}
-    else:
-        response.headers = {}
+    response.headers.clear()  # Start with empty headers
+
+    # Add Cache-Control header if provided
+    if cache_control_header:  # sourcery skip: no-conditionals-in-tests
+        response.headers.update({"Cache-Control": cache_control_header})
 
     # Act
     result = Client._get_maxage_headers_from_cache_control_header(response)
@@ -534,41 +545,50 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
 
 
 @pytest.mark.parametrize(
-    "model_name, models_dict, expected_result, exception",
+    "model_name, models_dict, expected_result",
     [
         (
             "MockModel",
             {"MockModel": MockModel},
             MockModel,
-            None,
-        ),
-        (
-            "NonExistentModel",
-            {"MockModel": MockModel},
-            None,
-            ValueError,
         ),
     ],
     ids=[
         "model_exists",
+    ],
+)
+def test_get_model(model_name, models_dict, expected_result):
+    # Create a simple Client object
+    test_client = Client()
+    test_client.models = models_dict
+
+    # Act
+    result = test_client._get_model(model_name)
+
+    # Assert
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "model_name, models_dict",
+    [
+        (
+            "NonExistentModel",
+            {"MockModel": MockModel},
+        ),
+    ],
+    ids=[
         "model_does_not_exist",
     ],
 )
-def test_get_model(model_name, models_dict, expected_result, exception):
+def test_get_model_raises_error(model_name, models_dict):
     # Create a simple Client object
-    class SimpleClient:
-        def __init__(self, models_to_set):
-            self.models = models_to_set
+    test_client = Client()
+    test_client.models = models_dict
 
-    test_client = SimpleClient(models_dict)
-
-    # Act and Assert
-    if exception:
-        with pytest.raises(exception):
-            Client._get_model(test_client, model_name)
-    else:
-        result = Client._get_model(test_client, model_name)
-        assert result == expected_result
+    # Act & Assert
+    with pytest.raises(ValueError):
+        test_client._get_model(model_name)
 
 
 # @pytest.mark.parametrize(
@@ -660,10 +680,10 @@ def test_deserialize_error(content_type, response_content, expected_result):
     # Mock Response
     response = Response()
     response._content = bytes(json.dumps(response_content), "utf-8")
-    response.headers = {
+    response.headers.update({
         "Content-Type": content_type,
         "Date": "Tue, 15 Nov 1994 12:45:26 GMT",
-    }
+    })
     response.status_code = 404
     response.reason = "Not Found"
     response.url = "/uri"
@@ -707,7 +727,7 @@ class Test_TfL_connectivity:
     def test_get_line_status_by_mode_rejected_with_invalid_api_key(self):
         api_token = "your_app_key"
         test_client = SampleClient(api_token)
-        assert test_client.client.app_key["app_key"] == api_token
+        assert test_client.client.app_key is not None and test_client.client.app_key["app_key"] == api_token
         # should get a 429 error inside an ApiError object
         result = test_client.Line_test_endpoint(
             "overground,tube"
@@ -750,4 +770,4 @@ def test_get_datetime_from_response_headers(headers, expected_result):
     # Assert
     assert result == expected_result
 
-    
+

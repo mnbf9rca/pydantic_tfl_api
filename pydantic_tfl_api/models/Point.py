@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Point(BaseModel):
-    lat: Optional[float] = Field(None, alias='lat')
-    lon: Optional[float] = Field(None, alias='lon')
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

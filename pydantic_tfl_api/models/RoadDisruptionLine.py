@@ -1,16 +1,15 @@
 from .DbGeography import DbGeography
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadDisruptionLine(BaseModel):
-    id: Optional[int] = Field(None, alias='id')
-    roadDisruptionId: Optional[str] = Field(None, alias='roadDisruptionId')
-    isDiversion: Optional[bool] = Field(None, alias='isDiversion')
-    multiLineString: Optional[DbGeography] = Field(None, alias='multiLineString')
-    startDate: Optional[str] = Field(None, alias='startDate')
-    endDate: Optional[str] = Field(None, alias='endDate')
-    startTime: Optional[str] = Field(None, alias='startTime')
-    endTime: Optional[str] = Field(None, alias='endTime')
+    id: int | None = Field(None)
+    roadDisruptionId: str | None = Field(None)
+    isDiversion: bool | None = Field(None)
+    multiLineString: DbGeography | None = Field(None)
+    startDate: str | None = Field(None)
+    endDate: str | None = Field(None)
+    startTime: str | None = Field(None)
+    endTime: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

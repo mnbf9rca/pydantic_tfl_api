@@ -1,15 +1,16 @@
-from pydantic import BaseModel, RootModel, Field, field_validator, ConfigDict
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from typing import Optional, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
+
+from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 
 # Define a type variable for the content
 T = TypeVar('T', bound=BaseModel)
 
 class ResponseModel(BaseModel, Generic[T]):
-    content_expires: Optional[datetime]
-    shared_expires: Optional[datetime]
-    response_timestamp: Optional[datetime]
+    content_expires: datetime | None
+    shared_expires: datetime | None
+    response_timestamp: datetime | None
     content: T  # The content will now be of the specified type
 
     model_config = ConfigDict(from_attributes=True)
@@ -30,6 +31,7 @@ class ApiError(BaseModel):
     message: str = Field(alias='message')
 
     @field_validator('timestamp_utc', mode='before')
+    @classmethod
     def parse_timestamp(cls, v):
         return v if isinstance(v, datetime) else parsedate_to_datetime(v)
         # return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
