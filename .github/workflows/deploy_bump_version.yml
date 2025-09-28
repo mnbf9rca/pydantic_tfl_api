@@ -55,29 +55,22 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5 # v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4
         with:
-          python-version: 3.12
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: install poetry
-        uses: snok/install-poetry@v1 # v1
-        with:
-          version: 1.8.3 # pin the version as they keep changing their APIs
-          virtualenvs-create: false
-          virtualenvs-in-project: false
+      - name: Set up Python
+        run: uv python install 3.12
 
       - name: Install dependencies
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          poetry install --without dev --no-interaction --sync
-          python  -c "import os; print(os.environ['VIRTUAL_ENV'])"
+        run: uv sync --all-extras --dev
 
       - name: Bump version and build
         run: |
-          poetry version ${{ env.BUMP_TYPE }}
-          version=$(poetry version | awk '{print $2}')
+          uv run bump-my-version bump ${{ env.BUMP_TYPE }}
+          version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: commit updated version number
