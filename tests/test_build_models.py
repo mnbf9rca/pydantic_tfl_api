@@ -526,18 +526,16 @@ class TestIsListOrDictModel:
     """Test the is_list_or_dict_model function."""
 
     def test_list_model_detection(self):
-        """Test detection of List models."""
-        from typing import List
-        list_type = List[str]
+        """Test detection of list models."""
+        list_type = list[str]
         result = is_list_or_dict_model(list_type)
-        assert result == "List"
+        assert result == "list"
 
     def test_dict_model_detection(self):
-        """Test detection of Dict models."""
-        from typing import Dict
-        dict_type = Dict[str, int]
+        """Test detection of dict models."""
+        dict_type = dict[str, int]
         result = is_list_or_dict_model(dict_type)
-        assert result == "Dict"
+        assert result == "dict"
 
     def test_regular_type_detection(self):
         """Test that regular types return None."""
