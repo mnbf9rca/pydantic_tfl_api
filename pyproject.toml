@@ -47,6 +47,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.coverage.run]
+source = ["pydantic_tfl_api"]
 omit = [
     "*/test/*",
     "*/tests/*",
@@ -56,11 +57,56 @@ omit = [
     "*/.eggs/*",
     "*/.vscode-remote/*",
     "*/build_script/*",
+    "*/scripts/*",
 ]
 relative_files = true
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+skip_covered = false
+precision = 2
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-branch --cov-report term-missing -vv --strict-markers -rfE"
+addopts = [
+    "--cov=pydantic_tfl_api",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=xml:coverage.xml",
+    "--cov-fail-under=85",
+    "-v",
+    "--strict-markers",
+    "-rfE"
+]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests that require network access",
+    "unit: marks tests as unit tests that don't require network access",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
 
 
 
