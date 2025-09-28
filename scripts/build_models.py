@@ -434,12 +434,12 @@ def get_builtin_types() -> set:
 
 
 def is_list_or_dict_model(model: Any) -> str | None:
-    """Determine if the model is a list or dict type and return the type string ('List' or 'Dict')."""
+    """Determine if the model is a list or dict type and return the type string ('list' or 'dict')."""
     origin = get_origin(model)
     if origin is list:
-        return "List"
-    if origin is dict or origin is Dict:
-        return "Dict"
+        return "list"
+    if origin is dict:
+        return "dict"
     return None
 
 
@@ -457,22 +457,22 @@ def handle_list_or_dict_model(
     args = model.__args__
 
     # Validate argument counts
-    if model_type == "List" and len(args) != 1:
-        raise ValueError(f"List type should have exactly 1 argument, got {len(args)}")
-    elif model_type == "Dict" and len(args) != 2:
-        raise ValueError(f"Dict type should have exactly 2 arguments (key, value), got {len(args)}")
+    if model_type == "list" and len(args) != 1:
+        raise ValueError(f"list type should have exactly 1 argument, got {len(args)}")
+    elif model_type == "dict" and len(args) != 2:
+        raise ValueError(f"dict type should have exactly 2 arguments (key, value), got {len(args)}")
 
     # Extract inner types based on model type
-    if model_type == "List":
+    if model_type == "list":
         inner_type = args[0]
         key_type = None
         value_type = inner_type
-    elif model_type == "Dict":
+    elif model_type == "dict":
         key_type = args[0]
         value_type = args[1]
         inner_type = value_type  # For backward compatibility, keep inner_type as value_type
     # Separate sets for typing imports and module imports
-    typing_imports = {model_type}
+    typing_imports = {model_type.title() if model_type else ""}
     module_imports = set()
 
     # Handle non-built-in types for both key and value types (for Dict) or inner_type (for List)
@@ -481,7 +481,7 @@ def handle_list_or_dict_model(
     def handle_type_imports(type_obj):
         """Helper function to handle imports for a given type."""
         type_name = getattr(type_obj, "__name__", None)
-        if type_name and type_name not in {"Optional", "List", "Union"}:
+        if type_name and type_name not in {"Optional", "list", "Union"}:
             sanitized_name = sanitize_name(type_name)
             if sanitized_name in models:
                 module_imports.add(f"from .{sanitized_name} import {sanitized_name}")
@@ -490,18 +490,18 @@ def handle_list_or_dict_model(
         return type_name or "Any"
 
     # Handle imports and get type names
-    if model_type == "List":
+    if model_type == "list":
         inner_type_name = handle_type_imports(inner_type)
-    elif model_type == "Dict":
+    elif model_type == "dict":
         key_type_name = handle_type_imports(key_type)
         value_type_name = handle_type_imports(value_type)
 
     # create the class definition
-    if model_type == "List":
+    if model_type == "list":
         class_definition = (
             f"class {sanitized_model_name}(RootModel[list[{inner_type_name}]]):\n"
         )
-    elif model_type == "Dict":
+    elif model_type == "dict":
         class_definition = f"class {sanitized_model_name}(RootModel[dict[{key_type_name}, {value_type_name}]]):\n"
     else:
         raise ValueError("Model is not a list or dict model.")
@@ -548,7 +548,7 @@ def handle_regular_model(
     for ref_model in referenced_models:
         if ref_model != sanitized_model_name and ref_model not in {
             "Optional",
-            "List",
+            "list",
             "Union",
         }:
             import_set.add(f"from .{ref_model} import {ref_model}")
@@ -679,12 +679,12 @@ def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
         args = annotation.__args__
 
         # Handle list (e.g., list[str], list[Casualty])
-        if origin is list or origin is List:
+        if origin is list:
             inner_type = get_type_str(args[0], models)
             return f"list[{inner_type}]"
 
         # Handle dict (e.g., dict[str, int])
-        elif origin is dict or origin is Dict:
+        elif origin is dict:
             key_type = get_type_str(args[0], models)
             value_type = get_type_str(args[1], models)
             return f"dict[{key_type}, {value_type}]"
@@ -1037,7 +1037,7 @@ def deduplicate_models(
             model_origin = get_origin(model)
             dedup_model_origin = get_origin(dedup_model)
 
-            if model_origin in {list, List} and dedup_model_origin in {list, List}:
+            if model_origin in {list} and dedup_model_origin in {list}:
                 model_inner_type = get_args(model)[0]
                 dedup_inner_type = get_args(dedup_model)[0]
 
@@ -1069,7 +1069,7 @@ def update_model_references(
         args = get_args(annotation)
 
         # Handle Union, List, or any other generic types
-        if origin in {Union, list, List, Optional} and args:
+        if origin in {Union, list, Optional} and args:
             # Recursively resolve references for the inner types
             resolved_inner_types = tuple(resolve_model_reference(arg) for arg in args)
             return origin[resolved_inner_types]
