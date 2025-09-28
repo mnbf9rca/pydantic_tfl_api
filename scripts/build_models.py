@@ -1111,7 +1111,8 @@ def create_class(spec: Dict[str, Any], output_path: str) -> None:
                     f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
                 )
 
-                docstring = f"{details.get("description", "No description in the OpenAPI spec.")}\n"
+                description = details.get("description", "No description in the OpenAPI spec.")
+                docstring = f"{description}\n"
                 docstring = docstring + f"\n  Query path: `{full_path}`\n"
                 docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
                 if parameters:
