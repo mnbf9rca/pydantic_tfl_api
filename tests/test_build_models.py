@@ -105,14 +105,17 @@ class TestUpdateRefs:
                     {"$ref": "#/components/schemas/OldName"},
                     123,
                     "string",
-                    {"nested": [{"$ref": "#/components/schemas/OldName"}]}
+                    {"nested": [{"$ref": "#/components/schemas/OldName"}]},
+                    [],  # empty list
                 ],
                 "dict": {
                     "key": {"$ref": "#/components/schemas/OldName"},
                     "list": [
                         {"$ref": "#/components/schemas/OldName"},
                         {"other": "value"}
-                    ]
+                    ],
+                    "empty_list": [],
+                    "empty_dict": {},
                 }
             }
         }
@@ -122,9 +125,34 @@ class TestUpdateRefs:
         assert obj["properties"]["array"][1] == 123
         assert obj["properties"]["array"][2] == "string"
         assert obj["properties"]["array"][3]["nested"][0]["$ref"] == "#/components/schemas/NewName"
+        # Test empty containers are preserved
+        assert obj["properties"]["array"][4] == []
         assert obj["properties"]["dict"]["key"]["$ref"] == "#/components/schemas/NewName"
         assert obj["properties"]["dict"]["list"][0]["$ref"] == "#/components/schemas/NewName"
         assert obj["properties"]["dict"]["list"][1]["other"] == "value"
+        assert obj["properties"]["dict"]["empty_list"] == []
+        assert obj["properties"]["dict"]["empty_dict"] == {}
+
+    def test_update_refs_error_conditions(self):
+        """Test update_refs handles error conditions gracefully."""
+        entity_mapping = {"OldName": "NewName"}
+
+        # Test with None input - should not crash
+        update_refs(None, entity_mapping)
+
+        # Test with non-dict, non-list input - should not crash
+        update_refs("string", entity_mapping)
+        update_refs(123, entity_mapping)
+
+        # Test with malformed dict structure - should not crash
+        malformed_obj = {"$ref": None}
+        update_refs(malformed_obj, entity_mapping)
+
+        # Test with empty entity mapping
+        obj_with_ref = {"$ref": "#/components/schemas/OldName"}
+        update_refs(obj_with_ref, {})
+        # Should remain unchanged when no mapping exists
+        assert obj_with_ref["$ref"] == "#/components/schemas/OldName"
 
 
 class TestGetApiName:
@@ -236,12 +264,22 @@ class TestMappingsImport:
         except ImportError:
             pytest.skip("mappings module not available")
 
-    @pytest.mark.parametrize("api_name", ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"])
-    def test_mappings_structure(self, api_name):
-        """Test the structure of specific TfL API mappings."""
+    def test_mappings_import_availability(self):
+        """Test that mappings module can be imported."""
         try:
             from mappings import tfl_mappings
-            if api_name in tfl_mappings:
-                assert isinstance(tfl_mappings[api_name], dict)
+            assert isinstance(tfl_mappings, dict)
+            assert len(tfl_mappings) > 0
         except ImportError:
             pytest.skip("mappings module not available")
+
+    @pytest.mark.parametrize("api_name", ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"])
+    def test_known_api_mappings_structure(self, api_name):
+        """Test the structure of specific TfL API mappings."""
+        pytest.importorskip("mappings", reason="mappings module not available")
+        from mappings import tfl_mappings
+
+        # Skip test if API not in mappings rather than using conditional
+        if api_name not in tfl_mappings:
+            pytest.skip(f"API '{api_name}' not found in mappings")
+        assert isinstance(tfl_mappings[api_name], dict)
