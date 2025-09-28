@@ -176,6 +176,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 **Priority**: Medium
 
 - [ ] Update all GitHub Actions to use UV
+- [ ] update all github actions to latest versions and pin by sha
 - [ ] Add UV caching in CI
 - [ ] Enable CodeCov reporting
 - [ ] Add mypy/pyright type checking
