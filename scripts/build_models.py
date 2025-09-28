@@ -352,8 +352,9 @@ def save_models(
                 init_f,
             )
 
+        model_names = ',\n    '.join(f'"{key}"' for key in models.keys())
         init_f.write(
-            f"\n__all__ = [\n    {',\n    '.join(f'\"{key}\"' for key in models.keys())}\n]\n"
+            f"\n__all__ = [\n    {model_names}\n]\n"
         )
 
     # Write enums after saving the models
