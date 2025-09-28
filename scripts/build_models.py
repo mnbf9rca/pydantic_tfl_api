@@ -443,6 +443,75 @@ def is_list_or_dict_model(model: Any) -> str | None:
     return None
 
 
+def validate_list_dict_args(model_type: str, args: tuple) -> None:
+    """Validate argument counts for list/dict models."""
+    if model_type == "list" and len(args) != 1:
+        raise ValueError(f"list type should have exactly 1 argument, got {len(args)}")
+    elif model_type == "dict" and len(args) != 2:
+        raise ValueError(f"dict type should have exactly 2 arguments (key, value), got {len(args)}")
+
+
+def extract_list_dict_types(model_type: str, args: tuple) -> tuple[Any, Any | None, Any]:
+    """Extract inner types from list/dict model arguments."""
+    if model_type == "list":
+        inner_type = args[0]
+        key_type = None
+        value_type = inner_type
+    elif model_type == "dict":
+        key_type = args[0]
+        value_type = args[1]
+        inner_type = value_type  # For backward compatibility
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
+
+    return inner_type, key_type, value_type
+
+
+def collect_type_imports(type_obj: Any, models: dict[str, type[BaseModel]], typing_imports: set[str], module_imports: set[str]) -> str:
+    """Collect imports for a given type and return its name."""
+    built_in_types = get_builtin_types()
+    type_name = getattr(type_obj, "__name__", None)
+
+    if type_name and type_name not in {"Optional", "list", "Union"}:
+        sanitized_name = sanitize_name(type_name)
+        if sanitized_name in models:
+            module_imports.add(f"from .{sanitized_name} import {sanitized_name}")
+        elif type_obj not in built_in_types:
+            typing_imports.add(type_name)
+
+    return type_name or "Any"
+
+
+def generate_list_dict_class_definition(model_type: str, sanitized_model_name: str, type_names: dict[str, str]) -> str:
+    """Generate class definition for list/dict models."""
+    if model_type == "list":
+        return f"class {sanitized_model_name}(RootModel[list[{type_names['inner']}]]):\n"
+    elif model_type == "dict":
+        return f"class {sanitized_model_name}(RootModel[dict[{type_names['key']}, {type_names['value']}]]):\n"
+    else:
+        raise ValueError("Model is not a list or dict model.")
+
+
+def write_imports_and_class(model_file: TextIOWrapper, typing_imports: set[str], module_imports: set[str],
+                           class_definition: str, sanitized_model_name: str) -> None:
+    """Write all imports and class definition to the model file."""
+    # Write typing imports
+    if typing_imports:
+        clean_typing_imports = sorted(typing_imports - get_builtin_types())
+        if clean_typing_imports:
+            model_file.write(f"from typing import {', '.join(sorted(clean_typing_imports))}\n")
+
+    # Write module imports
+    if module_imports:
+        model_file.write("\n".join(sorted(module_imports)) + "\n")
+
+    # Write class definition
+    model_file.write(f"\n\n{class_definition}")
+
+    # Write model config
+    model_file.write(f"\n    {get_model_config(sanitized_model_name)}\n")
+
+
 def handle_list_or_dict_model(
     model_file: TextIOWrapper,
     model: Any,
@@ -456,69 +525,25 @@ def handle_list_or_dict_model(
     model_type = is_list_or_dict_model(model)
     args = model.__args__
 
-    # Validate argument counts
-    if model_type == "list" and len(args) != 1:
-        raise ValueError(f"list type should have exactly 1 argument, got {len(args)}")
-    elif model_type == "dict" and len(args) != 2:
-        raise ValueError(f"dict type should have exactly 2 arguments (key, value), got {len(args)}")
+    # Validate and extract types using helper functions
+    validate_list_dict_args(model_type, args)
+    inner_type, key_type, value_type = extract_list_dict_types(model_type, args)
 
-    # Extract inner types based on model type
-    if model_type == "list":
-        inner_type = args[0]
-        key_type = None
-        value_type = inner_type
-    elif model_type == "dict":
-        key_type = args[0]
-        value_type = args[1]
-        inner_type = value_type  # For backward compatibility, keep inner_type as value_type
-    # Separate sets for typing imports and module imports
+    # Collect imports
     typing_imports = {model_type.title() if model_type else ""}
     module_imports = set()
 
-    # Handle non-built-in types for both key and value types (for Dict) or inner_type (for List)
-    built_in_types = get_builtin_types()
-
-    def handle_type_imports(type_obj):
-        """Helper function to handle imports for a given type."""
-        type_name = getattr(type_obj, "__name__", None)
-        if type_name and type_name not in {"Optional", "list", "Union"}:
-            sanitized_name = sanitize_name(type_name)
-            if sanitized_name in models:
-                module_imports.add(f"from .{sanitized_name} import {sanitized_name}")
-            elif type_obj not in built_in_types:
-                typing_imports.add(type_name)
-        return type_name or "Any"
-
     # Handle imports and get type names
+    type_names = {}
     if model_type == "list":
-        inner_type_name = handle_type_imports(inner_type)
+        type_names['inner'] = collect_type_imports(inner_type, models, typing_imports, module_imports)
     elif model_type == "dict":
-        key_type_name = handle_type_imports(key_type)
-        value_type_name = handle_type_imports(value_type)
+        type_names['key'] = collect_type_imports(key_type, models, typing_imports, module_imports)
+        type_names['value'] = collect_type_imports(value_type, models, typing_imports, module_imports)
 
-    # create the class definition
-    if model_type == "list":
-        class_definition = (
-            f"class {sanitized_model_name}(RootModel[list[{inner_type_name}]]):\n"
-        )
-    elif model_type == "dict":
-        class_definition = f"class {sanitized_model_name}(RootModel[dict[{key_type_name}, {value_type_name}]]):\n"
-    else:
-        raise ValueError("Model is not a list or dict model.")
-    # Write typing imports
-    if typing_imports:
-        typing_imports = sorted(typing_imports - get_builtin_types())
-        model_file.write(f"from typing import {', '.join(sorted(typing_imports))}\n")
-
-    # Write module imports
-    if module_imports:
-        model_file.write("\n".join(sorted(module_imports)) + "\n")
-
-    # Write class definition
-    model_file.write(f"\n\n{class_definition}")
-
-    # Write model config using helper function
-    model_file.write(f"\n    {get_model_config(sanitized_model_name)}\n")
+    # Generate and write class using helper functions
+    class_definition = generate_list_dict_class_definition(model_type, sanitized_model_name, type_names)
+    write_imports_and_class(model_file, typing_imports, module_imports, class_definition, sanitized_model_name)
 
 
 def handle_regular_model(
