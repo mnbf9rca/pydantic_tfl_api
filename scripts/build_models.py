@@ -1152,100 +1152,126 @@ def classify_parameters(
     return path_params, query_params
 
 
-def create_class(spec: dict[str, Any], output_path: str) -> None:
+def extract_api_metadata(spec: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+    """Extract basic API metadata from OpenAPI spec."""
     paths = spec.get("paths", {})
     class_name = f"{sanitize_name(get_api_name(spec))}Client"
-
-    class_lines = []
-    class_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
-    class_lines.append("from ..core import ApiError, ResponseModel, Client\n")
-    path_lines = [f"class {class_name}(Client):\n"]
-
-    all_types = set()
-    all_package_models = set()
     api_path = "/" + spec.get("servers", [{}])[0].get("url", "").split("/", 3)[3]
+    return class_name, api_path, paths
 
-    for path, methods in paths.items():
-        full_path = join_url_paths(api_path, path)
-        for method, details in methods.items():
-            operation_id = details.get("operationId")
-            if operation_id:
-                parameters = details.get("parameters", [])
-                all_types.update(
-                    [map_openapi_type(param["schema"]["type"]) for param in parameters]
-                )
 
-                param_str = create_function_parameters(parameters)
-                response_content = details["responses"].get("200", {})
+def create_method_signature(operation_id: str, parameters: list[dict], model_name: str) -> str:
+    """Create method signature for a single API operation."""
+    param_str = create_function_parameters(parameters)
+    sanitized_operation_id = sanitize_name(operation_id, prefix="Query")
+    return f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
 
-                model_name = get_model_name_from_path(response_content)
-                all_package_models.add(model_name)
 
-                # Sanitize the operation_id to ensure it's a valid Python identifier
-                sanitized_operation_id = sanitize_name(operation_id, prefix="Query")
-                path_lines.append(
-                    f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
-                )
+def create_method_docstring(details: dict[str, Any], full_path: str, model_name: str, parameters: list[dict]) -> str:
+    """Create docstring for a single API method."""
+    description = details.get("description", "No description in the OpenAPI spec.")
+    docstring = f"{description}\n"
+    docstring = docstring + f"\n  Query path: `{full_path}`\n"
+    docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
 
-                description = details.get("description", "No description in the OpenAPI spec.")
-                docstring = f"{description}\n"
-                docstring = docstring + f"\n  Query path: `{full_path}`\n"
-                docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
-                if parameters:
-                    docstring_parameters = "\n".join(
-                        [
-                            f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
-                            for param in parameters
-                        ]
-                    )
-                else:
-                    docstring_parameters = "        No parameters required."
-                path_lines.append(
-                    f"        '''\n        {docstring}\n\n  Parameters:\n{docstring_parameters}\n        '''\n"
-                )
+    if parameters:
+        docstring_parameters = "\n".join([
+            f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
+            for param in parameters
+        ])
+    else:
+        docstring_parameters = "        No parameters required."
 
-                path_params, query_params = classify_parameters(parameters)
+    return f"        '''\n        {docstring}\n\n  Parameters:\n{docstring_parameters}\n        '''\n"
 
-                formatted_path_params = ", ".join(
-                    [sanitize_field_name(param) for param in path_params]
-                )
-                formatted_query_params = ", ".join(
-                    [
-                        f"'{param}': {sanitize_field_name(param)}"
-                        for param in query_params
-                    ]
-                )
 
-                if formatted_query_params:
-                    query_params_dict = f"endpoint_args={{ {formatted_query_params} }}"
-                else:
-                    query_params_dict = "endpoint_args=None"
+def create_method_implementation(operation_id: str, parameters: list[dict]) -> str:
+    """Create method implementation for a single API operation."""
+    path_params, query_params = classify_parameters(parameters)
 
-                if path_params:
-                    path_lines.append(
-                        f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
-                    )
-                else:
-                    path_lines.append(
-                        f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
-                    )
+    formatted_path_params = ", ".join([sanitize_field_name(param) for param in path_params])
+    formatted_query_params = ", ".join([
+        f"'{param}': {sanitize_field_name(param)}"
+        for param in query_params
+    ])
+
+    if formatted_query_params:
+        query_params_dict = f"endpoint_args={{ {formatted_query_params} }}"
+    else:
+        query_params_dict = "endpoint_args=None"
+
+    if path_params:
+        return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
+    else:
+        return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
+
+
+def process_single_method(path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set) -> str:
+    """Process a single API method and return its complete definition."""
+    operation_id = details.get("operationId")
+    if not operation_id:
+        return ""
+
+    parameters = details.get("parameters", [])
+    all_types.update([map_openapi_type(param["schema"]["type"]) for param in parameters])
+
+    response_content = details["responses"].get("200", {})
+    model_name = get_model_name_from_path(response_content)
+    all_package_models.add(model_name)
+
+    full_path = join_url_paths(api_path, path)
+
+    # Build complete method definition
+    method_lines = []
+    method_lines.append(create_method_signature(operation_id, parameters, model_name))
+    method_lines.append(create_method_docstring(details, full_path, model_name, parameters))
+    method_lines.append(create_method_implementation(operation_id, parameters))
+
+    return "".join(method_lines)
+
+
+def generate_import_lines(class_name: str, all_types: set, all_package_models: set) -> list[str]:
+    """Generate all import statements for the client class."""
+    import_lines = []
+    import_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
+    import_lines.append("from ..core import ApiError, ResponseModel, Client\n")
 
     valid_type_imports = all_types - get_builtin_types()
     valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
     if valid_type_import_strings:
-        class_lines.append(
-            f"from typing import {', '.join(valid_type_import_strings)}\n"
-        )
+        import_lines.append(f"from typing import {', '.join(valid_type_import_strings)}\n")
+
     if all_package_models:
-        class_lines.append(
-            f"from ..models import {', '.join(sorted(all_package_models))}\n"
-        )
-    class_lines.append("\n")
+        import_lines.append(f"from ..models import {', '.join(sorted(all_package_models))}\n")
+
+    import_lines.append("\n")
+    return import_lines
+
+
+def create_class(spec: dict[str, Any], output_path: str) -> None:
+    """Generate API client class from OpenAPI specification."""
+    class_name, api_path, paths = extract_api_metadata(spec)
+
+    all_types = set()
+    all_package_models = set()
+    method_lines = [f"class {class_name}(Client):\n"]
+
+    # Process all API methods
+    for path, methods in paths.items():
+        for method, details in methods.items():
+            method_definition = process_single_method(path, method, details, api_path, all_types, all_package_models)
+            if method_definition:
+                method_lines.append(method_definition)
+
+    # Generate complete file
+    import_lines = generate_import_lines(class_name, all_types, all_package_models)
+
     class_file_path = os.path.join(output_path, f"{class_name}.py")
     os.makedirs(os.path.dirname(class_file_path), exist_ok=True)
+
     with open(class_file_path, "w") as class_file:
-        class_file.writelines(class_lines)
-        class_file.writelines(path_lines)
+        class_file.writelines(import_lines)
+        class_file.writelines(method_lines)
 
     logging.info(f"Class file generated at: {class_file_path}")
 
