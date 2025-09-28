@@ -249,7 +249,7 @@ def create_pydantic_models(
                     )
                 else:
                     fields[sanitized_field_name] = (
-                        Optional[field_type],
+                        field_type | None,
                         Field(None, alias=field_name),
                     )
             models[sanitized_name] = create_model(sanitized_name, **fields)
@@ -352,7 +352,7 @@ def write_import_statements(
             init_f.write(f"from .{model_name} import {model_name}\n")
 
 def save_models(
-    models: dict[str, Union[type[BaseModel], type[list]]],
+    models: dict[str, type[BaseModel] | type[list]],
     base_path: str,
     dependency_graph: dict[str, set[str]],
     circular_models: set[str],
@@ -756,7 +756,7 @@ def extract_inner_types(annotation: Any) -> list[Any]:
 
 
 def build_dependency_graph(
-    models: dict[str, Union[type[BaseModel], type[list]]],
+    models: dict[str, type[BaseModel] | type[list]],
 ) -> dict[str, set[str]]:
     """Build a dependency graph where each model depends on other models."""
     graph = defaultdict(set)
@@ -1013,8 +1013,8 @@ def are_models_equal(model1: type[BaseModel], model2: type[BaseModel]) -> bool:
 
 
 def deduplicate_models(
-    models: dict[str, Union[type[BaseModel], type[list]]],
-) -> dict[str, Union[type[BaseModel], type[list]]]:
+    models: dict[str, type[BaseModel] | type[list]],
+) -> dict[str, type[BaseModel] | type[list]]:
     """Deduplicate models by removing models with the same content."""
     deduplicated_models = {}
     reference_map = {}
@@ -1059,8 +1059,8 @@ def deduplicate_models(
 
 
 def update_model_references(
-    models: dict[str, Union[type[BaseModel], type[list]]], reference_map: dict[str, str]
-) -> dict[str, Union[type[BaseModel], type[list]]]:
+    models: dict[str, type[BaseModel] | type[list]], reference_map: dict[str, str]
+) -> dict[str, type[BaseModel] | type[list]]:
     """Update references in models based on the deduplication reference map, including nested generics."""
 
     def resolve_model_reference(annotation: Any) -> Any:
