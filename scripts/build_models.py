@@ -1,38 +1,54 @@
-import argparse
-import builtins
 import json
-import keyword
-import logging
 import os
-import re
-import sys
-from collections import defaultdict
-from enum import Enum
 from io import TextIOWrapper
-from typing import Any, ForwardRef, Optional, Union, cast, get_args, get_origin
+import sys
+import logging
+import inspect
+import ast
+import importlib.util
+import re
+import keyword
+import builtins
+import argparse
+from collections import deque
 from urllib.parse import urljoin
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, create_model
-from pydantic.fields import FieldInfo
+from typing import __all__ as typing_all
 
+from enum import Enum
+from typing import (
+    Dict,
+    Any,
+    Optional,
+    Union,
+    Type,
+    List,
+    Set,
+    get_origin,
+    get_args,
+    Literal,
+    ForwardRef,
+    Tuple,
+)
+from pydantic import BaseModel, RootModel, create_model, Field, ConfigDict
+from pydantic.fields import FieldInfo
+from datetime import datetime
+from collections import defaultdict, deque
 try:
     from .mapping_loader import load_tfl_mappings
 except ImportError:
-    try:
-        from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found,no-redef]
-    except ImportError as e:
-        raise ImportError(
-            "Cannot import load_tfl_mappings. Ensure mapping_loader.py is available in the scripts directory."
-        ) from e
+    from mapping_loader import load_tfl_mappings
 
 # Load mappings from JSON
 tfl_mappings = load_tfl_mappings()
 
-src_path = os.path.join(os.path.dirname(__file__), "src")
+src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.insert(0, src_path)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 # Helper functions
@@ -61,11 +77,13 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     return sanitized
 
 
-def update_refs(obj: Any, entity_mapping: dict[str, str]):
+def update_refs(obj: Any, entity_mapping: Dict[str, str]):
     if isinstance(obj, dict):
         for key, value in obj.items():
             if key == "$ref" and isinstance(value, str) and value.split("/")[-1] in entity_mapping:
-                obj[key] = value.replace(value.split("/")[-1], entity_mapping[value.split("/")[-1]])
+                obj[key] = value.replace(
+                    value.split("/")[-1], entity_mapping[value.split("/")[-1]]
+                )
             else:
                 update_refs(value, entity_mapping)
     elif isinstance(obj, list):
@@ -74,7 +92,9 @@ def update_refs(obj: Any, entity_mapping: dict[str, str]):
 
 
 # Update entities and references
-def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[str, str]) -> None:
+def update_entities(
+    spec: Dict[str, Any], api_name: str, pydantic_names: Dict[str, str]
+) -> None:
     if api_name not in tfl_mappings:
         return
 
@@ -82,7 +102,10 @@ def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[st
     components = spec.get("components", {}).get("schemas", {})
 
     # Sanitize old and new names to match how they will be used in the models
-    sanitized_entity_mapping = {old_name: sanitize_name(new_name) for old_name, new_name in entity_mapping.items()}
+    sanitized_entity_mapping = {
+        old_name: sanitize_name(new_name)
+        for old_name, new_name in entity_mapping.items()
+    }
 
     # Rename entities in the schema components
     for old_name, new_name in sanitized_entity_mapping.items():
@@ -94,7 +117,7 @@ def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[st
     update_refs(spec, sanitized_entity_mapping)
 
 
-def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
+def create_enum_class(enum_name: str, enum_values: List[Any]) -> Type[Enum]:
     """Dynamically create a Pydantic Enum class for the given enum values."""
 
     def clean_enum_name(value: str) -> str:
@@ -104,7 +127,7 @@ def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
     # Create a dictionary with cleaned enum names as keys and the original values as values
     # Handle uniqueness by adding suffix for duplicates
     enum_dict = {}
-    name_counts: dict[str, int] = {}
+    name_counts = {}
 
     for v in enum_values:
         cleaned_name = clean_enum_name(str(v))
@@ -119,24 +142,15 @@ def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
 
         enum_dict[unique_name] = v
 
-    # Create the enum class definition dynamically with proper member definitions
-    members_str = "\n".join(f"    {name} = {repr(value)}" for name, value in enum_dict.items())
-    class_def = f"""
-class {enum_name}(Enum):
-{members_str}
-"""
-    namespace: dict[str, Any] = {"Enum": Enum}
-    exec(class_def, namespace)
-    enum_class = namespace[enum_name]
-
-    return cast(type[Enum], enum_class)
+    # Dynamically create the Enum class
+    return Enum(enum_name, enum_dict)
 
 
 def map_type(
-    field_spec: dict[str, Any],
+    field_spec: Dict[str, Any],
     field_name: str,
-    components: dict[str, Any],
-    models: dict[str, type[BaseModel]],
+    components: Dict[str, Any],
+    models: Dict[str, Type[BaseModel]],
 ) -> Any:
     if "$ref" in field_spec:
         # Handle references using ForwardRef for proper type resolution
@@ -157,15 +171,12 @@ def map_type(
     # Handle arrays
     if openapi_type == "array":
         # Ensure that 'items' exist for arrays, fallback to Any if missing
-        if items_spec := field_spec.get("items", {}):
-            # We get the item type but currently return generic list
-            # TODO: In future, could return list[item_type] for better typing
-            # For now, just validate the items spec structure without using result
-            _ = map_type(items_spec, field_name, components, models)
-            return list
+        items_spec = field_spec.get("items", {})
+        if items_spec:
+            return List[map_type(items_spec, field_name, components, models)]
         else:
-            logging.warning("'items' missing in array definition, using Any")
-            return list[Any]
+            logging.warning(f"'items' missing in array definition, using Any")
+            return List[Any]
 
     # Map standard OpenAPI types to Python types
     return map_openapi_type(openapi_type)
@@ -182,22 +193,31 @@ def map_openapi_type(openapi_type: str) -> type | Any:
     }.get(openapi_type, Any)
 
 
-def create_array_types_from_model_paths(paths: dict[str, dict[str, Any]], components: dict[str, Any]) -> dict[str, Any]:
+def create_array_types_from_model_paths(
+    paths: Dict[str, Dict[str, Any]], components: Dict[str, Any]
+) -> Dict[str, Any]:
     array_types = {}
-    for methods in paths.values():
-        for details in methods.values():
-            if details.get("operationId"):
+    for path, methods in paths.items():
+        for method, details in methods.items():
+            operation_id = details.get("operationId")
+            if operation_id:
                 response_content = details["responses"]["200"]
                 if "content" not in response_content:
                     continue
 
-                response_type = response_content["content"]["application/json"]["schema"].get("type", "")
+                response_type = response_content["content"]["application/json"][
+                    "schema"
+                ].get("type", "")
                 if response_type == "array":
-                    model_ref = response_content["content"]["application/json"]["schema"]["items"].get("$ref", "")
+                    model_ref = response_content["content"]["application/json"][
+                        "schema"
+                    ]["items"].get("$ref", "")
                     model_name = model_ref.split("/")[-1]
                     if model_name in components:
                         array_model_name = get_array_model_name(model_name)
-                        array_types[array_model_name] = create_openapi_array_type(model_ref)
+                        array_types[array_model_name] = create_openapi_array_type(
+                            model_ref
+                        )
     return array_types
 
 
@@ -205,12 +225,14 @@ def get_array_model_name(model_name: str) -> str:
     return f"{sanitize_name(model_name)}Array"
 
 
-def create_openapi_array_type(model_ref: str) -> dict[str, Any]:
+def create_openapi_array_type(model_ref: str) -> Dict[str, Any]:
     return {"type": "array", "items": {"$ref": f"{model_ref}"}}
 
 
 # Create Pydantic models
-def create_pydantic_models(components: dict[str, Any], models: dict[str, Any]) -> None:
+def create_pydantic_models(
+    components: Dict[str, Any], models: Dict[str, Type[BaseModel] | type]
+) -> None:
     # First pass: create object models
     for model_name, model_spec in components.items():
         sanitized_name = sanitize_name(model_name)  # Ensure the model name is valid
@@ -218,14 +240,18 @@ def create_pydantic_models(components: dict[str, Any], models: dict[str, Any]) -
             if "properties" not in model_spec:
                 # Fallback if 'properties' is missing
                 # just create a List model which accepts any dict
-                models[sanitized_name] = dict[str, Any]
-                logging.warning(f"Object model {sanitized_name} has no valid 'properties'. Using Dict[str, Any].")
+                models[sanitized_name] = Dict[str, Any]
+                logging.warning(
+                    f"Object model {sanitized_name} has no valid 'properties'. Using Dict[str, Any]."
+                )
                 continue
             # Handle object models first
             fields = {}
             required_fields = model_spec.get("required", [])
             for field_name, field_spec in model_spec["properties"].items():
-                field_type = map_type(field_spec, field_name, components, models)  # Map the OpenAPI type to Python type
+                field_type = map_type(
+                    field_spec, field_name, components, models
+                )  # Map the OpenAPI type to Python type
                 sanitized_field_name = sanitize_field_name(field_name)
                 if field_name in required_fields:
                     fields[sanitized_field_name] = (
@@ -234,12 +260,10 @@ def create_pydantic_models(components: dict[str, Any], models: dict[str, Any]) -
                     )
                 else:
                     fields[sanitized_field_name] = (
-                        field_type | None,
+                        Optional[field_type],
                         Field(None, alias=field_name),
                     )
-            # Create model using proper Pydantic syntax
-            # Use type ignore for create_model signature mismatch
-            models[sanitized_name] = create_model(sanitized_name, __base__=BaseModel, **fields)  # type: ignore[call-overload]
+            models[sanitized_name] = create_model(sanitized_name, **fields)
             logging.info(f"Created object model: {sanitized_name}")
 
     # Second pass: handle array models referencing the object models
@@ -248,25 +272,28 @@ def create_pydantic_models(components: dict[str, Any], models: dict[str, Any]) -
         if model_spec.get("type") == "array":
             # Handle array models
             items_spec = model_spec.get("items")
-            if items_spec and "$ref" in items_spec:
+            if "$ref" in items_spec:
                 # Handle reference in 'items'
                 ref_model_name = sanitize_name(items_spec["$ref"].split("/")[-1])
                 if ref_model_name not in models:
                     raise KeyError(
                         f"Referenced model '{ref_model_name}' not found while creating array '{sanitized_name}'"
                     )
-                # Create parameterized List type for array items
-                # Note: ref_model reference is available via models[ref_model_name]
-                ref_model = models[ref_model_name]
-                models[sanitized_name] = list[ref_model]
-                logging.info(f"Created array model: {sanitized_name} -> List[{ref_model_name}]")
+                models[sanitized_name] = List[
+                    models[ref_model_name]
+                ]  # Create List type for array items
+                logging.info(
+                    f"Created array model: {sanitized_name} -> List[{ref_model_name}]"
+                )
             else:
                 # Fallback if 'items' is missing or doesn't have a reference
-                models[sanitized_name] = list[Any]
-                logging.warning(f"Array model {sanitized_name} has no valid 'items' reference. Using List[Any].")
+                models[sanitized_name] = List[Any]
+                logging.warning(
+                    f"Array model {sanitized_name} has no valid 'items' reference. Using List[Any]."
+                )
 
 
-def create_generic_response_model() -> type[RootModel]:
+def create_generic_response_model() -> Type[RootModel]:
     class GenericResponseModel(RootModel):
         root: Any
 
@@ -275,8 +302,8 @@ def create_generic_response_model() -> type[RootModel]:
     return GenericResponseModel
 
 
-def get_pydantic_imports(is_root_model: bool) -> str:
-    """Get the appropriate pydantic imports based on model type."""
+def get_pydantic_imports(sanitized_model_name: str, is_root_model: bool) -> str:
+    """Get the appropriate pydantic imports based on model type and name."""
     base_imports = ["RootModel"] if is_root_model else ["BaseModel", "Field"]
 
     # Always include ConfigDict for consistent v2 patterns
@@ -295,21 +322,18 @@ def get_model_config(sanitized_model_name: str) -> str:
 
 # Save models and config to files
 def determine_typing_imports(
-    model_fields: dict[str, FieldInfo],
-    models: dict[str, type[BaseModel] | type],
-    circular_models: set[str],
-) -> list[str]:
+    model_fields: Dict[str, FieldInfo],
+    models: Dict[str, Type[BaseModel] | type],
+    circular_models: Set[str],
+) -> List[str]:
     """Determine necessary typing imports based on the field annotations."""
     import_set = set()
 
     for field in model_fields.values():
         field_annotation = get_type_str(field.annotation, models)
 
-        # Only import specific typing constructs that we still need
-        # Modern Python 3.10+ doesn't need List, Dict, Optional, Union
-        still_needed_from_typing = ["Any", "ForwardRef", "Match", "Sequence"]
-
-        for type_name in still_needed_from_typing:
+        # Check for any type in typing.__all__
+        for type_name in typing_all:
             if type_name in field_annotation:
                 import_set.add(type_name)
 
@@ -317,28 +341,33 @@ def determine_typing_imports(
         if field_annotation in circular_models:
             import_set.add("ForwardRef")
 
-    return list(import_set)
+    return import_set
 
 
 def write_import_statements(
-    init_f: TextIOWrapper, models: dict[str, type[BaseModel]], sorted_models: list[str] | None = None
+    init_f: TextIOWrapper,
+    models: Dict[str, Type[BaseModel]],
+    models_dir: str,
+    sorted_models: List[str] = None
 ):
     """Write import statements in dependency-aware order to minimize forward references."""
     # If we have a topologically sorted order, use it; otherwise fall back to alphabetical
-    model_order = sorted_models or sorted(models.keys())
+    if sorted_models:
+        model_order = sorted_models
+    else:
+        model_order = sorted(models.keys())
 
     # Write imports in dependency order to minimize forward references
     for model_name in model_order:
         if model_name in models:
             init_f.write(f"from .{model_name} import {model_name}\n")
 
-
 def save_models(
-    models: dict[str, Any],
+    models: Dict[str, Union[Type[BaseModel], Type[List]]],
     base_path: str,
-    dependency_graph: dict[str, set[str]],
-    circular_models: set[str],
-    sorted_models: list[str] | None = None,
+    dependency_graph: Dict[str, Set[str]],
+    circular_models: Set[str],
+    sorted_models: List[str] = None,
 ):
     models_dir = os.path.join(base_path, "models")
     os.makedirs(models_dir, exist_ok=True)
@@ -349,7 +378,7 @@ def save_models(
     init_file = os.path.join(models_dir, "__init__.py")
     with open(init_file, "w") as init_f:
         # Write import statements in dependency-aware order to minimize forward references
-        write_import_statements(init_f, models, sorted_models)
+        write_import_statements(init_f, models, models_dir, sorted_models)
 
         for model_name, model in models.items():
             save_model_file(
@@ -362,10 +391,10 @@ def save_models(
                 init_f,
             )
 
-        model_names = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
-        init_f.write("from typing import Literal\n\n")
-        init_f.write(f"ResponseModelName = Literal[\n    {model_names}\n]\n")
-        init_f.write(f"\n__all__ = [\n    {model_names}\n]\n")
+        model_names = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
+        init_f.write(
+            f"\n__all__ = [\n    {model_names}\n]\n"
+        )
 
     # Write enums after saving the models
     write_enum_files(models, models_dir)
@@ -374,10 +403,10 @@ def save_models(
 def save_model_file(
     model_name: str,
     model: Any,
-    models: dict[str, type[BaseModel]],
+    models: Dict[str, Type[BaseModel]],
     models_dir: str,
-    dependency_graph: dict[str, set[str]],
-    circular_models: set[str],
+    dependency_graph: Dict[str, Set[str]],
+    circular_models: Set[str],
     init_f,
 ):
     sanitized_model_name = sanitize_name(model_name)
@@ -388,11 +417,13 @@ def save_model_file(
 
     with open(model_file, "w") as mf:
         if is_list_or_dict_model(model):
-            mf.write(f"{get_pydantic_imports(is_root_model=True)}\n")
+            mf.write(f"{get_pydantic_imports(sanitized_model_name, is_root_model=True)}\n")
             handle_list_or_dict_model(
                 mf,
                 model,
                 models,
+                dependency_graph,
+                circular_models,
                 sanitized_model_name,
             )
         else:
@@ -410,7 +441,7 @@ def save_model_file(
 
 def get_builtin_types() -> set:
     """Return a set of all built-in Python types."""
-    return {obj for _, obj in vars(builtins).items() if isinstance(obj, type)}
+    return {obj for name, obj in vars(builtins).items() if isinstance(obj, type)}
 
 
 def is_list_or_dict_model(model: Any) -> str | None:
@@ -418,16 +449,17 @@ def is_list_or_dict_model(model: Any) -> str | None:
     origin = get_origin(model)
     if origin is list:
         return "List"
-    elif origin is dict:
+    if origin is dict or origin is Dict:
         return "Dict"
-    else:
-        return None
+    return None
 
 
 def handle_list_or_dict_model(
     model_file: TextIOWrapper,
     model: Any,
-    models: dict[str, type[BaseModel]],
+    models: Dict[str, Type[BaseModel]],
+    dependency_graph: Dict[str, set[str]],
+    circular_models: Set[str],
     sanitized_model_name: str,
 ):
     """Handle models that are either list or dict types."""
@@ -450,12 +482,6 @@ def handle_list_or_dict_model(
         key_type = args[0]
         value_type = args[1]
         inner_type = value_type  # For backward compatibility, keep inner_type as value_type
-    else:
-        # This should never happen - if model_type is None, the model isn't a List or Dict
-        raise ValueError(
-            f"Model {model} is not a List or Dict type. "
-            f"handle_list_or_dict_model should only be called for List/Dict models."
-        )
     # Separate sets for typing imports and module imports
     typing_imports = {model_type}
     module_imports = set()
@@ -475,31 +501,25 @@ def handle_list_or_dict_model(
         return type_name or "Any"
 
     # Handle imports and get type names
-    inner_type_name = "Any"
-    key_type_name = "Any"
-    value_type_name = "Any"
-
-    if model_type == "List" and inner_type is not None:
+    if model_type == "List":
         inner_type_name = handle_type_imports(inner_type)
-    elif model_type == "Dict" and key_type is not None and value_type is not None:
+    elif model_type == "Dict":
         key_type_name = handle_type_imports(key_type)
         value_type_name = handle_type_imports(value_type)
 
     # create the class definition
     if model_type == "List":
-        class_definition = f"class {sanitized_model_name}(RootModel[List[{inner_type_name}]]):\n"
+        class_definition = (
+            f"class {sanitized_model_name}(RootModel[List[{inner_type_name}]]):\n"
+        )
     elif model_type == "Dict":
         class_definition = f"class {sanitized_model_name}(RootModel[Dict[{key_type_name}, {value_type_name}]]):\n"
     else:
         raise ValueError("Model is not a list or dict model.")
     # Write typing imports
     if typing_imports:
-        typing_imports_filtered = typing_imports - get_builtin_types()
-        # Filter to only include valid string imports
-        valid_imports = [str(imp) for imp in typing_imports_filtered if imp is not None and isinstance(imp, str)]
-        typing_imports_sorted = sorted(valid_imports)
-        if typing_imports_sorted:
-            model_file.write(f"from typing import {', '.join(typing_imports_sorted)}\n")
+        typing_imports = sorted(typing_imports - get_builtin_types())
+        model_file.write(f"from typing import {', '.join(sorted(typing_imports))}\n")
 
     # Write module imports
     if module_imports:
@@ -514,30 +534,25 @@ def handle_list_or_dict_model(
 
 def handle_regular_model(
     model_file: TextIOWrapper,
-    model: type[BaseModel],
-    models: dict[str, type[BaseModel]],
-    dependency_graph: dict[str, set],
-    circular_models: set[str],
+    model: BaseModel,
+    models: Dict[str, Type[BaseModel]],
+    dependency_graph: Dict[str, set],
+    circular_models: Set[str],
     sanitized_model_name: str,
 ):
     # Check if the model is a RootModel
     is_root_model = isinstance(model, type) and issubclass(model, RootModel)
 
-    # Ensure the model is a BaseModel before accessing model_fields
-    if not (isinstance(model, type) and issubclass(model, BaseModel)):
-        logging.warning(f"Model '{sanitized_model_name}' is not a Pydantic BaseModel, skipping typing imports")
-        typing_imports_set = set()
-    else:
-        # Determine necessary imports
-        typing_imports_set = set(determine_typing_imports(model.model_fields, models, circular_models))
-    typing_imports = sorted(typing_imports_set - get_builtin_types())
+    # Determine necessary imports
+    typing_imports = sorted(
+        determine_typing_imports(model.model_fields, models, circular_models)
+        - get_builtin_types()
+    )
 
-    import_set = set()
-    if typing_imports:
-        import_set.add(f"from typing import {', '.join(typing_imports)}")
+    import_set = {f"from typing import {', '.join(typing_imports)}"}
 
     # Add pydantic imports using helper function
-    import_set.add(get_pydantic_imports(is_root_model))
+    import_set.add(get_pydantic_imports(sanitized_model_name, is_root_model))
 
     # Write imports for referenced models
     referenced_models = dependency_graph.get(sanitized_model_name, set())
@@ -557,9 +572,9 @@ def handle_regular_model(
 
     # Write class definition
     if is_root_model:
-        root_annotation = model.model_fields["root"].annotation
-        annotation_name = getattr(root_annotation, "__name__", "Any") if root_annotation is not None else "Any"
-        model_file.write(f"class {sanitized_model_name}(RootModel[{annotation_name}]):\n")
+        model_file.write(
+            f"class {sanitized_model_name}(RootModel[{model.model_fields['root'].annotation.__name__}]):\n"
+        )
     else:
         model_file.write(f"class {sanitized_model_name}(BaseModel):\n")
         write_model_fields(model_file, model, models, circular_models)
@@ -572,97 +587,51 @@ def handle_regular_model(
         model_file.write(f"\n{sanitized_model_name}.model_rebuild()\n")
 
 
-def find_enum_imports(model: type[BaseModel]) -> set[str]:
+def find_enum_imports(model: BaseModel) -> Set[str]:
     """Find all enum imports in the model fields."""
     import_set = set()
-    # Ensure the model is a BaseModel before accessing model_fields
-    if not (isinstance(model, type) and issubclass(model, BaseModel)):
-        return import_set
-
-    for field in model.model_fields.values():
+    for field_name, field in model.model_fields.items():
         inner_types = extract_inner_types(field.annotation)
         for inner_type in inner_types:
             if isinstance(inner_type, type) and issubclass(inner_type, Enum):
-                import_set.add(f"from .{inner_type.__name__} import {inner_type.__name__}")
+                import_set.add(
+                    f"from .{inner_type.__name__} import {inner_type.__name__}"
+                )
     return import_set
 
 
-def resolve_forward_refs_in_annotation(
-    annotation: Any, models: dict[str, type[BaseModel]], circular_models: set[str]
-) -> str:
+def resolve_forward_refs_in_annotation(annotation: Any, models: Dict[str, Type[BaseModel]], circular_models: Set[str]) -> str:
     """
-    Recursively resolve ForwardRef in an annotation to a string representation,
-    using modern Python 3.10+ syntax (X | Y instead of Union[X, Y], list[T] instead of List[T]).
+    Recursively resolve ForwardRef in an annotation to a string representation, 
+    handling Optional, List, and other generics, and quoting forward references.
     """
-    import types
-
-    # Handle ForwardRef directly
-    if isinstance(annotation, ForwardRef):
-        return (
-            f"'{annotation.__forward_arg__}'"
-            if annotation.__forward_arg__ in circular_models
-            else annotation.__forward_arg__
-        )
-
-    # Handle basic types
-    if isinstance(annotation, type):
-        return annotation.__name__
-
-    # Handle modern union types (X | Y) from Python 3.10+
-    if isinstance(annotation, types.UnionType):
-        args = annotation.__args__
-        if len(args) == 2 and type(None) in args:
-            # It's an Optional type - use modern X | None syntax
-            non_none_type = next(arg for arg in args if arg is not type(None))
-            inner = resolve_forward_refs_in_annotation(non_none_type, models, circular_models)
-            return f"{inner} | None"
-        # General Union type - use modern X | Y syntax
-        return " | ".join(resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args)
-
-    # Handle generic types
     origin = get_origin(annotation)
     args = get_args(annotation)
 
+    # Handle Optional as Union[T, NoneType] and convert it to Optional[T]
+    if origin is Union and len(args) == 2 and type(None) in args:
+        non_none_arg = args[0] if args[0] is not type(None) else args[1]
+        resolved_inner = resolve_forward_refs_in_annotation(non_none_arg, models, circular_models)
+        return f"Optional[{resolved_inner}]"
+
     if origin is None:
+        # Base case: if it's a ForwardRef, return it quoted
+        if isinstance(annotation, ForwardRef):
+            return f"'{annotation.__forward_arg__}'" if annotation.__forward_arg__ in circular_models else annotation.__forward_arg__
         return annotation.__name__ if hasattr(annotation, "__name__") else str(annotation)
 
-    # Handle Union[X, Y] and convert to modern X | Y syntax
-    if origin is Union:
-        if len(args) == 2 and type(None) in args:
-            # It's an Optional type - use modern X | None syntax
-            non_none_arg = args[0] if args[0] is not type(None) else args[1]
-            inner = resolve_forward_refs_in_annotation(non_none_arg, models, circular_models)
-            return f"{inner} | None"
-        # General Union type - use modern X | Y syntax
-        return " | ".join(resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args)
-
-    # Handle list[T] instead of List[T]
-    if origin is list:
-        inner = resolve_forward_refs_in_annotation(args[0], models, circular_models)
-        return f"list[{inner}]"
-
-    # Handle dict[K, V] instead of Dict[K, V]
-    if origin is dict:
-        key_type = resolve_forward_refs_in_annotation(args[0], models, circular_models)
-        value_type = resolve_forward_refs_in_annotation(args[1], models, circular_models)
-        return f"dict[{key_type}, {value_type}]"
-
-    # For other generics, use modern syntax where possible
+    # For generics like List, Dict, etc., resolve the inner types
     resolved_args = ", ".join(resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args)
     return f"{origin.__name__}[{resolved_args}]"
 
 
 def write_model_fields(
     model_file: TextIOWrapper,
-    model: type[BaseModel],
-    models: dict[str, type[BaseModel]],
-    circular_models: set[str],
+    model: BaseModel,
+    models: Dict[str, Type[BaseModel]],
+    circular_models: Set[str],
 ):
     """Write the fields for the model."""
-    # Ensure the model is a BaseModel before accessing model_fields
-    if not (isinstance(model, type) and issubclass(model, BaseModel)):
-        return
-
     for field_name, field in model.model_fields.items():
         sanitized_field_name = sanitize_field_name(field_name)
 
@@ -671,12 +640,15 @@ def write_model_fields(
 
         # Only include alias if it differs from the original field name
         if field.alias and field.alias != field_name:
-            model_file.write(f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n")
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None, alias='{field.alias}')\n"
+            )
         else:
-            model_file.write(f"    {sanitized_field_name}: {field_type} = Field(None)\n")
+            model_file.write(
+                f"    {sanitized_field_name}: {field_type} = Field(None)\n"
+            )
 
-
-def write_enum_files(models: dict[str, type[BaseModel]], models_dir: str):
+def write_enum_files(models: Dict[str, Type[BaseModel]], models_dir: str):
     """Write enum files directly from the model's fields."""
     for model in models.values():
         if hasattr(model, "model_fields"):
@@ -691,7 +663,9 @@ def write_enum_files(models: dict[str, type[BaseModel]], models_dir: str):
                             ef.write("from enum import Enum\n\n\n")
                             ef.write(f"class {enum_name}(Enum):\n")
                             for enum_member in inner_type:
-                                ef.write(f"    {enum_member.name} = '{enum_member.value}'\n")
+                                ef.write(
+                                    f"    {enum_member.name} = '{enum_member.value}'\n"
+                                )
 
 
 def sanitize_field_name(field_name: str) -> str:
@@ -701,10 +675,8 @@ def sanitize_field_name(field_name: str) -> str:
     return f"{field_name}_field" if keyword.iskeyword(field_name) else field_name
 
 
-def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
+def get_type_str(annotation: Any, models: Dict[str, Type[BaseModel]]) -> str:
     """Convert the annotation to a valid Python type string for writing to a file, handling model references."""
-    import types
-
     if isinstance(annotation, ForwardRef):
         # Handle ForwardRef directly by returning the forward-referenced name
         return annotation.__forward_arg__
@@ -713,36 +685,30 @@ def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
         # Handle basic types (e.g., int, str, float)
         return annotation.__name__
 
-    # Handle modern union types (X | Y) from Python 3.10+
-    elif isinstance(annotation, types.UnionType):
-        args = annotation.__args__
-        if len(args) == 2 and type(None) in args:
-            # It's an Optional type - use modern X | None syntax
-            non_none_type = next(arg for arg in args if arg is not type(None))
-            return f"{get_type_str(non_none_type, models)} | None"
-        # General Union type - use modern X | Y syntax
-        return " | ".join(get_type_str(arg, models) for arg in args)
-
     elif hasattr(annotation, "__origin__"):
         origin = annotation.__origin__
         args = annotation.__args__
 
-        # Handle List (e.g., list[str], list[Casualty])
-        if origin is list:
-            return f"list[{get_type_str(args[0], models)}]"
+        # Handle List (e.g., List[str], List[Casualty])
+        if origin is list or origin is List:
+            inner_type = get_type_str(args[0], models)
+            return f"List[{inner_type}]"
 
-        # Handle Dict (e.g., dict[str, int])
-        elif origin is dict:
-            return f"dict[{get_type_str(args[0], models)}, {get_type_str(args[1], models)}]"
+        # Handle Dict (e.g., Dict[str, int])
+        elif origin is dict or origin is Dict:
+            key_type = get_type_str(args[0], models)
+            value_type = get_type_str(args[1], models)
+            return f"Dict[{key_type}, {value_type}]"
 
-        # Handle Optional and Union (e.g., int | None, str | int)
+        # Handle Optional and Union (e.g., Optional[int], Union[str, int])
         elif origin is Union:
             if len(args) == 2 and args[1] is type(None):
-                # It's an Optional type - use modern X | None syntax
-                return f"{get_type_str(args[0], models)} | None"
+                # It's an Optional type
+                return f"Optional[{get_type_str(args[0], models)}]"
             else:
-                # General Union type - use modern X | Y syntax
-                return " | ".join(get_type_str(arg, models) for arg in args)
+                # General Union type
+                inner_types = ", ".join(get_type_str(arg, models) for arg in args)
+                return f"Union[{inner_types}]"
 
     elif hasattr(annotation, "__name__") and annotation.__name__ in models:
         # Handle references to other models (e.g., Casualty)
@@ -751,19 +717,25 @@ def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
     return "Any"
 
 
-def create_mermaid_class_diagram(dependency_graph: dict[str, set[str]], sort_order: list[str], output_file: str):
+def create_mermaid_class_diagram(
+    dependency_graph: Dict[str, Set[str]], sort_order: List[str], output_file: str
+):
     with open(output_file, "w") as f:
         f.write("classDiagram\n")
         for model in sort_order:
-            if dependencies := sorted(dependency_graph.get(model, [])):
-                for dep in dependencies:
-                    f.write(f"    {model} --> {dep}\n")
+            if model in dependency_graph:
+                dependencies = sorted(dependency_graph[model])
+                if dependencies:
+                    for dep in dependencies:
+                        f.write(f"    {model} --> {dep}\n")
+                else:
+                    f.write(f"    class {model}\n")
             else:
                 f.write(f"    class {model}\n")
 
 
 # Dependency handling and circular references
-def extract_inner_types(annotation: Any) -> list[Any]:
+def extract_inner_types(annotation: Any) -> List[Any]:
     """Recursively extract and preserve inner types from nested generics, returning actual type objects."""
     origin = get_origin(annotation)
 
@@ -777,7 +749,10 @@ def extract_inner_types(annotation: Any) -> list[Any]:
                 contains_none = True
             else:
                 non_none_args.extend(extract_inner_types(arg))  # Accumulate all inner types
-        return [Optional] + non_none_args if contains_none else [Union] + non_none_args
+        if contains_none:  # If NoneType was present, it's Optional
+            return [Optional] + non_none_args
+        else:
+            return [Union] + non_none_args
 
     # If it's a generic type (e.g., List, Dict), recurse into its arguments
     elif origin:
@@ -785,14 +760,15 @@ def extract_inner_types(annotation: Any) -> list[Any]:
         for arg in get_args(annotation):
             inner_types.extend(extract_inner_types(arg))  # Accumulate inner types recursively
         return [origin] + inner_types  # Return the actual origin (e.g., List, Dict) instead of its name
-
+    
     # Base case: return the actual class/type
     return [annotation]
 
 
+
 def build_dependency_graph(
-    models: dict[str, Any],
-) -> dict[str, set[str]]:
+    models: Dict[str, Union[Type[BaseModel], Type[List]]],
+) -> Dict[str, Set[str]]:
     """Build a dependency graph where each model depends on other models."""
     graph = defaultdict(set)
 
@@ -809,7 +785,10 @@ def build_dependency_graph(
                         graph[model_name].add(inner_type.__forward_arg__)
 
                     # Handle direct model references
-                    elif hasattr(inner_type, "__name__") and inner_type.__name__ in models:
+                    elif (
+                        hasattr(inner_type, "__name__")
+                        and inner_type.__name__ in models
+                    ):
                         graph[model_name].add(sanitize_name(inner_type.__name__))
 
                     # If it's a generic type, keep unwrapping
@@ -818,18 +797,25 @@ def build_dependency_graph(
                         for nested_type in nested_types:
                             if isinstance(nested_type, ForwardRef):
                                 graph[model_name].add(nested_type.__forward_arg__)
-                            elif hasattr(nested_type, "__name__") and nested_type.__name__ in models:
-                                graph[model_name].add(sanitize_name(nested_type.__name__))
+                            elif (
+                                hasattr(nested_type, "__name__")
+                                and nested_type.__name__ in models
+                            ):
+                                graph[model_name].add(
+                                    sanitize_name(nested_type.__name__)
+                                )
 
         # Handle List models (arrays)
-        elif hasattr(model, "__origin__") and (model.__origin__ is list or model.__origin__ is dict):
-            if not (args := getattr(model, "__args__", None)):
-                continue  # Skip if no args available
-            inner_type = args[0]
+        elif hasattr(model, "__origin__") and (
+            model.__origin__ is list or model.__origin__ is dict
+        ):
+            inner_type = model.__args__[0]
             if hasattr(inner_type, "__name__") and inner_type.__name__ in models:
                 graph[model_name].add(sanitize_name(inner_type.__name__))
         else:
-            logging.warning(f"Model '{model_name}' is not a Pydantic model, dict or list type")
+            logging.warning(
+                f"Model '{model_name}' is not a Pydantic model, dict or list type"
+            )
 
     # finally, add any models which have zero dependencies
     for model_name in models:
@@ -838,7 +824,7 @@ def build_dependency_graph(
     return graph
 
 
-def handle_dependencies(models: dict[str, type[BaseModel]]):
+def handle_dependencies(models: Dict[str, Type[BaseModel]]):
     graph = build_dependency_graph(models)
     sorted_models = topological_sort(graph)
     circular_models = detect_circular_dependencies(graph)
@@ -846,7 +832,7 @@ def handle_dependencies(models: dict[str, type[BaseModel]]):
     return graph, circular_models, sorted_models
 
 
-def topological_sort(graph: dict[str, set[str]]) -> list[str]:
+def topological_sort(graph: Dict[str, Set[str]]) -> List[str]:
     # Exclude Python built-in types from the graph
     built_in_types = get_builtin_types()
     sorted_graph = sorted(graph)
@@ -869,7 +855,9 @@ def topological_sort(graph: dict[str, set[str]]) -> list[str]:
     sorted_models = []
 
     while queue:
-        model = queue.pop(0)  # Use pop(0) instead of popleft() for deterministic behavior
+        model = queue.pop(
+            0
+        )  # Use pop(0) instead of popleft() for deterministic behavior
         sorted_models.append(model)
         for dep in sorted(graph[model]):
             if dep in built_in_types:
@@ -881,13 +869,15 @@ def topological_sort(graph: dict[str, set[str]]) -> list[str]:
 
     if len(sorted_models) != len(in_degree):
         missing_models = sorted(set(in_degree.keys()) - set(sorted_models))
-        logging.warning(f"Circular dependencies detected among models: {missing_models}")
+        logging.warning(
+            f"Circular dependencies detected among models: {missing_models}"
+        )
         sorted_models.extend(missing_models)
 
     return sorted_models
 
 
-def detect_circular_dependencies(graph: dict[str, set[str]]) -> set[str]:
+def detect_circular_dependencies(graph: Dict[str, Set[str]]) -> Set[str]:
     circular_models = set()
     visited = set()
     stack = set()
@@ -911,11 +901,8 @@ def detect_circular_dependencies(graph: dict[str, set[str]]) -> set[str]:
 
     return circular_models
 
-
-def replace_circular_references(annotation: Any, circular_models: set[str]) -> Any:
+def replace_circular_references(annotation: Any, circular_models: Set[str]) -> Any:
     """Recursively replace circular model references in annotations with ForwardRef."""
-    import types
-
     origin = get_origin(annotation)
     args = get_args(annotation)
 
@@ -927,34 +914,17 @@ def replace_circular_references(annotation: Any, circular_models: set[str]) -> A
 
     # Recurse into generic types
     new_args = tuple(replace_circular_references(arg, circular_models) for arg in args)
+    return origin[new_args] if origin else annotation
 
-    # Handle modern union types (X | Y) vs old Union[X, Y]
-    if origin is types.UnionType:
-        # For X | Y syntax, reconstruct using modern union syntax
-        if len(new_args) == 2 and type(None) in new_args:
-            non_none_type = next(arg for arg in new_args if arg is not type(None))
-            return non_none_type | None
-        else:
-            # For multiple union types, create using X | Y syntax
-            result = new_args[0]
-            for arg in new_args[1:]:
-                result = result | arg
-            return result
-    elif origin:
-        # For other generic types like List[X], Dict[X, Y], etc.
-        return origin[new_args]
-    else:
-        return annotation
-
-
-def break_circular_dependencies(models: dict[str, type[BaseModel]], circular_models: set[str]):
+def break_circular_dependencies(
+    models: Dict[str, Type[BaseModel]], circular_models: Set[str]
+):
     """Replace circular references in models with ForwardRef."""
     for model_name in circular_models:
         model = models[model_name]
-        for field in model.model_fields.values():
+        for field_name, field in model.model_fields.items():
             # Modify field.annotation directly
             field.annotation = replace_circular_references(field.annotation, circular_models)
-
 
 # def break_circular_dependencies(
 #     models: Dict[str, Type[BaseModel]], circular_models: Set[str]
@@ -984,27 +954,31 @@ def break_circular_dependencies(models: dict[str, type[BaseModel]], circular_mod
 
 
 # Load OpenAPI specs
-def load_specs(folder_path: str) -> list[dict[str, Any]]:
-    return [json.load(open(os.path.join(folder_path, f))) for f in os.listdir(folder_path) if f.endswith(".json")]
+def load_specs(folder_path: str) -> List[Dict[str, Any]]:
+    return [
+        json.load(open(os.path.join(folder_path, f)))
+        for f in os.listdir(folder_path)
+        if f.endswith(".json")
+    ]
 
 
-def get_api_name(spec: dict[str, Any]) -> str:
+def get_api_name(spec: Dict[str, Any]) -> str:
     return spec["info"]["title"]
 
 
 # Combine components and paths from all OpenAPI specs
 def combine_components_and_paths(
-    specs: list[dict[str, Any]], pydantic_names: dict[str, str]
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    combined_components: dict[str, Any] = {}
-    combined_paths: dict[str, Any] = {}
+    specs: List[Dict[str, Any]], pydantic_names: Dict[str, str]
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    combined_components = {}
+    combined_paths = {}
 
     for spec in specs:
         api_name = get_api_name(spec)
         api_path = f"/{spec.get('servers', [{}])[0].get('url', '').split('/', 3)[3]}"
         logging.info(f"Processing {api_name}")
         update_entities(spec, api_name, pydantic_names)
-        combined_components |= spec.get("components", {}).get("schemas", {})
+        combined_components.update(spec.get("components", {}).get("schemas", {}))
         these_paths = spec.get("paths", {})
         # add /api_path to the paths
         for path, methods in these_paths.items():
@@ -1015,18 +989,14 @@ def combine_components_and_paths(
     return combined_components, combined_paths
 
 
-def are_models_equal(model1: type[BaseModel], model2: type[BaseModel]) -> bool:
+def are_models_equal(model1: Type[BaseModel], model2: Type[BaseModel]) -> bool:
     """Check if two Pydantic models are equal based on their fields, types, and metadata."""
-    # Ensure both are actually BaseModel subclasses
-    if not (issubclass(model1, BaseModel) and issubclass(model2, BaseModel)):
-        return False
-
     # Compare field structure
     if set(model1.model_fields.keys()) != set(model2.model_fields.keys()):
         return False
 
     # Compare each field's annotation, alias, default, and constraints
-    for field_name in model1.model_fields:
+    for field_name in model1.model_fields.keys():
         field1 = model1.model_fields[field_name]
         field2 = model2.model_fields[field_name]
 
@@ -1047,22 +1017,18 @@ def are_models_equal(model1: type[BaseModel], model2: type[BaseModel]) -> bool:
             return False
 
         # Compare field constraints (title, description, etc.)
-        if (
-            hasattr(field1, "json_schema_extra")
-            and hasattr(field2, "json_schema_extra")
-            and field1.json_schema_extra != field2.json_schema_extra
-        ):
+        if hasattr(field1, 'json_schema_extra') and hasattr(field2, 'json_schema_extra') and field1.json_schema_extra != field2.json_schema_extra:
             return False
 
     return True
 
 
 def deduplicate_models(
-    models: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, str]]:
+    models: Dict[str, Union[Type[BaseModel], Type[List]]],
+) -> Dict[str, Union[Type[BaseModel], Type[List]]]:
     """Deduplicate models by removing models with the same content."""
-    deduplicated_models: dict[str, Any] = {}
-    reference_map: dict[str, str] = {}
+    deduplicated_models = {}
+    reference_map = {}
 
     # Compare models to detect duplicates
     for model_name, model in models.items():
@@ -1073,14 +1039,16 @@ def deduplicate_models(
             if isinstance(model, type) and isinstance(dedup_model, type) and are_models_equal(model, dedup_model):
                 reference_map[model_name] = dedup_model_name
                 found_duplicate = True
-                logging.info(f"Model '{model_name}' is a duplicate of '{dedup_model_name}'")
+                logging.info(
+                    f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
+                )
                 break
 
             # Handle List models separately by comparing their inner types
             model_origin = get_origin(model)
             dedup_model_origin = get_origin(dedup_model)
 
-            if model_origin is list and dedup_model_origin is list:
+            if model_origin in {list, List} and dedup_model_origin in {list, List}:
                 model_inner_type = get_args(model)[0]
                 dedup_inner_type = get_args(dedup_model)[0]
 
@@ -1088,7 +1056,9 @@ def deduplicate_models(
                 if model_inner_type == dedup_inner_type:
                     reference_map[model_name] = dedup_model_name
                     found_duplicate = True
-                    logging.info(f"Model '{model_name}' is a duplicate of '{dedup_model_name}'")
+                    logging.info(
+                        f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
+                    )
                     break
 
         # If no duplicate found, keep the model
@@ -1099,7 +1069,9 @@ def deduplicate_models(
     return deduplicated_models, reference_map
 
 
-def update_model_references(models: dict[str, Any], reference_map: dict[str, str]) -> dict[str, Any]:
+def update_model_references(
+    models: Dict[str, Union[Type[BaseModel], Type[List]]], reference_map: Dict[str, str]
+) -> Dict[str, Union[Type[BaseModel], Type[List]]]:
     """Update references in models based on the deduplication reference map, including nested generics."""
 
     def resolve_model_reference(annotation: Any) -> Any:
@@ -1108,7 +1080,7 @@ def update_model_references(models: dict[str, Any], reference_map: dict[str, str
         args = get_args(annotation)
 
         # Handle Union, List, or any other generic types
-        if origin in {Union, list, list, Optional} and args:
+        if origin in {Union, list, List, Optional} and args:
             # Recursively resolve references for the inner types
             resolved_inner_types = tuple(resolve_model_reference(arg) for arg in args)
             return origin[resolved_inner_types]
@@ -1122,7 +1094,7 @@ def update_model_references(models: dict[str, Any], reference_map: dict[str, str
         # If it's a normal type or not in the map, return as-is
         return annotation
 
-    updated_models: dict[str, Any] = {}
+    updated_models = {}
 
     for model_name, model in models.items():
         if model_name in reference_map:
@@ -1138,21 +1110,28 @@ def update_model_references(models: dict[str, Any], reference_map: dict[str, str
 
 def join_url_paths(a: str, b: str) -> str:
     # Ensure the base path ends with a slash for urljoin to work properly
-    return urljoin(f"{a}/", b.lstrip("/"))
+    return urljoin(a + "/", b.lstrip("/"))
 
 
-def create_config(spec: dict[str, Any], output_path: str, base_url: str) -> None:
+def create_config(spec: Dict[str, Any], output_path: str, base_url: str) -> None:
     class_name = f"{sanitize_name(get_api_name(spec))}Client"
     paths = spec.get("paths", {})
 
+    config_lines = []
     api_path = "/" + spec.get("servers", [{}])[0].get("url", "").split("/", 3)[3]
-    config_lines = [f'base_url = "{base_url}"\n', "endpoints = {\n"]
+    config_lines.append(f'base_url = "{base_url}"\n')
+    config_lines.append("endpoints = {\n")
 
     for path, methods in paths.items():
-        for details in methods.values():
-            if operation_id := details.get("operationId"):
+        for method, details in methods.items():
+            operation_id = details.get("operationId")
+            if operation_id:
                 path_uri = join_url_paths(api_path, path)
-                path_params = [param["name"] for param in details.get("parameters", []) if param["in"] == "path"]
+                path_params = [
+                    param["name"]
+                    for param in details.get("parameters", [])
+                    if param["in"] == "path"
+                ]
                 for i, param in enumerate(path_params):
                     path_uri = path_uri.replace(f"{{{param}}}", f"{{{i}}}")
 
@@ -1160,7 +1139,9 @@ def create_config(spec: dict[str, Any], output_path: str, base_url: str) -> None
 
                 model_name = get_model_name_from_path(response_content)
 
-                config_lines.append(f"    '{operation_id}': {{'uri': '{path_uri}', 'model': '{model_name}'}},\n")
+                config_lines.append(
+                    f"    '{operation_id}': {{'uri': '{path_uri}', 'model': '{model_name}'}},\n"
+                )
 
     config_lines.append("}\n")
 
@@ -1174,22 +1155,21 @@ def create_config(spec: dict[str, Any], output_path: str, base_url: str) -> None
 
 
 def classify_parameters(
-    parameters: list[dict[str, Any]],
-) -> tuple[list[str], list[str]]:
+    parameters: List[Dict[str, Any]],
+) -> Tuple[List[str], List[str]]:
     """Classify parameters into path and query parameters."""
     path_params = [param["name"] for param in parameters if param["in"] == "path"]
     query_params = [param["name"] for param in parameters if param["in"] == "query"]
     return path_params, query_params
 
 
-def create_class(spec: dict[str, Any], output_path: str) -> None:
+def create_class(spec: Dict[str, Any], output_path: str) -> None:
     paths = spec.get("paths", {})
     class_name = f"{sanitize_name(get_api_name(spec))}Client"
 
-    class_lines = [
-        f"from .{class_name}_config import endpoints, base_url\n",
-        "from ..core import ApiError, ResponseModel, Client\n",
-    ]
+    class_lines = []
+    class_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
+    class_lines.append("from ..core import ApiError, ResponseModel, Client\n")
     path_lines = [f"class {class_name}(Client):\n"]
 
     all_types = set()
@@ -1198,10 +1178,13 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
 
     for path, methods in paths.items():
         full_path = join_url_paths(api_path, path)
-        for details in methods.values():
-            if operation_id := details.get("operationId"):
+        for method, details in methods.items():
+            operation_id = details.get("operationId")
+            if operation_id:
                 parameters = details.get("parameters", [])
-                all_types.update([map_openapi_type(param["schema"]["type"]) for param in parameters])
+                all_types.update(
+                    [map_openapi_type(param["schema"]["type"]) for param in parameters]
+                )
 
                 param_str = create_function_parameters(parameters)
                 response_content = details["responses"].get("200", {})
@@ -1216,7 +1199,9 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
                 )
 
                 description = details.get("description", "No description in the OpenAPI spec.")
-                docstring = f"{description}\n\n  Query path: `{full_path}`\n\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
+                docstring = f"{description}\n"
+                docstring = docstring + f"\n  Query path: `{full_path}`\n"
+                docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
                 if parameters:
                     docstring_parameters = "\n".join(
                         [
@@ -1232,9 +1217,14 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
 
                 path_params, query_params = classify_parameters(parameters)
 
-                formatted_path_params = ", ".join([sanitize_field_name(param) for param in path_params])
+                formatted_path_params = ", ".join(
+                    [sanitize_field_name(param) for param in path_params]
+                )
                 formatted_query_params = ", ".join(
-                    [f"'{param}': {sanitize_field_name(param)}" for param in query_params]
+                    [
+                        f"'{param}': {sanitize_field_name(param)}"
+                        for param in query_params
+                    ]
                 )
 
                 if formatted_query_params:
@@ -1252,10 +1242,15 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
                     )
 
     valid_type_imports = all_types - get_builtin_types()
-    if valid_type_import_strings := sorted([t.__name__ for t in valid_type_imports]):
-        class_lines.append(f"from typing import {', '.join(valid_type_import_strings)}\n")
+    valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
+    if valid_type_import_strings:
+        class_lines.append(
+            f"from typing import {', '.join(valid_type_import_strings)}\n"
+        )
     if all_package_models:
-        class_lines.append(f"from ..models import {', '.join(sorted(all_package_models))}\n")
+        class_lines.append(
+            f"from ..models import {', '.join(sorted(all_package_models))}\n"
+        )
     class_lines.append("\n")
     class_file_path = os.path.join(output_path, f"{class_name}.py")
     os.makedirs(os.path.dirname(class_file_path), exist_ok=True)
@@ -1266,7 +1261,9 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
     logging.info(f"Class file generated at: {class_file_path}")
 
 
-def get_model_name_from_path(response_content: dict[str, Any], only_arrays: bool = False) -> str:
+def get_model_name_from_path(
+    response_content: Dict[str, Any], only_arrays: bool = False
+) -> str:
     if not response_content or "content" not in response_content:
         return "GenericResponseModel"
 
@@ -1283,77 +1280,70 @@ def get_model_name_from_path(response_content: dict[str, Any], only_arrays: bool
 
     if response_type == "array":
         items_schema = schema.get("items", {})
-        if model_ref := items_schema.get("$ref", ""):
-            return get_array_model_name(sanitize_name(model_ref.split("/")[-1]))
-    elif not only_arrays and (model_ref := schema.get("$ref", "")):
+        model_ref = items_schema.get("$ref", "")
+        if not model_ref:
+            return "GenericResponseModel"
+        return get_array_model_name(sanitize_name(model_ref.split("/")[-1]))
+    elif not only_arrays:
+        model_ref = schema.get("$ref", "")
+        if not model_ref:
+            return "GenericResponseModel"
         return sanitize_name(model_ref.split("/")[-1])
+    else:
+        return "GenericResponseModel"
 
-    return "GenericResponseModel"
 
-
-def create_function_parameters(parameters: list[dict[str, Any]]) -> str:
+def create_function_parameters(parameters: List[Dict[str, Any]]) -> str:
     """Create a string of function parameters, ensuring they are safe Python identifiers."""
     # Sort parameters to ensure required ones come first
-    sorted_parameters = sorted(parameters, key=lambda param: not param.get("required", False))
+    sorted_parameters = sorted(
+        parameters, key=lambda param: not param.get("required", False)
+    )
 
-    return ", ".join(
+    param_str = ", ".join(
         [
-            f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
-            if param.get("required", False)
-            else f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} | None = None"
+            f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} | None = None"
+            if not param.get("required", False)
+            else f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
             for param in sorted_parameters
         ]
     )
+    return param_str
 
 
-def _format_class_names_list(class_names: list[str]) -> str:
-    """Format class names as a comma-separated list with proper indentation."""
-    return ",\n".join([f"    '{name}'" for name in class_names])
-
-
-def _write_class_names_to_all(file_handle, class_names: list[str], additional_items: list[str] | None = None) -> None:
-    """Write class names to __all__ list in a file."""
-    file_handle.write("__all__ = [\n")
-    file_handle.write(_format_class_names_list(class_names))
-    if additional_items:
-        for item in additional_items:
-            file_handle.write(f",\n    '{item}'")
-    file_handle.write("\n]\n")
-
-
-def _write_endpoint_init_file(file_handle, class_names: list[str]) -> None:
-    """Write the endpoint __init__.py file content."""
-    file_handle.write("from typing import Literal\n\n")
-    file_handle.write("\n".join([f"from .{name} import {name}" for name in class_names]))
-    file_handle.write("\n\nTfLEndpoint = Literal[\n")
-    file_handle.write(_format_class_names_list(class_names))
-    file_handle.write("\n]\n")
-    file_handle.write("\n")
-    _write_class_names_to_all(file_handle, class_names)
-
-
-def save_classes(specs: list[dict[str, Any]], base_path: str, base_url: str) -> None:
+def save_classes(specs: List[Dict[str, Any]], base_path: str, base_url: str) -> None:
     """Create config and class files for each spec in the specs list."""
 
     class_names = [f"{sanitize_name(get_api_name(spec))}Client" for spec in specs]
     init_file_path = os.path.join(base_path, "__init__.py")
     with open(init_file_path, "w") as init_file:
         # init_file.write(f"# {init_file_path}\n")
-        class_names_joined = ",\n    ".join(class_names)
-        init_file.write(f"from .endpoints import (\n    {class_names_joined}\n)\n")
+        class_names_joined = ',\n    '.join(class_names)
+        init_file.write(
+            f"from .endpoints import (\n    {class_names_joined}\n)\n"
+        )
         # init_file.write("\n".join([f"from .endpoints.{name} import {name}" for name in class_names]))
         # init_file.write("from ..core import Client\n")
         # init_file.write("from ..core import RestClient\n")
         init_file.write("from . import models\n")
         # init_file.write("from .models import ApiError, GenericResponseModel, ResponseModel\n")
         # other_classes = ["Client", "RestClient", "ApiError", "GenericResponseModel", "ResponseModel"]
-        _write_class_names_to_all(init_file, class_names, ["models"])
+        init_file.write("__all__ = [\n")
+        init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
+        # init_file.write(",\n".join([f"    '{name}'" for name in other_classes]))
+        init_file.write(",\n    'models'\n]\n")
 
     endpoint_path = os.path.join(base_path, "endpoints")
     os.makedirs(endpoint_path, exist_ok=True)
     endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
     with open(endpoint_init_file, "w") as endpoint_init:
-        _write_endpoint_init_file(endpoint_init, class_names)
+        # endpoint_init.write(f"# {endpoint_init_file}\n")
+        endpoint_init.write(
+            "\n".join([f"from .{name} import {name}" for name in class_names])
+        )
+        endpoint_init.write("\n__all__ = [\n")
+        endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
+        endpoint_init.write("\n]\n")
 
     for spec in specs:
         api_name = get_api_name(spec)
@@ -1365,14 +1355,16 @@ def save_classes(specs: list[dict[str, Any]], base_path: str, base_url: str) -> 
     logging.info("All classes and configs saved.")
 
 
-def map_deduplicated_name(type_name: str, reference_map: dict[str, str]) -> str:
-    return reference_map.get(type_name, type_name)
+def map_deduplicated_name(type_name: str, reference_map: Dict[str, str]) -> str:
+    if type_name in reference_map:
+        return reference_map[type_name]
+    return type_name
 
 
-def _create_schema_name_mapping(combined_components: dict[str, Any]) -> dict[str, str]:
+def _create_schema_name_mapping(combined_components: Dict[str, Any]) -> Dict[str, str]:
     """Create reverse mapping from sanitized names back to original schema names."""
     schema_name_mapping = {}
-    for schema_name in combined_components:
+    for schema_name in combined_components.keys():
         sanitized = sanitize_name(schema_name)
         schema_name_mapping[sanitized] = schema_name
     return schema_name_mapping
@@ -1380,11 +1372,11 @@ def _create_schema_name_mapping(combined_components: dict[str, Any]) -> dict[str
 
 def _update_schema_with_reference_map(
     schema_name: str,
-    schema: dict[str, Any],
-    reference_map: dict[str, str],
-    schema_name_mapping: dict[str, str],
-    combined_components: dict[str, Any],
-) -> tuple[str, dict[str, Any]]:
+    schema: Dict[str, Any],
+    reference_map: Dict[str, str],
+    schema_name_mapping: Dict[str, str],
+    combined_components: Dict[str, Any],
+) -> Tuple[str, Dict[str, Any]]:
     """Update a single schema using the reference map."""
     sanitized_name = sanitize_name(schema_name)
     if sanitized_name in reference_map:
@@ -1402,10 +1394,10 @@ def _update_schema_with_reference_map(
 
 
 def _update_schemas_in_spec(
-    spec: dict[str, Any],
-    combined_components: dict[str, Any],
-    reference_map: dict[str, str],
-    schema_name_mapping: dict[str, str],
+    spec: Dict[str, Any],
+    combined_components: Dict[str, Any],
+    reference_map: Dict[str, str],
+    schema_name_mapping: Dict[str, str],
 ) -> None:
     """Update all schemas in a spec using the reference map."""
     if "components" in spec and "schemas" in spec["components"]:
@@ -1418,7 +1410,7 @@ def _update_schemas_in_spec(
         spec["components"]["schemas"] = updated_schemas
 
 
-def _update_reference_in_schema(schema: dict[str, Any], reference_map: dict[str, str]) -> None:
+def _update_reference_in_schema(schema: Dict[str, Any], reference_map: Dict[str, str]) -> None:
     """Update a single schema reference using the reference map."""
     if "$ref" in schema:
         ref = schema["$ref"].split("/")[-1]
@@ -1432,23 +1424,26 @@ def _update_reference_in_schema(schema: dict[str, Any], reference_map: dict[str,
             schema["items"]["$ref"] = f"#/components/schemas/{reference_map[sanitized_ref]}"
 
 
-def _update_paths_in_spec(spec: dict[str, Any], reference_map: dict[str, str]) -> None:
+def _update_paths_in_spec(spec: Dict[str, Any], reference_map: Dict[str, str]) -> None:
     """Update all path references in a spec using the reference map."""
     if "paths" in spec:
         for path in spec["paths"].values():
             for method in path.values():
                 if "responses" in method:
                     for response in method["responses"].values():
-                        if "content" in response and "application/json" in response["content"]:
+                        if (
+                            "content" in response
+                            and "application/json" in response["content"]
+                        ):
                             schema = response["content"]["application/json"].get("schema", {})
                             _update_reference_in_schema(schema, reference_map)
 
 
 def update_specs_with_model_changes(
-    specs: list[dict[str, Any]],
-    combined_components: dict[str, Any],
-    reference_map: dict[str, str],
-) -> list[dict[str, Any]]:
+    specs: List[Dict[str, Any]],
+    combined_components: Dict[str, Any],
+    reference_map: Dict[str, str],
+) -> List[Dict[str, Any]]:
     """Update specs with model changes by applying reference mappings."""
     updated_specs = []
     schema_name_mapping = _create_schema_name_mapping(combined_components)
@@ -1472,7 +1467,7 @@ def _validate_and_setup_paths(spec_path: str, output_path: str) -> None:
     os.makedirs(output_path, exist_ok=True)
 
 
-def _load_and_process_specs(spec_path: str) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
+def _load_and_process_specs(spec_path: str) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
     """Load OpenAPI specs and process components and paths."""
     logging.info("Loading OpenAPI specs...")
     specs = load_specs(spec_path)
@@ -1480,21 +1475,25 @@ def _load_and_process_specs(spec_path: str) -> tuple[list[dict[str, Any]], dict[
         raise ValueError(f"No valid specifications found in {spec_path}")
 
     logging.info("Generating components...")
-    pydantic_names: dict[str, str] = {}
-    combined_components, combined_paths = combine_components_and_paths(specs, pydantic_names)
+    pydantic_names = {}
+    combined_components, combined_paths = combine_components_and_paths(
+        specs, pydantic_names
+    )
 
     logging.info("Creating array types from model paths...")
     # some paths have an array type as a response, we need to handle these separately
-    array_types = create_array_types_from_model_paths(combined_paths, combined_components)
+    array_types = create_array_types_from_model_paths(
+        combined_paths, combined_components
+    )
     combined_components.update(array_types)
 
     return specs, combined_components, combined_paths
 
 
-def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
+def _generate_and_process_models(combined_components: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
     """Generate Pydantic models and process them for deduplication."""
     logging.info("Generating Pydantic models...")
-    models: dict[str, Any] = {}
+    models = {}
     create_pydantic_models(combined_components, models)
 
     logging.info("Creating generic response model...")
@@ -1506,14 +1505,12 @@ def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[d
     deduplicated_models, reference_map = deduplicate_models(models)
 
     # Update model references
-    models_updated = update_model_references(deduplicated_models, reference_map)
+    models = update_model_references(deduplicated_models, reference_map)
 
-    return models_updated, reference_map
+    return models, reference_map
 
 
-def _handle_dependencies_and_save_models(
-    models: dict[str, Any], output_path: str
-) -> tuple[dict[str, set[str]], set[str], list[str]]:
+def _handle_dependencies_and_save_models(models: Dict[str, Any], output_path: str) -> Tuple[Dict[str, List[str]], List[str], List[str]]:
     """Handle model dependencies and save models to files."""
     logging.info("Handling dependencies...")
     dependency_graph, circular_models, sorted_models = handle_dependencies(models)
@@ -1526,44 +1523,28 @@ def _handle_dependencies_and_save_models(
 
 
 def _generate_classes_and_diagrams(
-    specs: list[dict[str, Any]],
-    combined_components: dict[str, Any],
-    reference_map: dict[str, str],
+    specs: List[Dict[str, Any]],
+    combined_components: Dict[str, Any],
+    reference_map: Dict[str, str],
     output_path: str,
-    dependency_graph: dict[str, set[str]],
-    sorted_models: list[str],
+    dependency_graph: Dict[str, List[str]],
+    sorted_models: List[str],
 ) -> None:
     """Generate API classes and create documentation diagrams."""
     # Create config and class
     logging.info("Creating config and class files...")
     base_url = "https://api.tfl.gov.uk"
     logging.info("Updating specs with model changes...")
-    updated_specs = update_specs_with_model_changes(specs, combined_components, reference_map)
+    updated_specs = update_specs_with_model_changes(
+        specs, combined_components, reference_map
+    )
 
     save_classes(updated_specs, output_path, base_url)
 
     logging.info("Creating Mermaid class diagram...")
-    create_mermaid_class_diagram(dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd"))
-
-
-def _execute_model_generation(spec_path: str, output_path: str) -> int:
-    """Execute the core model generation logic.
-
-    Args:
-        spec_path: Path to the directory containing OpenAPI specification files
-        output_path: Path to the directory where generated models will be saved
-
-    Returns:
-        Number of models generated
-    """
-    _validate_and_setup_paths(spec_path, output_path)
-    specs, combined_components, _ = _load_and_process_specs(spec_path)
-    models, reference_map = _generate_and_process_models(combined_components)
-    dependency_graph, _, sorted_models = _handle_dependencies_and_save_models(models, output_path)
-    _generate_classes_and_diagrams(
-        specs, combined_components, reference_map, output_path, dependency_graph, sorted_models
+    create_mermaid_class_diagram(
+        dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
     )
-    return len(models)
 
 
 def main(spec_path: str, output_path: str):
@@ -1580,8 +1561,13 @@ def main(spec_path: str, output_path: str):
         Exception: For any other errors during model generation
     """
     try:
-        model_count = _execute_model_generation(spec_path, output_path)
-        logging.info(f"Model generation completed successfully. Generated {model_count} models.")
+        _validate_and_setup_paths(spec_path, output_path)
+        specs, combined_components, combined_paths = _load_and_process_specs(spec_path)
+        models, reference_map = _generate_and_process_models(combined_components)
+        dependency_graph, circular_models, sorted_models = _handle_dependencies_and_save_models(models, output_path)
+        _generate_classes_and_diagrams(specs, combined_components, reference_map, output_path, dependency_graph, sorted_models)
+
+        logging.info(f"Model generation completed successfully. Generated {len(models)} models.")
 
     except FileNotFoundError as e:
         logging.error(f"File not found error: {e}")
@@ -1600,7 +1586,9 @@ def main(spec_path: str, output_path: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process OpenAPI spec and generate output.")
+    parser = argparse.ArgumentParser(
+        description="Process OpenAPI spec and generate output."
+    )
     parser.add_argument("specpath", help="Path to the OpenAPI specification file")
     parser.add_argument("output", help="Path to the output file")
 
