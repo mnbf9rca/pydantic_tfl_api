@@ -19,53 +19,79 @@ class TestTflMappings:
         assert isinstance(tfl_mappings, dict)
         assert len(tfl_mappings) > 0
 
-    def test_known_apis_exist(self):
+    @pytest.mark.parametrize("api_name", [
+        "AccidentStats",
+        "AirQuality",
+        "BikePoint",
+        "Journey",
+        "Line",
+        "Mode",
+        "Place",
+        "Road",
+        "Search",
+        "StopPoint",
+        "Vehicle"
+    ])
+    def test_known_apis_exist(self, api_name):
         """Test that expected APIs have mappings."""
         from mappings import tfl_mappings
+        assert api_name in tfl_mappings, f"Expected API '{api_name}' not found in mappings"
 
-        expected_apis = [
-            "AccidentStats",
-            "AirQuality",
-            "BikePoint",
-            "Journey",
-            "Line",
-            "Mode",
-            "Place",
-            "Road",
-            "Search",
-            "StopPoint",
-            "Vehicle"
-        ]
-
-        for api in expected_apis:
-            assert api in tfl_mappings, f"Expected API '{api}' not found in mappings"
-
-    def test_mapping_structure(self):
-        """Test the structure of individual API mappings."""
+    def _get_all_mapping_data(self):
+        """Helper to extract all mapping data for parameterized tests."""
         from mappings import tfl_mappings
+
+        # Extract all api mappings for testing
+        api_data = []
+        mapping_data = []
 
         for api_name, mapping in tfl_mappings.items():
-            assert isinstance(mapping, dict), f"Mapping for {api_name} should be a dictionary"
-
-            # Some APIs may have empty mappings (like 'crowding'), which is valid
-            if len(mapping) > 0:
-                # Check that all keys and values are strings
+            api_data.append((api_name, mapping))
+            # Only add non-empty mappings to avoid conditional logic
+            if mapping:
                 for old_name, new_name in mapping.items():
-                    assert isinstance(old_name, str), f"Mapping key should be string in {api_name}"
-                    assert isinstance(new_name, str), f"Mapping value should be string in {api_name}"
+                    mapping_data.append((api_name, old_name, new_name))
 
-    def test_specific_mappings(self):
-        """Test specific known mappings."""
+        return api_data, mapping_data
+
+    @pytest.mark.parametrize("api_name,mapping", _get_all_mapping_data(None)[0])
+    def test_mapping_is_dictionary(self, api_name, mapping):
+        """Test that each API mapping is a dictionary."""
+        assert isinstance(mapping, dict), f"Mapping for {api_name} should be a dictionary"
+
+    @pytest.mark.parametrize("api_name,old_name,new_name", _get_all_mapping_data(None)[1])
+    def test_mapping_values_are_strings(self, api_name, old_name, new_name):
+        """Test that mapping keys and values are strings."""
+        assert isinstance(old_name, str), f"Mapping key should be string in {api_name}"
+        assert isinstance(new_name, str), f"Mapping value should be string in {api_name}"
+
+    @pytest.mark.parametrize("api_name,old_name,new_name", _get_all_mapping_data(None)[1])
+    def test_mapping_names_are_non_empty(self, api_name, old_name, new_name):
+        """Test that mapping keys and values are non-empty."""
+        assert old_name.strip(), f"Empty old name found in {api_name}"
+        assert new_name.strip(), f"Empty new name found in {api_name}"
+
+    @pytest.mark.parametrize("api_name,old_name,expected_new_name", [
+        ("AirQuality", "System.Object", "Tfl.Api.Presentation.Entities.LondonAirForecast"),
+    ])
+    def test_specific_mappings(self, api_name, old_name, expected_new_name):
+        """Test specific known mappings using parameterization."""
         from mappings import tfl_mappings
 
-        # Test AirQuality mapping
-        if "AirQuality" in tfl_mappings:
-            air_quality = tfl_mappings["AirQuality"]
-            assert "System.Object" in air_quality
-            assert air_quality["System.Object"] == "Tfl.Api.Presentation.Entities.LondonAirForecast"
+        assert api_name in tfl_mappings, f"Expected API '{api_name}' not found in mappings"
+        mapping = tfl_mappings[api_name]
+        assert old_name in mapping, f"Expected old name '{old_name}' not found in mapping for API '{api_name}'"
+        assert mapping[old_name] == expected_new_name, (
+            f"Expected new name '{expected_new_name}' for old name '{old_name}' in API '{api_name}', "
+            f"but got '{mapping[old_name]}'"
+        )
 
-        # Test that BikePoint has PlaceArray mappings
-        if "BikePoint" in tfl_mappings:
-            bike_point = tfl_mappings["BikePoint"]
-            place_array_mappings = [k for k in bike_point.keys() if "PlaceArray" in k]
-            assert len(place_array_mappings) > 0, "BikePoint should have PlaceArray mappings"
+    def test_bikepoint_has_place_array_mappings(self):
+        """Test that BikePoint has PlaceArray mappings."""
+        from mappings import tfl_mappings
+
+        # This is a specific structural test that doesn't need parameterization
+        assert "BikePoint" in tfl_mappings, "BikePoint should exist in mappings"
+        bike_point = tfl_mappings["BikePoint"]
+        place_array_mappings = [k for k in bike_point.keys() if "PlaceArray" in k]
+        assert len(place_array_mappings) > 0, "BikePoint should have PlaceArray mappings"

@@ -34,7 +34,10 @@ from pydantic import BaseModel, RootModel, create_model, Field
 from pydantic.fields import FieldInfo
 from datetime import datetime
 from collections import defaultdict, deque
-from mappings import tfl_mappings
+try:
+    from .mappings import tfl_mappings
+except ImportError:
+    from mappings import tfl_mappings
 
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.insert(0, src_path)
@@ -74,7 +77,7 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
 def update_refs(obj: Any, entity_mapping: Dict[str, str]):
     if isinstance(obj, dict):
         for key, value in obj.items():
-            if key == "$ref" and value.split("/")[-1] in entity_mapping:
+            if key == "$ref" and isinstance(value, str) and value.split("/")[-1] in entity_mapping:
                 obj[key] = value.replace(
                     value.split("/")[-1], entity_mapping[value.split("/")[-1]]
                 )
@@ -119,7 +122,22 @@ def create_enum_class(enum_name: str, enum_values: List[Any]) -> Type[Enum]:
         return re.sub(r"\W|^(?=\d)", "_", value).strip("_").replace("-", "_").upper()
 
     # Create a dictionary with cleaned enum names as keys and the original values as values
-    enum_dict = {clean_enum_name(str(v)): v for v in enum_values}
+    # Handle uniqueness by adding suffix for duplicates
+    enum_dict = {}
+    name_counts = {}
+
+    for v in enum_values:
+        cleaned_name = clean_enum_name(str(v))
+
+        # Handle duplicate names by appending a counter
+        if cleaned_name in enum_dict:
+            name_counts[cleaned_name] = name_counts.get(cleaned_name, 1) + 1
+            unique_name = f"{cleaned_name}_{name_counts[cleaned_name]}"
+        else:
+            unique_name = cleaned_name
+            name_counts[cleaned_name] = 1
+
+        enum_dict[unique_name] = v
 
     # Dynamically create the Enum class
     return Enum(enum_name, enum_dict)
@@ -132,8 +150,9 @@ def map_type(
     models: Dict[str, Type[BaseModel]],
 ) -> Any:
     if "$ref" in field_spec:
-        # Handle references
-        return sanitize_name(field_spec["$ref"].split("/")[-1])
+        # Handle references using ForwardRef for proper type resolution
+        ref_name = sanitize_name(field_spec["$ref"].split("/")[-1])
+        return ForwardRef(ref_name)
 
     openapi_type: str = field_spec.get("type", "Any")
 
@@ -306,29 +325,29 @@ def determine_typing_imports(
 
 
 def write_import_statements(
-    init_f: TextIOWrapper, models: Dict[str, Type[BaseModel]], models_dir: str
+    init_f: TextIOWrapper,
+    models: Dict[str, Type[BaseModel]],
+    models_dir: str,
+    sorted_models: List[str] = None
 ):
-    # Group models by their module, excluding standard Python and typing modules
-    module_to_classes = {}
-    for model_name, model in models.items():
-        # Skip models that are Dict or List or other typing models
-        if isinstance(model, (Dict, List)) or model.__module__ in ['builtins', 'typing', '__main__']:
-            continue
+    """Write import statements in dependency-aware order to minimize forward references."""
+    # If we have a topologically sorted order, use it; otherwise fall back to alphabetical
+    if sorted_models:
+        model_order = sorted_models
+    else:
+        model_order = sorted(models.keys())
 
-        module_name = model.__module__.split(".")[-1]
-        if module_name not in module_to_classes:
-            module_to_classes[module_name] = []
-        module_to_classes[module_name].append(model_name)
-
-    # Write the import statements, one per module
-    for module, class_names in module_to_classes.items():
-        init_f.write(f"from .{module} import {', '.join(class_names)}\n")
+    # Write imports in dependency order to minimize forward references
+    for model_name in model_order:
+        if model_name in models:
+            init_f.write(f"from .{model_name} import {model_name}\n")
 
 def save_models(
     models: Dict[str, Union[Type[BaseModel], Type[List]]],
     base_path: str,
     dependency_graph: Dict[str, Set[str]],
     circular_models: Set[str],
+    sorted_models: List[str] = None,
 ):
     models_dir = os.path.join(base_path, "models")
     os.makedirs(models_dir, exist_ok=True)
@@ -338,8 +357,8 @@ def save_models(
 
     init_file = os.path.join(models_dir, "__init__.py")
     with open(init_file, "w") as init_f:
-        # Write import statements for existing models
-        write_import_statements(init_f, models, models_dir)
+        # Write import statements in dependency-aware order to minimize forward references
+        write_import_statements(init_f, models, models_dir, sorted_models)
 
         for model_name, model in models.items():
             save_model_file(
@@ -352,7 +371,7 @@ def save_models(
                 init_f,
             )
 
-        model_names = ',\n    '.join(f'"{key}"' for key in models.keys())
+        model_names = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
         init_f.write(
             f"\n__all__ = [\n    {model_names}\n]\n"
         )
@@ -373,6 +392,8 @@ def save_model_file(
     sanitized_model_name = sanitize_name(model_name)
     model_file = os.path.join(models_dir, f"{sanitized_model_name}.py")
     os.makedirs(models_dir, exist_ok=True)
+
+    # Files will be overwritten directly - git serves as our backup
 
     with open(model_file, "w") as mf:
         if is_list_or_dict_model(model):
@@ -423,25 +444,49 @@ def handle_list_or_dict_model(
     sanitized_model_name: str,
 ):
     """Handle models that are either list or dict types."""
-    inner_type = model.__args__[0]
     # Check if the model is a List or Dict
     model_type = is_list_or_dict_model(model)
+    args = model.__args__
+
+    # Validate argument counts
+    if model_type == "List" and len(args) != 1:
+        raise ValueError(f"List type should have exactly 1 argument, got {len(args)}")
+    elif model_type == "Dict" and len(args) != 2:
+        raise ValueError(f"Dict type should have exactly 2 arguments (key, value), got {len(args)}")
+
+    # Extract inner types based on model type
+    if model_type == "List":
+        inner_type = args[0]
+        key_type = None
+        value_type = inner_type
+    elif model_type == "Dict":
+        key_type = args[0]
+        value_type = args[1]
+        inner_type = value_type  # For backward compatibility, keep inner_type as value_type
     # Separate sets for typing imports and module imports
     typing_imports = {model_type}
     module_imports = set()
 
-    # Handle non-built-in types for inner_type
+    # Handle non-built-in types for both key and value types (for Dict) or inner_type (for List)
     built_in_types = get_builtin_types()
-    inner_type_name = getattr(inner_type, "__name__", None)
 
-    if inner_type_name and inner_type_name not in {"Optional", "List", "Union"}:
-        sanitized_inner_name = sanitize_name(inner_type_name)
-        if sanitized_inner_name in models:
-            module_imports.add(
-                f"from .{sanitized_inner_name} import {sanitized_inner_name}"
-            )
-        elif inner_type not in built_in_types:
-            typing_imports.add(inner_type_name)
+    def handle_type_imports(type_obj):
+        """Helper function to handle imports for a given type."""
+        type_name = getattr(type_obj, "__name__", None)
+        if type_name and type_name not in {"Optional", "List", "Union"}:
+            sanitized_name = sanitize_name(type_name)
+            if sanitized_name in models:
+                module_imports.add(f"from .{sanitized_name} import {sanitized_name}")
+            elif type_obj not in built_in_types:
+                typing_imports.add(type_name)
+        return type_name or "Any"
+
+    # Handle imports and get type names
+    if model_type == "List":
+        inner_type_name = handle_type_imports(inner_type)
+    elif model_type == "Dict":
+        key_type_name = handle_type_imports(key_type)
+        value_type_name = handle_type_imports(value_type)
 
     # create the class definition
     if model_type == "List":
@@ -449,8 +494,7 @@ def handle_list_or_dict_model(
             f"class {sanitized_model_name}(RootModel[List[{inner_type_name}]]):\n"
         )
     elif model_type == "Dict":
-        class_definition = f"class {sanitized_model_name}(RootModel[Dict[str, Any]]):\n"
-        typing_imports.add("Any")
+        class_definition = f"class {sanitized_model_name}(RootModel[Dict[{key_type_name}, {value_type_name}]]):\n"
     else:
         raise ValueError("Model is not a list or dict model.")
     # Write typing imports
@@ -605,8 +649,7 @@ def sanitize_field_name(field_name: str) -> str:
     """Sanitize field names that are Python reserved keywords."""
     if keyword.iskeyword(field_name):
         logging.info(f"Field name '{field_name}' is a Python keyword, sanitizing to '{field_name}_field'")
-        return f"{field_name}_field"  # Append '_field' to reserved keywords
-    return field_name
+    return f"{field_name}_field" if keyword.iskeyword(field_name) else field_name
 
 
 def get_type_str(annotation: Any, models: Dict[str, Type[BaseModel]]) -> str:
@@ -752,7 +795,7 @@ def build_dependency_graph(
             )
 
     # finally, add any models which have zero dependencies
-    for model_name in models.keys():
+    for model_name in models:
         if model_name not in graph:
             graph[model_name] = set()
     return graph
@@ -909,14 +952,14 @@ def combine_components_and_paths(
 
     for spec in specs:
         api_name = get_api_name(spec)
-        api_path = "/" + spec.get("servers", [{}])[0].get("url", "").split("/", 3)[3]
+        api_path = f"/{spec.get('servers', [{}])[0].get('url', '').split('/', 3)[3]}"
         logging.info(f"Processing {api_name}")
         update_entities(spec, api_name, pydantic_names)
         combined_components.update(spec.get("components", {}).get("schemas", {}))
         these_paths = spec.get("paths", {})
         # add /api_path to the paths
         for path, methods in these_paths.items():
-            new_path = urljoin(api_path + "/", path.lstrip("/"))
+            new_path = urljoin(f"{api_path}/", path.lstrip("/"))
             combined_paths[new_path] = methods
         # combined_paths.update(spec.get("paths", {}))
 
@@ -924,14 +967,37 @@ def combine_components_and_paths(
 
 
 def are_models_equal(model1: Type[BaseModel], model2: Type[BaseModel]) -> bool:
-    """Check if two Pydantic models are equal based on their fields and types."""
-    fields1 = {
-        name: str(field.annotation) for name, field in model1.model_fields.items()
-    }
-    fields2 = {
-        name: str(field.annotation) for name, field in model2.model_fields.items()
-    }
-    return fields1 == fields2
+    """Check if two Pydantic models are equal based on their fields, types, and metadata."""
+    # Compare field structure
+    if set(model1.model_fields.keys()) != set(model2.model_fields.keys()):
+        return False
+
+    # Compare each field's annotation, alias, default, and constraints
+    for field_name in model1.model_fields.keys():
+        field1 = model1.model_fields[field_name]
+        field2 = model2.model_fields[field_name]
+
+        # Compare field annotations
+        if str(field1.annotation) != str(field2.annotation):
+            return False
+
+        # Compare aliases
+        if field1.alias != field2.alias:
+            return False
+
+        # Compare default values
+        if field1.default != field2.default:
+            return False
+
+        # Compare if field is required
+        if field1.is_required() != field2.is_required():
+            return False
+
+        # Compare field constraints (title, description, etc.)
+        if hasattr(field1, 'json_schema_extra') and hasattr(field2, 'json_schema_extra') and field1.json_schema_extra != field2.json_schema_extra:
+            return False
+
+    return True
 
 
 def deduplicate_models(
@@ -947,15 +1013,13 @@ def deduplicate_models(
 
         # Compare with already deduplicated models
         for dedup_model_name, dedup_model in deduplicated_models.items():
-            if isinstance(model, type) and isinstance(dedup_model, type):
-                # Compare Pydantic models
-                if are_models_equal(model, dedup_model):
-                    reference_map[model_name] = dedup_model_name
-                    found_duplicate = True
-                    logging.info(
-                        f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
-                    )
-                    break
+            if isinstance(model, type) and isinstance(dedup_model, type) and are_models_equal(model, dedup_model):
+                reference_map[model_name] = dedup_model_name
+                found_duplicate = True
+                logging.info(
+                    f"Model '{model_name}' is a duplicate of '{dedup_model_name}'"
+                )
+                break
 
             # Handle List models separately by comparing their inner types
             model_origin = get_origin(model)
@@ -1274,64 +1338,118 @@ def map_deduplicated_name(type_name: str, reference_map: Dict[str, str]) -> str:
     return type_name
 
 
+def _create_schema_name_mapping(combined_components: Dict[str, Any]) -> Dict[str, str]:
+    """Create reverse mapping from sanitized names back to original schema names."""
+    schema_name_mapping = {}
+    for schema_name in combined_components.keys():
+        sanitized = sanitize_name(schema_name)
+        schema_name_mapping[sanitized] = schema_name
+    return schema_name_mapping
+
+
+def _update_schema_with_reference_map(
+    schema_name: str,
+    schema: Dict[str, Any],
+    reference_map: Dict[str, str],
+    schema_name_mapping: Dict[str, str],
+    combined_components: Dict[str, Any],
+) -> Tuple[str, Dict[str, Any]]:
+    """Update a single schema using the reference map."""
+    sanitized_name = sanitize_name(schema_name)
+    if sanitized_name in reference_map:
+        # This is a duplicate, use the canonical model's schema
+        canonical_name = reference_map[sanitized_name]
+        # Find the original schema name for the canonical model
+        if canonical_name in schema_name_mapping:
+            original_schema_name = schema_name_mapping[canonical_name]
+            return canonical_name, combined_components[original_schema_name]
+        else:
+            # Fallback: use the current schema but with canonical name
+            return canonical_name, schema
+    else:
+        return sanitized_name, schema
+
+
+def _update_schemas_in_spec(
+    spec: Dict[str, Any],
+    combined_components: Dict[str, Any],
+    reference_map: Dict[str, str],
+    schema_name_mapping: Dict[str, str],
+) -> None:
+    """Update all schemas in a spec using the reference map."""
+    if "components" in spec and "schemas" in spec["components"]:
+        updated_schemas = {}
+        for schema_name, schema in spec["components"]["schemas"].items():
+            new_name, new_schema = _update_schema_with_reference_map(
+                schema_name, schema, reference_map, schema_name_mapping, combined_components
+            )
+            updated_schemas[new_name] = new_schema
+        spec["components"]["schemas"] = updated_schemas
+
+
+def _update_reference_in_schema(schema: Dict[str, Any], reference_map: Dict[str, str]) -> None:
+    """Update a single schema reference using the reference map."""
+    if "$ref" in schema:
+        ref = schema["$ref"].split("/")[-1]
+        sanitized_ref = sanitize_name(ref)
+        if sanitized_ref in reference_map:
+            schema["$ref"] = f"#/components/schemas/{reference_map[sanitized_ref]}"
+    elif schema.get("type") == "array" and "$ref" in schema.get("items", {}):
+        ref = schema["items"]["$ref"].split("/")[-1]
+        sanitized_ref = sanitize_name(ref)
+        if sanitized_ref in reference_map:
+            schema["items"]["$ref"] = f"#/components/schemas/{reference_map[sanitized_ref]}"
+
+
+def _update_paths_in_spec(spec: Dict[str, Any], reference_map: Dict[str, str]) -> None:
+    """Update all path references in a spec using the reference map."""
+    if "paths" in spec:
+        for path in spec["paths"].values():
+            for method in path.values():
+                if "responses" in method:
+                    for response in method["responses"].values():
+                        if (
+                            "content" in response
+                            and "application/json" in response["content"]
+                        ):
+                            schema = response["content"]["application/json"].get("schema", {})
+                            _update_reference_in_schema(schema, reference_map)
+
+
 def update_specs_with_model_changes(
     specs: List[Dict[str, Any]],
     combined_components: Dict[str, Any],
     reference_map: Dict[str, str],
 ) -> List[Dict[str, Any]]:
+    """Update specs with model changes by applying reference mappings."""
     updated_specs = []
+    schema_name_mapping = _create_schema_name_mapping(combined_components)
+
     for spec in specs:
         updated_spec = spec.copy()
-        if "components" in updated_spec and "schemas" in updated_spec["components"]:
-            updated_schemas = {}
-            for schema_name, schema in updated_spec["components"]["schemas"].items():
-                sanitized_name = sanitize_name(schema_name)
-                if sanitized_name in reference_map:
-                    new_name = reference_map[sanitized_name]
-                    updated_schemas[new_name] = combined_components[new_name]
-                else:
-                    updated_schemas[sanitized_name] = schema
-            updated_spec["components"]["schemas"] = updated_schemas
-
-        # Update references in paths
-        if "paths" in updated_spec:
-            for path in updated_spec["paths"].values():
-                for method in path.values():
-                    if "responses" in method:
-                        for response in method["responses"].values():
-                            if (
-                                "content" in response
-                                and "application/json" in response["content"]
-                            ):
-                                schema = response["content"]["application/json"].get(
-                                    "schema", {}
-                                )
-                                if "$ref" in schema:
-                                    ref = schema["$ref"].split("/")[-1]
-                                    sanitized_ref = sanitize_name(ref)
-                                    if sanitized_ref in reference_map:
-                                        schema["$ref"] = (
-                                            f"#/components/schemas/{reference_map[sanitized_ref]}"
-                                        )
-                                elif schema.get(
-                                    "type"
-                                ) == "array" and "$ref" in schema.get("items", {}):
-                                    ref = schema["items"]["$ref"].split("/")[-1]
-                                    sanitized_ref = sanitize_name(ref)
-                                    if sanitized_ref in reference_map:
-                                        schema["items"]["$ref"] = (
-                                            f"#/components/schemas/{reference_map[sanitized_ref]}"
-                                        )
-
+        _update_schemas_in_spec(updated_spec, combined_components, reference_map, schema_name_mapping)
+        _update_paths_in_spec(updated_spec, reference_map)
         updated_specs.append(updated_spec)
+
     return updated_specs
 
 
 # Main function
-def main(spec_path: str, output_path: str):
+def _validate_and_setup_paths(spec_path: str, output_path: str) -> None:
+    """Validate input paths and create output directory."""
+    if not os.path.exists(spec_path):
+        raise FileNotFoundError(f"Specification path does not exist: {spec_path}")
+
+    logging.info(f"Starting model generation from {spec_path} to {output_path}")
     os.makedirs(output_path, exist_ok=True)
+
+
+def _load_and_process_specs(spec_path: str) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
+    """Load OpenAPI specs and process components and paths."""
     logging.info("Loading OpenAPI specs...")
     specs = load_specs(spec_path)
+    if not specs:
+        raise ValueError(f"No valid specifications found in {spec_path}")
 
     logging.info("Generating components...")
     pydantic_names = {}
@@ -1346,6 +1464,11 @@ def main(spec_path: str, output_path: str):
     )
     combined_components.update(array_types)
 
+    return specs, combined_components, combined_paths
+
+
+def _generate_and_process_models(combined_components: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    """Generate Pydantic models and process them for deduplication."""
     logging.info("Generating Pydantic models...")
     models = {}
     create_pydantic_models(combined_components, models)
@@ -1361,13 +1484,30 @@ def main(spec_path: str, output_path: str):
     # Update model references
     models = update_model_references(deduplicated_models, reference_map)
 
+    return models, reference_map
+
+
+def _handle_dependencies_and_save_models(models: Dict[str, Any], output_path: str) -> Tuple[Dict[str, List[str]], List[str], List[str]]:
+    """Handle model dependencies and save models to files."""
     logging.info("Handling dependencies...")
     dependency_graph, circular_models, sorted_models = handle_dependencies(models)
 
     # Now save the deduplicated models
     logging.info("Saving models to files...")
-    save_models(models, output_path, dependency_graph, circular_models)
+    save_models(models, output_path, dependency_graph, circular_models, sorted_models)
 
+    return dependency_graph, circular_models, sorted_models
+
+
+def _generate_classes_and_diagrams(
+    specs: List[Dict[str, Any]],
+    combined_components: Dict[str, Any],
+    reference_map: Dict[str, str],
+    output_path: str,
+    dependency_graph: Dict[str, List[str]],
+    sorted_models: List[str],
+) -> None:
+    """Generate API classes and create documentation diagrams."""
     # Create config and class
     logging.info("Creating config and class files...")
     base_url = "https://api.tfl.gov.uk"
@@ -1382,6 +1522,42 @@ def main(spec_path: str, output_path: str):
     create_mermaid_class_diagram(
         dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
     )
+
+
+def main(spec_path: str, output_path: str):
+    """
+    Main function to build Pydantic models from OpenAPI specifications.
+
+    Args:
+        spec_path: Path to the directory containing OpenAPI specification files
+        output_path: Path to the directory where generated models will be saved
+
+    Raises:
+        FileNotFoundError: If spec_path doesn't exist
+        ValueError: If specs are invalid or malformed
+        Exception: For any other errors during model generation
+    """
+    try:
+        _validate_and_setup_paths(spec_path, output_path)
+        specs, combined_components, combined_paths = _load_and_process_specs(spec_path)
+        models, reference_map = _generate_and_process_models(combined_components)
+        dependency_graph, circular_models, sorted_models = _handle_dependencies_and_save_models(models, output_path)
+        _generate_classes_and_diagrams(specs, combined_components, reference_map, output_path, dependency_graph, sorted_models)
+
+        logging.info(f"Model generation completed successfully. Generated {len(models)} models.")
+
+    except FileNotFoundError as e:
+        logging.error(f"File not found error: {e}")
+        raise
+    except ValueError as e:
+        logging.error(f"Value error during model generation: {e}")
+        raise
+    except PermissionError as e:
+        logging.error(f"Permission error accessing files: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error during model generation: {e}", exc_info=True)
+        raise RuntimeError(f"Model generation failed: {e}") from e
 
     logging.info("Processing complete.")
 
