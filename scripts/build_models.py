@@ -164,7 +164,7 @@ def map_type(
         if items_spec:
             return list[map_type(items_spec, field_name, components, models)]
         else:
-            logging.warning(f"'items' missing in array definition, using Any")
+            logging.warning("'items' missing in array definition, using Any")
             return list[Any]
 
     # Map standard OpenAPI types to Python types
@@ -591,7 +591,7 @@ def find_enum_imports(model: BaseModel) -> set[str]:
 
 def resolve_forward_refs_in_annotation(annotation: Any, models: dict[str, type[BaseModel]], circular_models: set[str]) -> str:
     """
-    Recursively resolve ForwardRef in an annotation to a string representation, 
+    Recursively resolve ForwardRef in an annotation to a string representation,
     handling Optional, List, and other generics, and quoting forward references.
     """
     origin = get_origin(annotation)
@@ -749,7 +749,7 @@ def extract_inner_types(annotation: Any) -> list[Any]:
         for arg in get_args(annotation):
             inner_types.extend(extract_inner_types(arg))  # Accumulate inner types recursively
         return [origin] + inner_types  # Return the actual origin (e.g., List, Dict) instead of its name
-    
+
     # Base case: return the actual class/type
     return [annotation]
 
