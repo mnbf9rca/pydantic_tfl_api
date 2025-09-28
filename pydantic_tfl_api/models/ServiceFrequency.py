@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ServiceFrequency(BaseModel):
-    lowestFrequency: Optional[float] = Field(None, alias='lowestFrequency')
-    highestFrequency: Optional[float] = Field(None, alias='highestFrequency')
+    lowestFrequency: float | None = Field(None)
+    highestFrequency: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

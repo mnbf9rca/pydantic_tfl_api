@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class OrderedRoute(BaseModel):
-    name: Optional[str] = Field(None, alias='name')
-    naptanIds: Optional[list[str]] = Field(None, alias='naptanIds')
-    serviceType: Optional[str] = Field(None, alias='serviceType')
+    name: str | None = Field(None)
+    naptanIds: list[str] | None = Field(None)
+    serviceType: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

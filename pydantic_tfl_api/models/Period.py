@@ -1,14 +1,13 @@
 from .ServiceFrequency import ServiceFrequency
 from .TwentyFourHourClockTime import TwentyFourHourClockTime
 from .TypeEnum import TypeEnum
-from pydantic import BaseModel, Field
-from typing import Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Period(BaseModel):
-    type: Optional[TypeEnum] = Field(None, alias='type')
-    fromTime: Optional[TwentyFourHourClockTime] = Field(None, alias='fromTime')
-    toTime: Optional[TwentyFourHourClockTime] = Field(None, alias='toTime')
-    frequency: Optional[ServiceFrequency] = Field(None, alias='frequency')
+    type: TypeEnum | None = Field(None)
+    fromTime: TwentyFourHourClockTime | None = Field(None)
+    toTime: TwentyFourHourClockTime | None = Field(None)
+    frequency: ServiceFrequency | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

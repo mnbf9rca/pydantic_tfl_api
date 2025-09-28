@@ -1,18 +1,17 @@
 from .Crowding import Crowding
 from .RouteTypeEnum import RouteTypeEnum
 from .StatusEnum import StatusEnum
-from pydantic import BaseModel, Field
-from typing import Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Identifier(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    name: Optional[str] = Field(None, alias='name')
-    uri: Optional[str] = Field(None, alias='uri')
-    fullName: Optional[str] = Field(None, alias='fullName')
-    type: Optional[str] = Field(None, alias='type')
-    crowding: Optional[Crowding] = Field(None, alias='crowding')
-    routeType: Optional[RouteTypeEnum] = Field(None, alias='routeType')
-    status: Optional[StatusEnum] = Field(None, alias='status')
+    id: str | None = Field(None)
+    name: str | None = Field(None)
+    uri: str | None = Field(None)
+    fullName: str | None = Field(None)
+    type: str | None = Field(None)
+    crowding: Crowding | None = Field(None)
+    routeType: RouteTypeEnum | None = Field(None)
+    status: StatusEnum | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

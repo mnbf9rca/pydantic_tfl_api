@@ -1,25 +1,24 @@
 from .PhaseEnum import PhaseEnum
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadProject(BaseModel):
-    projectId: Optional[str] = Field(None, alias='projectId')
-    schemeName: Optional[str] = Field(None, alias='schemeName')
-    projectName: Optional[str] = Field(None, alias='projectName')
-    projectDescription: Optional[str] = Field(None, alias='projectDescription')
-    projectPageUrl: Optional[str] = Field(None, alias='projectPageUrl')
-    consultationPageUrl: Optional[str] = Field(None, alias='consultationPageUrl')
-    consultationStartDate: Optional[str] = Field(None, alias='consultationStartDate')
-    consultationEndDate: Optional[str] = Field(None, alias='consultationEndDate')
-    constructionStartDate: Optional[str] = Field(None, alias='constructionStartDate')
-    constructionEndDate: Optional[str] = Field(None, alias='constructionEndDate')
-    boroughsBenefited: Optional[list[str]] = Field(None, alias='boroughsBenefited')
-    cycleSuperhighwayId: Optional[str] = Field(None, alias='cycleSuperhighwayId')
-    phase: Optional[PhaseEnum] = Field(None, alias='phase')
-    contactName: Optional[str] = Field(None, alias='contactName')
-    contactEmail: Optional[str] = Field(None, alias='contactEmail')
-    externalPageUrl: Optional[str] = Field(None, alias='externalPageUrl')
-    projectSummaryPageUrl: Optional[str] = Field(None, alias='projectSummaryPageUrl')
+    projectId: str | None = Field(None)
+    schemeName: str | None = Field(None)
+    projectName: str | None = Field(None)
+    projectDescription: str | None = Field(None)
+    projectPageUrl: str | None = Field(None)
+    consultationPageUrl: str | None = Field(None)
+    consultationStartDate: str | None = Field(None)
+    consultationEndDate: str | None = Field(None)
+    constructionStartDate: str | None = Field(None)
+    constructionEndDate: str | None = Field(None)
+    boroughsBenefited: list[str] | None = Field(None)
+    cycleSuperhighwayId: str | None = Field(None)
+    phase: PhaseEnum | None = Field(None)
+    contactName: str | None = Field(None)
+    contactEmail: str | None = Field(None)
+    externalPageUrl: str | None = Field(None)
+    projectSummaryPageUrl: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

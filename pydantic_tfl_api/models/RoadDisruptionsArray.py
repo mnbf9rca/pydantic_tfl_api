@@ -1,8 +1,8 @@
-from pydantic import RootModel
+from pydantic import RootModel, ConfigDict
 from typing import List
 from .RoadDisruption import RoadDisruption
 
 
 class RoadDisruptionsArray(RootModel[List[RoadDisruption]]):
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

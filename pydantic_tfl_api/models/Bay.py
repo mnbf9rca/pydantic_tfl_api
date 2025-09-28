@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Bay(BaseModel):
-    bayType: Optional[str] = Field(None, alias='bayType')
-    bayCount: Optional[int] = Field(None, alias='bayCount')
-    free: Optional[int] = Field(None, alias='free')
-    occupied: Optional[int] = Field(None, alias='occupied')
+    bayType: str | None = Field(None)
+    bayCount: int | None = Field(None)
+    free: int | None = Field(None)
+    occupied: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

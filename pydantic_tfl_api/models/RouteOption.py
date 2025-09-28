@@ -1,12 +1,11 @@
 from .Identifier import Identifier
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RouteOption(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    name: Optional[str] = Field(None, alias='name')
-    directions: Optional[list[str]] = Field(None, alias='directions')
-    lineIdentifier: Optional[Identifier] = Field(None, alias='lineIdentifier')
+    id: str | None = Field(None)
+    name: str | None = Field(None)
+    directions: list[str] | None = Field(None)
+    lineIdentifier: Identifier | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

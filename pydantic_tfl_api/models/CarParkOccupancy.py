@@ -1,12 +1,11 @@
 from .Bay import Bay
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CarParkOccupancy(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    bays: Optional[list[Bay]] = Field(None, alias='bays')
-    name: Optional[str] = Field(None, alias='name')
-    carParkDetailsUrl: Optional[str] = Field(None, alias='carParkDetailsUrl')
+    id: str | None = Field(None)
+    bays: list[Bay] | None = Field(None)
+    name: str | None = Field(None)
+    carParkDetailsUrl: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -1,28 +1,27 @@
 from .Identifier import Identifier
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class MatchedStop(BaseModel):
-    routeId: Optional[int] = Field(None, alias='routeId')
-    parentId: Optional[str] = Field(None, alias='parentId')
-    stationId: Optional[str] = Field(None, alias='stationId')
-    icsId: Optional[str] = Field(None, alias='icsId')
-    topMostParentId: Optional[str] = Field(None, alias='topMostParentId')
-    direction: Optional[str] = Field(None, alias='direction')
-    towards: Optional[str] = Field(None, alias='towards')
-    modes: Optional[list[str]] = Field(None, alias='modes')
-    stopType: Optional[str] = Field(None, alias='stopType')
-    stopLetter: Optional[str] = Field(None, alias='stopLetter')
-    zone: Optional[str] = Field(None, alias='zone')
-    accessibilitySummary: Optional[str] = Field(None, alias='accessibilitySummary')
-    hasDisruption: Optional[bool] = Field(None, alias='hasDisruption')
-    lines: Optional[list[Identifier]] = Field(None, alias='lines')
-    status: Optional[bool] = Field(None, alias='status')
-    id: Optional[str] = Field(None, alias='id')
-    url: Optional[str] = Field(None, alias='url')
-    name: Optional[str] = Field(None, alias='name')
-    lat: Optional[float] = Field(None, alias='lat')
-    lon: Optional[float] = Field(None, alias='lon')
+    routeId: int | None = Field(None)
+    parentId: str | None = Field(None)
+    stationId: str | None = Field(None)
+    icsId: str | None = Field(None)
+    topMostParentId: str | None = Field(None)
+    direction: str | None = Field(None)
+    towards: str | None = Field(None)
+    modes: list[str] | None = Field(None)
+    stopType: str | None = Field(None)
+    stopLetter: str | None = Field(None)
+    zone: str | None = Field(None)
+    accessibilitySummary: str | None = Field(None)
+    hasDisruption: bool | None = Field(None)
+    lines: list[Identifier] | None = Field(None)
+    status: bool | None = Field(None)
+    id: str | None = Field(None)
+    url: str | None = Field(None)
+    name: str | None = Field(None)
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

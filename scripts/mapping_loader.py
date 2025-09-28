@@ -7,14 +7,15 @@ that replace the legacy Python mappings.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
+
 import jsonschema
 
 
 class MappingLoader:
     """Loader for TfL API mappings with schema validation."""
 
-    def __init__(self, data_file: Optional[Path] = None, schema_file: Optional[Path] = None):
+    def __init__(self, data_file: Path | None = None, schema_file: Path | None = None):
         """Initialize the mapping loader.
 
         Args:
@@ -23,8 +24,8 @@ class MappingLoader:
         """
         self._data_file = data_file or self._get_default_data_file()
         self._schema_file = schema_file or self._get_default_schema_file()
-        self._mappings_data: Optional[Dict[str, Any]] = None
-        self._schema: Optional[Dict[str, Any]] = None
+        self._mappings_data: dict[str, Any] | None = None
+        self._schema: dict[str, Any] | None = None
 
     def _get_default_data_file(self) -> Path:
         """Get the default path to the mappings data file."""
@@ -34,18 +35,18 @@ class MappingLoader:
         """Get the default path to the schema file."""
         return Path(__file__).parent.parent / "schemas" / "tfl_mappings_schema.json"
 
-    def _load_schema(self) -> Dict[str, Any]:
+    def _load_schema(self) -> dict[str, Any]:
         """Load and cache the JSON schema."""
         if self._schema is None:
-            with open(self._schema_file, 'r', encoding='utf-8') as f:
+            with open(self._schema_file, encoding='utf-8') as f:
                 self._schema = json.load(f)
         assert self._schema is not None  # mypy assertion: schema is loaded
         return self._schema
 
-    def _load_data(self) -> Dict[str, Any]:
+    def _load_data(self) -> dict[str, Any]:
         """Load and cache the mappings data."""
         if self._mappings_data is None:
-            with open(self._data_file, 'r', encoding='utf-8') as f:
+            with open(self._data_file, encoding='utf-8') as f:
                 self._mappings_data = json.load(f)
         assert self._mappings_data is not None  # mypy assertion: data is loaded
         return self._mappings_data
@@ -64,7 +65,7 @@ class MappingLoader:
         jsonschema.validate(instance=data, schema=schema)
         return True
 
-    def get_api_mappings(self, api_name: str) -> Dict[str, str]:
+    def get_api_mappings(self, api_name: str) -> dict[str, str]:
         """Get type mappings for a specific API.
 
         Args:
@@ -82,7 +83,7 @@ class MappingLoader:
 
         return data["apis"][api_name]["mappings"]
 
-    def get_api_response_mappings(self, api_name: str) -> Dict[str, str]:
+    def get_api_response_mappings(self, api_name: str) -> dict[str, str]:
         """Get response mappings for a specific API.
 
         Args:
@@ -101,7 +102,7 @@ class MappingLoader:
         api_data = data["apis"][api_name]
         return api_data.get("response_mappings", {})
 
-    def get_all_mappings(self, api_name: str) -> Dict[str, str]:
+    def get_all_mappings(self, api_name: str) -> dict[str, str]:
         """Get combined type and response mappings for a specific API.
 
         Args:
@@ -119,7 +120,7 @@ class MappingLoader:
         # Combine both mappings using union operator
         return type_mappings | response_mappings
 
-    def get_legacy_format(self) -> Dict[str, Dict[str, str]]:
+    def get_legacy_format(self) -> dict[str, dict[str, str]]:
         """Get mappings in the legacy Python format for backward compatibility.
 
         Returns:
@@ -146,7 +147,7 @@ class MappingLoader:
         data = self._load_data()
         return list(data["apis"].keys())
 
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         """Get metadata about the mappings.
 
         Returns:
@@ -161,7 +162,7 @@ class MappingLoader:
 
 
 # Convenience functions for backward compatibility
-def load_tfl_mappings() -> Dict[str, Dict[str, str]]:
+def load_tfl_mappings() -> dict[str, dict[str, str]]:
     """Load TfL mappings in legacy format.
 
     This function provides backward compatibility with the old mappings.py format.
@@ -173,7 +174,7 @@ def load_tfl_mappings() -> Dict[str, Dict[str, str]]:
     return loader.get_legacy_format()
 
 
-def get_api_mappings(api_name: str) -> Dict[str, str]:
+def get_api_mappings(api_name: str) -> dict[str, str]:
     """Get mappings for a specific API.
 
     Args:

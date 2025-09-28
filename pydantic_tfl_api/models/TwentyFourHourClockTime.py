@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TwentyFourHourClockTime(BaseModel):
-    hour: Optional[str] = Field(None, alias='hour')
-    minute: Optional[str] = Field(None, alias='minute')
+    hour: str | None = Field(None)
+    minute: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

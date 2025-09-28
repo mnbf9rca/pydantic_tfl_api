@@ -1,9 +1,8 @@
 from .DisambiguationOption import DisambiguationOption
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Disambiguation(BaseModel):
-    disambiguationOptions: Optional[list[DisambiguationOption]] = Field(None, alias='disambiguationOptions')
+    disambiguationOptions: list[DisambiguationOption] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

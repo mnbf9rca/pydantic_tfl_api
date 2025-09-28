@@ -1,6 +1,7 @@
 import unittest
-from pydantic_tfl_api import endpoints
 from typing import get_args
+
+from pydantic_tfl_api import endpoints
 
 
 class TestTypeHints(unittest.TestCase):

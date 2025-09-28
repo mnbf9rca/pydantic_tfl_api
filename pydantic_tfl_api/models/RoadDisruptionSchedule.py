@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadDisruptionSchedule(BaseModel):
-    startTime: Optional[str] = Field(None, alias='startTime')
-    endTime: Optional[str] = Field(None, alias='endTime')
+    startTime: str | None = Field(None)
+    endTime: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

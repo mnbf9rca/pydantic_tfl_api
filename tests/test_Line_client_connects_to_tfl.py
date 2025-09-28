@@ -1,13 +1,12 @@
-import os
-import pytest
-from pydantic_tfl_api.models import Line, LineArray
-from pydantic_tfl_api.endpoints import LineClient
 from pydantic_tfl_api.core import ApiError, ResponseModel
+from pydantic_tfl_api.endpoints import LineClient
+from pydantic_tfl_api.models import Line, LineArray
+
 
 def test_get_line_status_by_mode_rejected_with_invalid_api_key():
     api_token = "your_app_key"
     client = LineClient(api_token)
-    assert client.client.app_key["app_key"] == api_token
+    assert client.client.app_key is not None and client.client.app_key["app_key"] == api_token
     # should get a 429 error inside an ApiError object
     result = client.StatusByModeByPathModesQueryDetailQuerySeverityLevel(
         "overground,tube"

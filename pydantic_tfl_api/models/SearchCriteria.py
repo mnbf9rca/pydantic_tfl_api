@@ -1,12 +1,11 @@
 from .DateTimeTypeEnum import DateTimeTypeEnum
 from .TimeAdjustments import TimeAdjustments
-from pydantic import BaseModel, Field
-from typing import Optional, Type
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class SearchCriteria(BaseModel):
-    dateTime: Optional[str] = Field(None, alias='dateTime')
-    dateTimeType: Optional[DateTimeTypeEnum] = Field(None, alias='dateTimeType')
-    timeAdjustments: Optional[TimeAdjustments] = Field(None, alias='timeAdjustments')
+    dateTime: str | None = Field(None)
+    dateTimeType: DateTimeTypeEnum | None = Field(None)
+    timeAdjustments: TimeAdjustments | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

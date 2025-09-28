@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Interval(BaseModel):
-    stopId: Optional[str] = Field(None, alias='stopId')
-    timeToArrival: Optional[float] = Field(None, alias='timeToArrival')
+    stopId: str | None = Field(None)
+    timeToArrival: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

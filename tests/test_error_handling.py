@@ -7,22 +7,26 @@ Simple tests to verify that:
 3. Error objects contain useful information for debugging
 """
 
-import pytest
-from unittest.mock import patch, Mock
-import requests
-from requests.exceptions import RequestException, Timeout, ConnectionError
+from unittest.mock import Mock, patch
 
-from pydantic_tfl_api.core import ResponseModel, ApiError
+import pytest
+from requests.exceptions import ConnectionError, Timeout
+
+from pydantic_tfl_api.core import ApiError
 from pydantic_tfl_api.endpoints import LineClient
 
 
 class TestErrorHandling:
     """Test suite for error handling behavior."""
 
+    def _create_client_and_call_metamodes(self, api_key=None):
+        """Helper to create LineClient and call MetaModes consistently."""
+        client = LineClient(api_key) if api_key else LineClient()
+        return client.MetaModes()
+
     def test_invalid_api_key_returns_api_error(self):
         """Test that invalid API key returns ApiError object."""
-        client = LineClient("invalid_key_12345")
-        result = client.MetaModes()
+        result = self._create_client_and_call_metamodes("invalid_key_12345")
 
         # Should return ApiError, not raise exception
         assert isinstance(result, ApiError), f"Expected ApiError for invalid key, got {type(result)}"
@@ -74,8 +78,7 @@ class TestErrorHandling:
 
     def test_api_error_has_useful_information(self):
         """Test that ApiError objects contain debugging information."""
-        client = LineClient("test_invalid_key")
-        result = client.MetaModes()
+        result = self._create_client_and_call_metamodes("test_invalid_key")
 
         # Use helper to validate ApiError properties
         self._validate_api_error_properties(result)

@@ -1,14 +1,13 @@
 from .KnownJourney import KnownJourney
 from .Period import Period
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Schedule(BaseModel):
-    name: Optional[str] = Field(None, alias='name')
-    knownJourneys: Optional[list[KnownJourney]] = Field(None, alias='knownJourneys')
-    firstJourney: Optional[KnownJourney] = Field(None, alias='firstJourney')
-    lastJourney: Optional[KnownJourney] = Field(None, alias='lastJourney')
-    periods: Optional[list[Period]] = Field(None, alias='periods')
+    name: str | None = Field(None)
+    knownJourneys: list[KnownJourney] | None = Field(None)
+    firstJourney: KnownJourney | None = Field(None)
+    lastJourney: KnownJourney | None = Field(None)
+    periods: list[Period] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

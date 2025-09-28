@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class FareCaveat(BaseModel):
-    text: Optional[str] = Field(None, alias='text')
-    type: Optional[str] = Field(None, alias='type')
+    text: str | None = Field(None)
+    type: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

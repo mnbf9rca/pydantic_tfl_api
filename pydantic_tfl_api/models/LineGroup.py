@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineGroup(BaseModel):
-    naptanIdReference: Optional[str] = Field(None, alias='naptanIdReference')
-    stationAtcoCode: Optional[str] = Field(None, alias='stationAtcoCode')
-    lineIdentifier: Optional[list[str]] = Field(None, alias='lineIdentifier')
+    naptanIdReference: str | None = Field(None)
+    stationAtcoCode: str | None = Field(None)
+    lineIdentifier: list[str] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

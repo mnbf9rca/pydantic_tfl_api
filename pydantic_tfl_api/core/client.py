@@ -22,21 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os
-import sys
 
-from importlib import import_module
-from typing import Any, List, Optional, Tuple
-from requests import Response
 import pkgutil
-from pydantic import BaseModel, RootModel
-
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
+from importlib import import_module
+from typing import Any
+
+from pydantic import BaseModel, RootModel
+from requests import Response
 
 from pydantic_tfl_api import models
-from pydantic_tfl_api.core import ApiError, ResponseModel
-from pydantic_tfl_api.core.rest_client import RestClient
+from .package_models import ApiError, ResponseModel
+from .rest_client import RestClient
 
 
 class Client:
@@ -45,13 +43,13 @@ class Client:
     :param str api_token: API token to access TfL unified API
     """
 
-    def __init__(self, api_token: str = None):
+    def __init__(self, api_token: str | None = None):
         self.client = RestClient(api_token)
         self.models = self._load_models()
 
     def _load_models(self):
         models_dict = {}
-        for importer, modname, ispkg in pkgutil.iter_modules(models.__path__):
+        for _importer, modname, _ispkg in pkgutil.iter_modules(models.__path__):
             module = import_module(f"..models.{modname}", __package__)
             for model_name in dir(module):
                 attr = getattr(module, model_name)
@@ -68,28 +66,28 @@ class Client:
             return None
 
     @staticmethod
-    def _get_maxage_headers_from_cache_control_header(response: Response) -> Tuple[Optional[int], Optional[int]]:
+    def _get_maxage_headers_from_cache_control_header(response: Response) -> tuple[int | None, int | None]:
         cache_control = response.headers.get("Cache-Control")
         # e.g. 'public, must-revalidate, max-age=43200, s-maxage=86400'
         if cache_control is None:
             return None, None
         directives = cache_control.split(", ")
         # e.g. ['public', 'must-revalidate', 'max-age=43200', 's-maxage=86400']
-        directives = {d.split("=")[0]: d.split("=")[1]
-                      for d in directives if "=" in d}
-        smaxage = Client._parse_int_or_none(directives.get("s-maxage", ""))
-        maxage = Client._parse_int_or_none(directives.get("max-age", ""))
+        directive_dict = {d.split("=")[0]: d.split("=")[1]
+                         for d in directives if "=" in d}
+        smaxage = Client._parse_int_or_none(directive_dict.get("s-maxage", ""))
+        maxage = Client._parse_int_or_none(directive_dict.get("max-age", ""))
         return smaxage, maxage
 
     @staticmethod
-    def _parse_timedelta(value: Optional[int], base_time: Optional[datetime]) -> Optional[datetime]:
+    def _parse_timedelta(value: int | None, base_time: datetime | None) -> datetime | None:
         try:
             return base_time + timedelta(seconds=value) if value is not None and base_time is not None else None
         except (TypeError, ValueError):
             return None
 
     @staticmethod
-    def _get_result_expiry(response: Response) -> Tuple[datetime | None, datetime | None]:
+    def _get_result_expiry(response: Response) -> tuple[datetime | None, datetime | None]:
         s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(
             response)
         request_datetime = parsedate_to_datetime(response.headers.get(
@@ -99,15 +97,15 @@ class Client:
         maxage_expiry = Client._parse_timedelta(maxage, request_datetime)
 
         return s_maxage_expiry, maxage_expiry
-    
+
     @staticmethod
     def _get_datetime_from_response_headers(response: Response) -> datetime | None:
-        response_headers = response.headers 
+        response_headers = response.headers
         try:
             return parsedate_to_datetime(response_headers.get("Date")) if "Date" in response_headers else None
         except (TypeError, ValueError):
             return None
-        
+
 
 
     def _deserialize(self, model_name: str, response: Response) -> Any:
@@ -121,21 +119,21 @@ class Client:
 
         return result
 
-    def _get_model(self, model_name: str) -> BaseModel:
+    def _get_model(self, model_name: str) -> type[BaseModel]:
         Model = self.models.get(model_name)
         if Model is None:
             raise ValueError(f"No model found with name {model_name}")
         return Model
 
     def _create_model_instance(
-        self, Model: BaseModel, 
-        response_json: Any, 
-        result_expiry: Optional[datetime], 
-        shared_expiry: Optional[datetime],
-        response_date_time: Optional[datetime],
+        self, model: BaseModel,
+        response_json: Any,
+        result_expiry: datetime | None,
+        shared_expiry: datetime | None,
+        response_date_time: datetime | None,
     ) -> ResponseModel:
-        is_root_model = isinstance(Model, type) and issubclass(Model, RootModel)
-        
+        is_root_model = isinstance(model, type) and issubclass(model, RootModel)
+
         # Adjust for root models: RootModel expects one positional argument
         if is_root_model:
             # If it's a root model and response_json is not already a list, wrap it in a list
@@ -143,14 +141,11 @@ class Client:
                 response_json = [response_json]  # Wrap the input in a list if necessary
 
             # Create the root model by passing the input directly
-            content = Model(response_json)
+            content = model(response_json)
 
         else:
             # For non-root models: If it's a dict, expand it into keyword arguments
-            if isinstance(response_json, dict):
-                content = Model(**response_json)
-            else:
-                content = Model(response_json)
+            content = model(**response_json) if isinstance(response_json, dict) else model(response_json)
 
         return ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content, response_timestamp=response_date_time)
 
@@ -159,7 +154,7 @@ class Client:
         if response.headers.get("Content-Type") == "application/json":
             return self._deserialize("ApiError", response)
         return ApiError(
-            timestampUtc=parsedate_to_datetime(response.headers.get("Date")),
+            timestampUtc=parsedate_to_datetime(response.headers.get("Date")) or datetime.utcnow(),
             exceptionType="Unknown",
             httpStatusCode=response.status_code,
             httpStatus=response.reason,
@@ -170,8 +165,8 @@ class Client:
     def _send_request_and_deserialize(
         self, base_url: str,
         endpoint_and_model: dict[str, str],
-        params: str | int | List[str | int] = None, endpoint_args: dict = None
-    ) -> BaseModel | List[BaseModel] | ApiError:
+        params: str | int | list[str | int] | None = None, endpoint_args: dict | None = None
+    ) -> BaseModel | list[BaseModel] | ApiError:
         if params is None:
             params = []
         if not isinstance(params, list):

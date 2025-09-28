@@ -89,7 +89,7 @@ response_to_request_mapping = {
         "endpoint_params": {},
         "model": "LineArray",
         "result_is_empty": True,
-    },    
+    },
     "lineStatusByMode_tube_None_Line": {
         "endpoint": "lineStatusByMode",
         "endpoint_args": ["tube"],
@@ -124,7 +124,7 @@ response_to_request_mapping = {
         "endpoint_params": {},
         "model": "LineArray",
         "result_is_empty": False,
-    },    
+    },
     "routeByMode_tube_None_Line": {
         "endpoint": "routeByMode",
         "endpoint_args": ["tube"],
@@ -180,7 +180,7 @@ response_to_request_mapping = {
         "endpoint_params": {},
         "model": "DisruptionArray",
         "result_is_empty": False,
-    },    
+    },
     "lineDisruptionsByLineId_14_None_Line": {
         "endpoint": "lineDisruptionsByLineId",
         "endpoint_args": ["14"],

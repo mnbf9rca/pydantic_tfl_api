@@ -1,11 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Obstacle(BaseModel):
-    type: Optional[str] = Field(None, alias='type')
-    incline: Optional[str] = Field(None, alias='incline')
-    stopId: Optional[int] = Field(None, alias='stopId')
-    position: Optional[str] = Field(None, alias='position')
+    type: str | None = Field(None)
+    incline: str | None = Field(None)
+    stopId: int | None = Field(None)
+    position: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

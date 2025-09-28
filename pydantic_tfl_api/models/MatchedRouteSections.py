@@ -1,8 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class MatchedRouteSections(BaseModel):
-    id: Optional[int] = Field(None, alias='id')
+    id: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

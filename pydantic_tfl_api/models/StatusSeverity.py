@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class StatusSeverity(BaseModel):
-    modeName: Optional[str] = Field(None, alias='modeName')
-    severityLevel: Optional[int] = Field(None, alias='severityLevel')
-    description: Optional[str] = Field(None, alias='description')
+    modeName: str | None = Field(None)
+    severityLevel: int | None = Field(None)
+    description: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

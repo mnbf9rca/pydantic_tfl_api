@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineModeGroup(BaseModel):
-    modeName: Optional[str] = Field(None, alias='modeName')
-    lineIdentifier: Optional[list[str]] = Field(None, alias='lineIdentifier')
+    modeName: str | None = Field(None)
+    lineIdentifier: list[str] | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

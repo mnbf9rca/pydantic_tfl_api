@@ -1,16 +1,16 @@
 from .SearchMatch import SearchMatch
-from pydantic import BaseModel, Field
-from typing import List, Match, Optional
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Match
 
 
 class SearchResponse(BaseModel):
-    query: Optional[str] = Field(None, alias='query')
-    from_field: Optional[int] = Field(None, alias='from')
-    page: Optional[int] = Field(None, alias='page')
-    pageSize: Optional[int] = Field(None, alias='pageSize')
-    provider: Optional[str] = Field(None, alias='provider')
-    total: Optional[int] = Field(None, alias='total')
-    matches: Optional[list[SearchMatch]] = Field(None, alias='matches')
-    maxScore: Optional[float] = Field(None, alias='maxScore')
+    query: str | None = Field(None)
+    from_field: int | None = Field(None, alias='from')
+    page: int | None = Field(None)
+    pageSize: int | None = Field(None)
+    provider: str | None = Field(None)
+    total: int | None = Field(None)
+    matches: list[SearchMatch] | None = Field(None)
+    maxScore: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

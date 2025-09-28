@@ -1,14 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TrainLoading(BaseModel):
-    line: Optional[str] = Field(None, alias='line')
-    lineDirection: Optional[str] = Field(None, alias='lineDirection')
-    platformDirection: Optional[str] = Field(None, alias='platformDirection')
-    direction: Optional[str] = Field(None, alias='direction')
-    naptanTo: Optional[str] = Field(None, alias='naptanTo')
-    timeSlice: Optional[str] = Field(None, alias='timeSlice')
-    value: Optional[int] = Field(None, alias='value')
+    line: str | None = Field(None)
+    lineDirection: str | None = Field(None)
+    platformDirection: str | None = Field(None)
+    direction: str | None = Field(None)
+    naptanTo: str | None = Field(None)
+    timeSlice: str | None = Field(None)
+    value: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

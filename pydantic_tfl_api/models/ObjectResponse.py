@@ -1,7 +1,7 @@
-from pydantic import RootModel
+from pydantic import RootModel, ConfigDict
 from typing import Any, Dict
 
 
 class ObjectResponse(RootModel[Dict[str, Any]]):
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -1,12 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class SearchMatch(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    url: Optional[str] = Field(None, alias='url')
-    name: Optional[str] = Field(None, alias='name')
-    lat: Optional[float] = Field(None, alias='lat')
-    lon: Optional[float] = Field(None, alias='lon')
+    id: str | None = Field(None)
+    url: str | None = Field(None)
+    name: str | None = Field(None)
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

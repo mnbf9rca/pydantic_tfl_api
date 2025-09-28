@@ -1,20 +1,19 @@
 from .AdditionalProperties import AdditionalProperties
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class Place(BaseModel):
-    id: Optional[str] = Field(None, alias='id')
-    url: Optional[str] = Field(None, alias='url')
-    commonName: Optional[str] = Field(None, alias='commonName')
-    distance: Optional[float] = Field(None, alias='distance')
-    placeType: Optional[str] = Field(None, alias='placeType')
-    additionalProperties: Optional[list[AdditionalProperties]] = Field(None, alias='additionalProperties')
-    children: Optional[list['Place']] = Field(None, alias='children')
-    childrenUrls: Optional[list[str]] = Field(None, alias='childrenUrls')
-    lat: Optional[float] = Field(None, alias='lat')
-    lon: Optional[float] = Field(None, alias='lon')
+    id: str | None = Field(None)
+    url: str | None = Field(None)
+    commonName: str | None = Field(None)
+    distance: float | None = Field(None)
+    placeType: str | None = Field(None)
+    additionalProperties: list[AdditionalProperties] | None = Field(None)
+    children: list['Place'] | None = Field(None)
+    childrenUrls: list[str] | None = Field(None)
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)
 
 Place.model_rebuild()

@@ -1,14 +1,14 @@
 """
 Tests for the build_models.py script functionality.
 """
-import tempfile
 import json
+import tempfile
 from pathlib import Path
 
 import pytest
 
 # Import from scripts package
-from scripts.build_models import sanitize_name, update_refs, get_api_name
+from scripts.build_models import get_api_name, sanitize_name, update_refs
 
 
 class TestSanitizeName:
@@ -261,7 +261,7 @@ class TestMappingsImport:
     def _validate_mapping_structure(self, api_mappings, api_name):
         """Helper to validate mapping structure without loops in test."""
         # Validate all mapping keys are strings
-        invalid_keys = [k for k in api_mappings.keys() if not isinstance(k, str)]
+        invalid_keys = [k for k in api_mappings if not isinstance(k, str)]
         assert not invalid_keys, f"Non-string keys found in {api_name}: {invalid_keys}"
 
         # Validate all mapping values are strings

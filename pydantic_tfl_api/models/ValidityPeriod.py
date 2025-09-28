@@ -1,10 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ValidityPeriod(BaseModel):
-    fromDate: Optional[str] = Field(None, alias='fromDate')
-    toDate: Optional[str] = Field(None, alias='toDate')
-    isNow: Optional[bool] = Field(None, alias='isNow')
+    fromDate: str | None = Field(None)
+    toDate: str | None = Field(None)
+    isNow: bool | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class PathAttribute(BaseModel):
-    name: Optional[str] = Field(None, alias='name')
-    value: Optional[str] = Field(None, alias='value')
+    name: str | None = Field(None)
+    value: str | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

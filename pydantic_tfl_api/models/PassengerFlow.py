@@ -1,9 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class PassengerFlow(BaseModel):
-    timeSlice: Optional[str] = Field(None, alias='timeSlice')
-    value: Optional[int] = Field(None, alias='value')
+    timeSlice: str | None = Field(None)
+    value: int | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

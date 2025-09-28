@@ -1,9 +1,8 @@
 from .DbGeographyWellKnownValue import DbGeographyWellKnownValue
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class DbGeography(BaseModel):
-    geography: Optional[DbGeographyWellKnownValue] = Field(None, alias='geography')
+    geography: DbGeographyWellKnownValue | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)

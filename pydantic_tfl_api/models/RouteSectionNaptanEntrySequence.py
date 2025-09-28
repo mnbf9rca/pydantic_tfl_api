@@ -1,10 +1,9 @@
 from .StopPoint import StopPoint
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RouteSectionNaptanEntrySequence(BaseModel):
-    ordinal: Optional[int] = Field(None, alias='ordinal')
-    stopPoint: Optional[StopPoint] = Field(None, alias='stopPoint')
+    ordinal: int | None = Field(None)
+    stopPoint: StopPoint | None = Field(None)
 
-    model_config = {'from_attributes': True}
+    model_config = ConfigDict(from_attributes=True)
