@@ -173,17 +173,17 @@ warn_unused_ignores = true
 # Allow some flexibility for complex Pydantic usage
 disable_error_code = ["operator", "arg-type"]
 
-# Target specific directories (only core package for now)
+# Target specific directories for type checking
 files = [
     "pydantic_tfl_api/core/",
+    "scripts/",
+    "tests/",
 ]
 
-# Exclude auto-generated models and scripts for now
+# Exclude auto-generated models and endpoints
 exclude = [
     "pydantic_tfl_api/models/",
     "pydantic_tfl_api/endpoints/",
-    "scripts/",
-    "tests/",
 ]
 
 [[tool.mypy.overrides]]

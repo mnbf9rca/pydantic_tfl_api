@@ -73,7 +73,7 @@ class TestTypeHints(unittest.TestCase):
 for resp in response_to_request_mapping:
     def test_deserialise_response(resp: str = resp) -> None:
         response = create_response_from_json(f"tests/tfl_responses/{resp}.json")
-        expect_empty_response: bool = response_to_request_mapping[resp]["result_is_empty"]
+        expect_empty_response: bool = bool(response_to_request_mapping[resp]["result_is_empty"])
         model = response_to_request_mapping[resp]["model"]
 
         test_client = Client()
