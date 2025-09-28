@@ -16,19 +16,19 @@ Important: Before starting each phase:
 After raising the PR for the current phase, update this plan with the PR number.
 
 ### Phase 1: Package Manager Migration
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 **Priority**: High
 
-- [ ] Convert pyproject.toml from Poetry to UV format
-- [ ] Update development documentation for UV
-- [ ] Update .github/workflows to use UV instead of Poetry
-- [ ] Test package installation with UV
-- [ ] Update README installation instructions
-- [ ] Add UV lock file (uv.lock)
-- [ ] Remove poetry.lock after successful migration
-- [ ] commit
-- [ ] check for package updates with UV
-- [ ] test and commit
+- [x] Convert pyproject.toml from Poetry to UV format
+- [x] Update development documentation for UV
+- [x] Update .github/workflows to use UV instead of Poetry
+- [x] Test package installation with UV
+- [x] Update README installation instructions
+- [x] Add UV lock file (uv.lock)
+- [x] Remove poetry.lock after successful migration
+- [x] commit
+- [x] check for package updates with UV
+- [x] test and commit
 
 **Dependencies**: None
 **Blockers**: None
@@ -36,21 +36,21 @@ After raising the PR for the current phase, update this plan with the PR number.
 ---
 
 ### Phase 2: Project Structure Reorganization
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 **Priority**: High
 Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-openapi-spec (git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git)
 
-- [ ] Create `scripts/` directory structure
-- [ ] Move `build_models.py` from external repo to `scripts/`
-- [ ] Move `mappings.py` from external repo to `scripts/`
-- [ ] Add `scripts/__init__.py` for module organization
-- [ ] Update .gitignore to exclude `external/` folder
-- [ ] ensure that dependencies are listed in pyproject.toml for UV (e.g. as dev dependencies)
-- [ ] Update build script paths in documentation
-- [ ] Test build process with new structure
-- [ ] commit
-- [ ] create tests for build scripts
-- [ ] commit tests
+- [x] Create `scripts/` directory structure
+- [x] Move `build_models.py` from external repo to `scripts/`
+- [x] Move `mappings.py` from external repo to `scripts/`
+- [x] Add `scripts/__init__.py` for module organization
+- [x] Update .gitignore to exclude `external/` folder
+- [x] ensure that dependencies are listed in pyproject.toml for UV (e.g. as dev dependencies)
+- [x] Update build script paths in documentation
+- [x] Test build process with new structure
+- [x] commit
+- [x] create tests for build scripts
+- [x] commit tests
 
 **Dependencies**: Phase 1 (UV migration)
 **Blockers**: None
@@ -58,7 +58,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 ---
 
 ### Phase 2.5: Build Script Quality Evaluation
-**Status**: 🔴 Not Started
+**Status**: 🟡 In Progress
 **Priority**: High
 
 - [ ] **Code Quality Review**
@@ -75,6 +75,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 - [ ] **Output Validation**
   - [ ] Generate Pydantic models for 3-5 APIs and compare with existing ones
   - [ ] Verify generated models can deserialize real TfL API responses
+  - [ ] Test against OpenAPI specs in `OpenAPI_specs` folder from git@github.com:mnbf9rca/build-pydantic-from-openapi-spec.git
   - [ ] Check for missing model classes or incorrect field types
   - [ ] Validate that circular references in models are handled properly
   - [ ] Test model imports and dependencies work correctly
@@ -254,9 +255,9 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 
 | Phase | Status | Priority | Completion |
 |-------|--------|----------|------------|
-| 1. Package Manager Migration | 🔴 Not Started | High | 0% |
-| 2. Project Structure | 🔴 Not Started | High | 0% |
-| 2.5. Build Script Evaluation | 🔴 Not Started | High | 0% |
+| 1. Package Manager Migration | ✅ Complete | High | 100% |
+| 2. Project Structure | ✅ Complete | High | 100% |
+| 2.5. Build Script Evaluation | 🟡 In Progress | High | 5% |
 | 3. Dependency Management | 🔴 Not Started | Medium | 0% |
 | 4. Pydantic v2 Completion | 🔴 Not Started | High | 0% |
 | 5. Build Automation | 🟡 Partial | High | 10% |
@@ -265,7 +266,7 @@ Reference for external repo: https://github.com/mnbf9rca/build-pydantic-from-ope
 | 8. Code Gen Enhancements | 🔴 Not Started | Low | 0% |
 | 9. Documentation | 🔴 Not Started | Low | 0% |
 | 10. Monitoring | 🔴 Not Started | Low | 0% |
-**Overall Progress**: 1%
+**Overall Progress**: 22%
 
 ---
 

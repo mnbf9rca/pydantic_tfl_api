@@ -119,7 +119,22 @@ def create_enum_class(enum_name: str, enum_values: List[Any]) -> Type[Enum]:
         return re.sub(r"\W|^(?=\d)", "_", value).strip("_").replace("-", "_").upper()
 
     # Create a dictionary with cleaned enum names as keys and the original values as values
-    enum_dict = {clean_enum_name(str(v)): v for v in enum_values}
+    # Handle uniqueness by adding suffix for duplicates
+    enum_dict = {}
+    name_counts = {}
+
+    for v in enum_values:
+        cleaned_name = clean_enum_name(str(v))
+
+        # Handle duplicate names by appending a counter
+        if cleaned_name in enum_dict:
+            name_counts[cleaned_name] = name_counts.get(cleaned_name, 1) + 1
+            unique_name = f"{cleaned_name}_{name_counts[cleaned_name]}"
+        else:
+            unique_name = cleaned_name
+            name_counts[cleaned_name] = 1
+
+        enum_dict[unique_name] = v
 
     # Dynamically create the Enum class
     return Enum(enum_name, enum_dict)
@@ -132,8 +147,9 @@ def map_type(
     models: Dict[str, Type[BaseModel]],
 ) -> Any:
     if "$ref" in field_spec:
-        # Handle references
-        return sanitize_name(field_spec["$ref"].split("/")[-1])
+        # Handle references using ForwardRef for proper type resolution
+        ref_name = sanitize_name(field_spec["$ref"].split("/")[-1])
+        return ForwardRef(ref_name)
 
     openapi_type: str = field_spec.get("type", "Any")
 
@@ -374,6 +390,18 @@ def save_model_file(
     model_file = os.path.join(models_dir, f"{sanitized_model_name}.py")
     os.makedirs(models_dir, exist_ok=True)
 
+    # Check if file exists and create backup if it does
+    if os.path.exists(model_file):
+        import time
+        timestamp = int(time.time())
+        backup_file = f"{model_file}.backup.{timestamp}"
+        try:
+            import shutil
+            shutil.copy2(model_file, backup_file)
+            logging.info(f"Created backup of existing file: {backup_file}")
+        except Exception as e:
+            logging.warning(f"Failed to create backup for {model_file}: {e}")
+
     with open(model_file, "w") as mf:
         if is_list_or_dict_model(model):
             mf.write("from pydantic import RootModel\n")
@@ -423,25 +451,49 @@ def handle_list_or_dict_model(
     sanitized_model_name: str,
 ):
     """Handle models that are either list or dict types."""
-    inner_type = model.__args__[0]
     # Check if the model is a List or Dict
     model_type = is_list_or_dict_model(model)
+    args = model.__args__
+
+    # Validate argument counts
+    if model_type == "List" and len(args) != 1:
+        raise ValueError(f"List type should have exactly 1 argument, got {len(args)}")
+    elif model_type == "Dict" and len(args) != 2:
+        raise ValueError(f"Dict type should have exactly 2 arguments (key, value), got {len(args)}")
+
+    # Extract inner types based on model type
+    if model_type == "List":
+        inner_type = args[0]
+        key_type = None
+        value_type = inner_type
+    elif model_type == "Dict":
+        key_type = args[0]
+        value_type = args[1]
+        inner_type = value_type  # For backward compatibility, keep inner_type as value_type
     # Separate sets for typing imports and module imports
     typing_imports = {model_type}
     module_imports = set()
 
-    # Handle non-built-in types for inner_type
+    # Handle non-built-in types for both key and value types (for Dict) or inner_type (for List)
     built_in_types = get_builtin_types()
-    inner_type_name = getattr(inner_type, "__name__", None)
 
-    if inner_type_name and inner_type_name not in {"Optional", "List", "Union"}:
-        sanitized_inner_name = sanitize_name(inner_type_name)
-        if sanitized_inner_name in models:
-            module_imports.add(
-                f"from .{sanitized_inner_name} import {sanitized_inner_name}"
-            )
-        elif inner_type not in built_in_types:
-            typing_imports.add(inner_type_name)
+    def handle_type_imports(type_obj):
+        """Helper function to handle imports for a given type."""
+        type_name = getattr(type_obj, "__name__", None)
+        if type_name and type_name not in {"Optional", "List", "Union"}:
+            sanitized_name = sanitize_name(type_name)
+            if sanitized_name in models:
+                module_imports.add(f"from .{sanitized_name} import {sanitized_name}")
+            elif type_obj not in built_in_types:
+                typing_imports.add(type_name)
+        return type_name or "Any"
+
+    # Handle imports and get type names
+    if model_type == "List":
+        inner_type_name = handle_type_imports(inner_type)
+    elif model_type == "Dict":
+        key_type_name = handle_type_imports(key_type)
+        value_type_name = handle_type_imports(value_type)
 
     # create the class definition
     if model_type == "List":
@@ -449,8 +501,7 @@ def handle_list_or_dict_model(
             f"class {sanitized_model_name}(RootModel[List[{inner_type_name}]]):\n"
         )
     elif model_type == "Dict":
-        class_definition = f"class {sanitized_model_name}(RootModel[Dict[str, Any]]):\n"
-        typing_imports.add("Any")
+        class_definition = f"class {sanitized_model_name}(RootModel[Dict[{key_type_name}, {value_type_name}]]):\n"
     else:
         raise ValueError("Model is not a list or dict model.")
     # Write typing imports
@@ -924,14 +975,38 @@ def combine_components_and_paths(
 
 
 def are_models_equal(model1: Type[BaseModel], model2: Type[BaseModel]) -> bool:
-    """Check if two Pydantic models are equal based on their fields and types."""
-    fields1 = {
-        name: str(field.annotation) for name, field in model1.model_fields.items()
-    }
-    fields2 = {
-        name: str(field.annotation) for name, field in model2.model_fields.items()
-    }
-    return fields1 == fields2
+    """Check if two Pydantic models are equal based on their fields, types, and metadata."""
+    # Compare field structure
+    if set(model1.model_fields.keys()) != set(model2.model_fields.keys()):
+        return False
+
+    # Compare each field's annotation, alias, default, and constraints
+    for field_name in model1.model_fields.keys():
+        field1 = model1.model_fields[field_name]
+        field2 = model2.model_fields[field_name]
+
+        # Compare field annotations
+        if str(field1.annotation) != str(field2.annotation):
+            return False
+
+        # Compare aliases
+        if field1.alias != field2.alias:
+            return False
+
+        # Compare default values
+        if field1.default != field2.default:
+            return False
+
+        # Compare if field is required
+        if field1.is_required() != field2.is_required():
+            return False
+
+        # Compare field constraints (title, description, etc.)
+        if hasattr(field1, 'json_schema_extra') and hasattr(field2, 'json_schema_extra'):
+            if field1.json_schema_extra != field2.json_schema_extra:
+                return False
+
+    return True
 
 
 def deduplicate_models(
@@ -1329,59 +1404,95 @@ def update_specs_with_model_changes(
 
 # Main function
 def main(spec_path: str, output_path: str):
-    os.makedirs(output_path, exist_ok=True)
-    logging.info("Loading OpenAPI specs...")
-    specs = load_specs(spec_path)
+    """
+    Main function to build Pydantic models from OpenAPI specifications.
 
-    logging.info("Generating components...")
-    pydantic_names = {}
-    combined_components, combined_paths = combine_components_and_paths(
-        specs, pydantic_names
-    )
+    Args:
+        spec_path: Path to the directory containing OpenAPI specification files
+        output_path: Path to the directory where generated models will be saved
 
-    logging.info("Creating array types from model paths...")
-    # some paths have an array type as a response, we need to handle these separately
-    array_types = create_array_types_from_model_paths(
-        combined_paths, combined_components
-    )
-    combined_components.update(array_types)
+    Raises:
+        FileNotFoundError: If spec_path doesn't exist
+        ValueError: If specs are invalid or malformed
+        Exception: For any other errors during model generation
+    """
+    try:
+        # Validate input paths
+        if not os.path.exists(spec_path):
+            raise FileNotFoundError(f"Specification path does not exist: {spec_path}")
 
-    logging.info("Generating Pydantic models...")
-    models = {}
-    create_pydantic_models(combined_components, models)
+        logging.info(f"Starting model generation from {spec_path} to {output_path}")
+        os.makedirs(output_path, exist_ok=True)
 
-    logging.info("Creating generic response model...")
-    generic_model = create_generic_response_model()
-    models["GenericResponseModel"] = generic_model
+        logging.info("Loading OpenAPI specs...")
+        specs = load_specs(spec_path)
+        if not specs:
+            raise ValueError(f"No valid specifications found in {spec_path}")
 
-    # Deduplicate models before saving them
-    logging.info("Deduplicating models...")
-    deduplicated_models, reference_map = deduplicate_models(models)
+        logging.info("Generating components...")
+        pydantic_names = {}
+        combined_components, combined_paths = combine_components_and_paths(
+            specs, pydantic_names
+        )
 
-    # Update model references
-    models = update_model_references(deduplicated_models, reference_map)
+        logging.info("Creating array types from model paths...")
+        # some paths have an array type as a response, we need to handle these separately
+        array_types = create_array_types_from_model_paths(
+            combined_paths, combined_components
+        )
+        combined_components.update(array_types)
 
-    logging.info("Handling dependencies...")
-    dependency_graph, circular_models, sorted_models = handle_dependencies(models)
+        logging.info("Generating Pydantic models...")
+        models = {}
+        create_pydantic_models(combined_components, models)
 
-    # Now save the deduplicated models
-    logging.info("Saving models to files...")
-    save_models(models, output_path, dependency_graph, circular_models)
+        logging.info("Creating generic response model...")
+        generic_model = create_generic_response_model()
+        models["GenericResponseModel"] = generic_model
 
-    # Create config and class
-    logging.info("Creating config and class files...")
-    base_url = "https://api.tfl.gov.uk"
-    logging.info("Updating specs with model changes...")
-    updated_specs = update_specs_with_model_changes(
-        specs, combined_components, reference_map
-    )
+        # Deduplicate models before saving them
+        logging.info("Deduplicating models...")
+        deduplicated_models, reference_map = deduplicate_models(models)
 
-    save_classes(updated_specs, output_path, base_url)
+        # Update model references
+        models = update_model_references(deduplicated_models, reference_map)
 
-    logging.info("Creating Mermaid class diagram...")
-    create_mermaid_class_diagram(
-        dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
-    )
+        logging.info("Handling dependencies...")
+        dependency_graph, circular_models, sorted_models = handle_dependencies(models)
+
+        # Now save the deduplicated models
+        logging.info("Saving models to files...")
+        save_models(models, output_path, dependency_graph, circular_models)
+
+        # Create config and class
+        logging.info("Creating config and class files...")
+        base_url = "https://api.tfl.gov.uk"
+        logging.info("Updating specs with model changes...")
+        updated_specs = update_specs_with_model_changes(
+            specs, combined_components, reference_map
+        )
+
+        save_classes(updated_specs, output_path, base_url)
+
+        logging.info("Creating Mermaid class diagram...")
+        create_mermaid_class_diagram(
+            dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
+        )
+
+        logging.info(f"Model generation completed successfully. Generated {len(models)} models.")
+
+    except FileNotFoundError as e:
+        logging.error(f"File not found error: {e}")
+        raise
+    except ValueError as e:
+        logging.error(f"Value error during model generation: {e}")
+        raise
+    except PermissionError as e:
+        logging.error(f"Permission error accessing files: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error during model generation: {e}", exc_info=True)
+        raise RuntimeError(f"Model generation failed: {e}") from e
 
     logging.info("Processing complete.")
 
