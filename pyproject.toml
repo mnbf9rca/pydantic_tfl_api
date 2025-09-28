@@ -31,15 +31,15 @@ Issues = "https://github.com/mnbf9rca/pydantic_tfl_api/issues"
 
 [tool.uv]
 dev-dependencies = [
-    "black>=24.4.2",
-    "pytest>=8.2.2",
-    "pytest-asyncio>=0.23.7",
-    "pytest-cov>=5.0.0",
-    "flake8>=7.1.0",
+    "black>=25.9.0",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "flake8>=7.3.0",
     "Flake8-pyproject>=1.2.3",
-    "coverage[toml]>=7.5.4",
-    "pre-commit>=3.8.0",
-    "bump-my-version>=0.15.0",
+    "coverage[toml]>=7.10.0",
+    "pre-commit>=4.3.0",
+    "bump-my-version>=1.2.0",
 ]
 
 [build-system]

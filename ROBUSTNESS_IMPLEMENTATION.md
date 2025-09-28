@@ -9,7 +9,11 @@ This document tracks the implementation of robustness improvements for pydantic-
 
 ## Implementation Phases
 
-Important: Before starting each phase, ensure that you switch to main, pull the latest changes, and create a new branch for the phase.
+Important: Before starting each phase:
+1. ensure that you switch to main, pull the latest changes, and create a new branch for the phase.
+2. Update this plan to reflect the completion status of the previous phase.
+
+After raising the PR for the current phase, update this plan with the PR number.
 
 ### Phase 1: Package Manager Migration
 **Status**: 🔴 Not Started
