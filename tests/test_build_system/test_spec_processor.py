@@ -167,9 +167,9 @@ class TestSpecProcessor:
         assert spec_processor.sanitize_name("user_data") == "Data"
         assert spec_processor.sanitize_name("SimpleModel") == "SimpleModel"
 
-        # Test prefix handling
+        # Test prefix handling - only needed for actual keywords or leading digits
         assert spec_processor.sanitize_name("123model") == "Model_123model"
-        assert spec_processor.sanitize_name("class") == "Model_Class"
+        assert spec_processor.sanitize_name("class") == "Class"  # CamelCase makes it non-keyword
 
     def test_update_refs_basic(self, spec_processor):
         """Test updating $ref values in a simple object."""

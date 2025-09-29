@@ -62,9 +62,9 @@ class TestModelBuilder:
         assert model_builder.sanitize_name("user_name") == "Name"
         assert model_builder.sanitize_name("simple") == "Simple"
 
-        # Test keyword handling
-        assert model_builder.sanitize_name("class") == "Model_Class"
-        assert model_builder.sanitize_name("def") == "Model_Def"
+        # Test keyword handling - CamelCase conversion makes them non-keywords
+        assert model_builder.sanitize_name("class") == "Class"
+        assert model_builder.sanitize_name("def") == "Def"
 
         # Test digit handling
         assert model_builder.sanitize_name("123test") == "Model_123test"
