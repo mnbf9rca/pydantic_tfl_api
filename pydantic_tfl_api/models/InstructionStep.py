@@ -2,7 +2,6 @@ from .PathAttribute import PathAttribute
 from .SkyDirectionDescriptionEnum import SkyDirectionDescriptionEnum
 from .TrackTypeEnum import TrackTypeEnum
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Type
 
 
 class InstructionStep(BaseModel):
@@ -16,7 +15,7 @@ class InstructionStep(BaseModel):
     cumulativeTravelTime: int | None = Field(None)
     latitude: float | None = Field(None)
     longitude: float | None = Field(None)
-    pathAttribute: Optional[PathAttribute] = Field(None)
+    pathAttribute: PathAttribute | None = Field(None)
     descriptionHeading: str | None = Field(None)
     trackType: TrackTypeEnum | None = Field(None)
 

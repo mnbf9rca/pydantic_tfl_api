@@ -1,6 +1,5 @@
 from .PredictionTiming import PredictionTiming
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class Prediction(BaseModel):
@@ -23,6 +22,6 @@ class Prediction(BaseModel):
     expectedArrival: str | None = Field(None)
     timeToLive: str | None = Field(None)
     modeName: str | None = Field(None)
-    timing: Optional[PredictionTiming] = Field(None)
+    timing: PredictionTiming | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)

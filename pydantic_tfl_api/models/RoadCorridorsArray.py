@@ -1,5 +1,4 @@
 from pydantic import RootModel, ConfigDict
-from typing import List
 from .RoadCorridor import RoadCorridor
 
 

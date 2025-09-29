@@ -1,6 +1,5 @@
-from pydantic import RootModel, ConfigDict
-from typing import List
 from .LineServiceType import LineServiceType
+from pydantic import RootModel, ConfigDict
 
 
 class LineServiceTypeArray(RootModel[list[LineServiceType]]):

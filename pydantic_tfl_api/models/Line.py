@@ -4,7 +4,6 @@ from .LineServiceTypeInfo import LineServiceTypeInfo
 from .LineStatus import LineStatus
 from .MatchedRoute import MatchedRoute
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Match, Optional, Type
 
 
 class Line(BaseModel):
@@ -17,6 +16,6 @@ class Line(BaseModel):
     lineStatuses: list[LineStatus] | None = Field(None)
     routeSections: list[MatchedRoute] | None = Field(None)
     serviceTypes: list[LineServiceTypeInfo] | None = Field(None)
-    crowding: Optional[Crowding] = Field(None)
+    crowding: Crowding | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)

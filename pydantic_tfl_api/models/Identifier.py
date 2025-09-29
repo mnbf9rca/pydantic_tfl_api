@@ -2,7 +2,6 @@ from .Crowding import Crowding
 from .RouteTypeEnum import RouteTypeEnum
 from .StatusEnum import StatusEnum
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Type
 
 
 class Identifier(BaseModel):
@@ -11,7 +10,7 @@ class Identifier(BaseModel):
     uri: str | None = Field(None)
     fullName: str | None = Field(None)
     type: str | None = Field(None)
-    crowding: Optional[Crowding] = Field(None)
+    crowding: Crowding | None = Field(None)
     routeType: RouteTypeEnum | None = Field(None)
     status: StatusEnum | None = Field(None)
 

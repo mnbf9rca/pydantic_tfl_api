@@ -48,6 +48,7 @@ from .JpElevation import JpElevation
 from .PathAttribute import PathAttribute
 from .PlaceArray import PlaceArray
 from .PlaceCategoryArray import PlaceCategoryArray
+from .PlaceCategory import PlaceCategory
 from .PlannedWork import PlannedWork
 from .Point import Point
 from .PredictionArray import PredictionArray
@@ -78,8 +79,6 @@ from .SearchMatch import SearchMatch
 from .StatusSeveritiesArray import StatusSeveritiesArray
 from .StatusSeverity import StatusSeverity
 from .StopPointArray import StopPointArray
-from .StopPointCategoryArray import StopPointCategoryArray
-from .PlaceCategory import PlaceCategory
 from .StopPointRouteSectionArray import StopPointRouteSectionArray
 from .StopPointRouteSection import StopPointRouteSection
 from .StopPointSequence import StopPointSequence
@@ -115,122 +114,6 @@ from .VehicleMatch import VehicleMatch
 from .AdditionalProperties import AdditionalProperties
 from .Place import Place
 from ..core.package_models import GenericResponseModel
-from .Mode import Mode
-from .Place import Place
-from .StopPoint import StopPoint
-from .RouteSectionNaptanEntrySequence import RouteSectionNaptanEntrySequence
-from .RouteSection import RouteSection
-from .Disruption import Disruption
-from .ValidityPeriod import ValidityPeriod
-from .LineStatus import LineStatus
-from .MatchedRoute import MatchedRoute
-from .LineServiceTypeInfo import LineServiceTypeInfo
-from .Line import Line
-from .StatusSeverity import StatusSeverity
-from .MatchedStop import MatchedStop
-from .StopPointSequence import StopPointSequence
-from .OrderedRoute import OrderedRoute
-from .RouteSequence import RouteSequence
-from .LineRouteSection import LineRouteSection
-from .MatchedRouteSections import MatchedRouteSections
-from .RouteSearchMatch import RouteSearchMatch
-from .RouteSearchResponse import RouteSearchResponse
-from .Interval import Interval
-from .StationInterval import StationInterval
-from .PassengerFlow import PassengerFlow
-from .KnownJourney import KnownJourney
-from .TwentyFourHourClockTime import TwentyFourHourClockTime
-from .ServiceFrequency import ServiceFrequency
-from .Period import Period
-from .Schedule import Schedule
-from .TimetableRoute import TimetableRoute
-from .Timetable import Timetable
-from .DisambiguationOption import DisambiguationOption
-from .Disambiguation import Disambiguation
-from .TimetableResponse import TimetableResponse
-from .TrainLoading import TrainLoading
-from .PredictionTiming import PredictionTiming
-from .Prediction import Prediction
-from .Crowding import Crowding
-from .Identifier import Identifier
-from .LineGroup import LineGroup
-from .LineModeGroup import LineModeGroup
-from .AdditionalProperties import AdditionalProperties
-from .ObjectResponse import ObjectResponse
-from .LondonAirForecast import LondonAirForecast
-from .Bay import Bay
-from .CarParkOccupancy import CarParkOccupancy
-from .ChargeConnectorOccupancy import ChargeConnectorOccupancy
-from .BikePointOccupancy import BikePointOccupancy
-from .VehicleMatch import VehicleMatch
-from .SearchMatch import SearchMatch
-from .SearchResponse import SearchResponse
-from .AccidentDetail import AccidentDetail
-from .Casualty import Casualty
-from .Vehicle import Vehicle
-from .JpElevation import JpElevation
-from .Path import Path
-from .RouteOption import RouteOption
-from .PathAttribute import PathAttribute
-from .PlannedWork import PlannedWork
-from .Leg import Leg
-from .FareTapDetails import FareTapDetails
-from .FareTap import FareTap
-from .Fare import Fare
-from .FareCaveat import FareCaveat
-from .JourneyFare import JourneyFare
-from .Journey import Journey
-from .InstructionStep import InstructionStep
-from .JourneyPlannerCycleHireDockingStationData import JourneyPlannerCycleHireDockingStationData
-from .TimeAdjustment import TimeAdjustment
-from .TimeAdjustments import TimeAdjustments
-from .SearchCriteria import SearchCriteria
-from .JourneyVector import JourneyVector
-from .Instruction import Instruction
-from .ItineraryResult import ItineraryResult
-from .Obstacle import Obstacle
-from .Point import Point
-from .DbGeographyWellKnownValue import DbGeographyWellKnownValue
-from .DbGeography import DbGeography
-from .Object import Object
-from .RoadCorridor import RoadCorridor
-from .StreetSegment import StreetSegment
-from .Street import Street
-from .RoadProject import RoadProject
-from .RoadDisruptionLine import RoadDisruptionLine
-from .RoadDisruptionImpactArea import RoadDisruptionImpactArea
-from .RoadDisruptionSchedule import RoadDisruptionSchedule
-from .RoadDisruption import RoadDisruption
-from .PlaceCategory import PlaceCategory
-from .ActiveServiceType import ActiveServiceType
-from .LineSpecificServiceType import LineSpecificServiceType
-from .LineServiceType import LineServiceType
-from .ArrivalDeparture import ArrivalDeparture
-from .StopPointRouteSection import StopPointRouteSection
-from .DisruptedPoint import DisruptedPoint
-from .StopPointsResponse import StopPointsResponse
-from .LiftDisruption import LiftDisruption
-from .ModeArray import ModeArray
-from .StatusSeveritiesArray import StatusSeveritiesArray
-from .StringsArray import StringsArray
-from .LineArray import LineArray
-from .StopPointArray import StopPointArray
-from .DisruptionArray import DisruptionArray
-from .PredictionArray import PredictionArray
-from .PlaceArray import PlaceArray
-from .AccidentDetailArray import AccidentDetailArray
-from .RoadCorridorsArray import RoadCorridorsArray
-from .RoadDisruptionsArray import RoadDisruptionsArray
-from .PlaceCategoryArray import PlaceCategoryArray
-from .ActiveServiceTypesArray import ActiveServiceTypesArray
-from .LiftDisruptionsArray import LiftDisruptionsArray
-from .ChargeConnectorOccupancyArray import ChargeConnectorOccupancyArray
-from .BikePointOccupancyArray import BikePointOccupancyArray
-from .StopPointCategoryArray import StopPointCategoryArray
-from .LineServiceTypeArray import LineServiceTypeArray
-from .ArrivalDepartureArray import ArrivalDepartureArray
-from .StopPointRouteSectionArray import StopPointRouteSectionArray
-from .DisruptedPointArray import DisruptedPointArray
 from typing import Literal
 
 ResponseModelName = Literal[
@@ -332,7 +215,6 @@ ResponseModelName = Literal[
     "StatusSeverity",
     "StopPoint",
     "StopPointArray",
-    "StopPointCategoryArray",
     "StopPointRouteSection",
     "StopPointRouteSectionArray",
     "StopPointSequence",
@@ -451,7 +333,6 @@ __all__ = [
     "StatusSeverity",
     "StopPoint",
     "StopPointArray",
-    "StopPointCategoryArray",
     "StopPointRouteSection",
     "StopPointRouteSectionArray",
     "StopPointSequence",

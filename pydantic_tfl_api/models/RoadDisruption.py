@@ -5,7 +5,6 @@ from .RoadDisruptionSchedule import RoadDisruptionSchedule
 from .RoadProject import RoadProject
 from .Street import Street
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class RoadDisruption(BaseModel):
@@ -26,14 +25,14 @@ class RoadDisruption(BaseModel):
     levelOfInterest: str | None = Field(None)
     location: str | None = Field(None)
     status: str | None = Field(None)
-    geography: Optional[DbGeography] = Field(None)
-    geometry: Optional[DbGeography] = Field(None)
+    geography: DbGeography | None = Field(None)
+    geometry: DbGeography | None = Field(None)
     streets: list[Street] | None = Field(None)
     isProvisional: bool | None = Field(None)
     hasClosures: bool | None = Field(None)
     linkText: str | None = Field(None)
     linkUrl: str | None = Field(None)
-    roadProject: Optional[RoadProject] = Field(None)
+    roadProject: RoadProject | None = Field(None)
     publishStartDate: str | None = Field(None)
     publishEndDate: str | None = Field(None)
     timeFrame: str | None = Field(None)

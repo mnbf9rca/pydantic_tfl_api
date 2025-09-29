@@ -1,7 +1,6 @@
 from .Disruption import Disruption
 from .ValidityPeriod import ValidityPeriod
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class LineStatus(BaseModel):
@@ -13,6 +12,6 @@ class LineStatus(BaseModel):
     created: str | None = Field(None)
     modified: str | None = Field(None)
     validityPeriods: list[ValidityPeriod] | None = Field(None)
-    disruption: Optional[Disruption] = Field(None)
+    disruption: Disruption | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,5 @@
-from pydantic import RootModel, ConfigDict
-from typing import List
 from .ChargeConnectorOccupancy import ChargeConnectorOccupancy
+from pydantic import RootModel, ConfigDict
 
 
 class ChargeConnectorOccupancyArray(RootModel[list[ChargeConnectorOccupancy]]):

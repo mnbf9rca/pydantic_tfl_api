@@ -1,5 +1,5 @@
 from pydantic import RootModel, ConfigDict
-from typing import Any, List
+from typing import Any
 
 
 class StringsArray(RootModel[list[Any]]):

@@ -1,6 +1,5 @@
-from pydantic import RootModel, ConfigDict
-from typing import List
 from .BikePointOccupancy import BikePointOccupancy
+from pydantic import RootModel, ConfigDict
 
 
 class BikePointOccupancyArray(RootModel[list[BikePointOccupancy]]):

@@ -2,7 +2,6 @@ from .LineRouteSection import LineRouteSection
 from .MatchedRouteSections import MatchedRouteSections
 from .MatchedStop import MatchedStop
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Match
 
 
 class RouteSearchMatch(BaseModel):

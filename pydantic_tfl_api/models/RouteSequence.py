@@ -2,7 +2,6 @@ from .MatchedStop import MatchedStop
 from .OrderedRoute import OrderedRoute
 from .StopPointSequence import StopPointSequence
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Match, Sequence
 
 
 class RouteSequence(BaseModel):

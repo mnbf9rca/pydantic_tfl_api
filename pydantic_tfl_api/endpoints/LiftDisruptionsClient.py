@@ -3,7 +3,7 @@ from ..core import ApiError, ResponseModel, Client
 from ..models import LiftDisruptionsArray
 
 class LiftDisruptionsClient(Client):
-    def get(self, ) -> ResponseModel[LiftDisruptionsArray] | ApiError:
+    def Get(self, ) -> ResponseModel[LiftDisruptionsArray] | ApiError:
         '''
         List of all currently disrupted lift routes
 

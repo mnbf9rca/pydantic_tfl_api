@@ -2,7 +2,6 @@ from .Disambiguation import Disambiguation
 from .MatchedStop import MatchedStop
 from .Timetable import Timetable
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Match, Optional
 
 
 class TimetableResponse(BaseModel):
@@ -12,8 +11,8 @@ class TimetableResponse(BaseModel):
     pdfUrl: str | None = Field(None)
     stations: list[MatchedStop] | None = Field(None)
     stops: list[MatchedStop] | None = Field(None)
-    timetable: Optional[Timetable] = Field(None)
-    disambiguation: Optional[Disambiguation] = Field(None)
+    timetable: Timetable | None = Field(None)
+    disambiguation: Disambiguation | None = Field(None)
     statusErrorMessage: str | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)

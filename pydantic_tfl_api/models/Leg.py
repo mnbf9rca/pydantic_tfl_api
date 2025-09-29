@@ -7,21 +7,20 @@ from .PlannedWork import PlannedWork
 from .Point import Point
 from .RouteOption import RouteOption
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class Leg(BaseModel):
     duration: int | None = Field(None)
     speed: str | None = Field(None)
-    instruction: Optional[Instruction] = Field(None)
+    instruction: Instruction | None = Field(None)
     obstacles: list[Obstacle] | None = Field(None)
     departureTime: str | None = Field(None)
     arrivalTime: str | None = Field(None)
-    departurePoint: Optional[Point] = Field(None)
-    arrivalPoint: Optional[Point] = Field(None)
-    path: Optional[Path] = Field(None)
+    departurePoint: Point | None = Field(None)
+    arrivalPoint: Point | None = Field(None)
+    path: Path | None = Field(None)
     routeOptions: list[RouteOption] | None = Field(None)
-    mode: Optional[Identifier] = Field(None)
+    mode: Identifier | None = Field(None)
     disruptions: list[Disruption] | None = Field(None)
     plannedWorks: list[PlannedWork] | None = Field(None)
     distance: float | None = Field(None)

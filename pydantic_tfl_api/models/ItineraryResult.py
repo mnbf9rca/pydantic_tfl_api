@@ -4,16 +4,15 @@ from .JourneyVector import JourneyVector
 from .Line import Line
 from .SearchCriteria import SearchCriteria
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class ItineraryResult(BaseModel):
     journeys: list[Journey] | None = Field(None)
     lines: list[Line] | None = Field(None)
-    cycleHireDockingStationData: Optional[JourneyPlannerCycleHireDockingStationData] = Field(None)
+    cycleHireDockingStationData: JourneyPlannerCycleHireDockingStationData | None = Field(None)
     stopMessages: list[str] | None = Field(None)
     recommendedMaxAgeMinutes: int | None = Field(None)
-    searchCriteria: Optional[SearchCriteria] = Field(None)
-    journeyVector: Optional[JourneyVector] = Field(None)
+    searchCriteria: SearchCriteria | None = Field(None)
+    journeyVector: JourneyVector | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)
