@@ -61,7 +61,7 @@ class Client:
 
         # Also load models imported in the main models module (like GenericResponseModel)
         for model_name in dir(models):
-            if not model_name.startswith('_'):  # Skip private attributes
+            if not model_name.startswith("_"):  # Skip private attributes
                 attr = getattr(models, model_name)
                 if isinstance(attr, type) and issubclass(attr, BaseModel):
                     models_dict[model_name] = attr
@@ -84,8 +84,7 @@ class Client:
             return None, None
         directives = cache_control.split(", ")
         # e.g. ['public', 'must-revalidate', 'max-age=43200', 's-maxage=86400']
-        directive_dict = {d.split("=")[0]: d.split("=")[1]
-                         for d in directives if "=" in d}
+        directive_dict = {d.split("=")[0]: d.split("=")[1] for d in directives if "=" in d}
         smaxage = Client._parse_int_or_none(directive_dict.get("s-maxage", ""))
         maxage = Client._parse_int_or_none(directive_dict.get("max-age", ""))
         return smaxage, maxage
@@ -99,10 +98,8 @@ class Client:
 
     @staticmethod
     def _get_result_expiry(response: Response) -> tuple[datetime | None, datetime | None]:
-        s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(
-            response)
-        request_datetime = parsedate_to_datetime(response.headers.get(
-            "Date")) if "Date" in response.headers else None
+        s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(response)
+        request_datetime = parsedate_to_datetime(response.headers.get("Date")) if "Date" in response.headers else None
 
         s_maxage_expiry = Client._parse_timedelta(s_maxage, request_datetime)
         maxage_expiry = Client._parse_timedelta(maxage, request_datetime)
@@ -117,16 +114,13 @@ class Client:
         except (TypeError, ValueError):
             return None
 
-
-
     def _deserialize(self, model_name: str, response: Response) -> Any:
         shared_expiry, result_expiry = self._get_result_expiry(response)
         response_date_time = self._get_datetime_from_response_headers(response)
         Model = self._get_model(model_name)
         data = response.json()
 
-        result = self._create_model_instance(
-            Model, data, result_expiry, shared_expiry, response_date_time)
+        result = self._create_model_instance(Model, data, result_expiry, shared_expiry, response_date_time)
 
         return result
 
@@ -137,7 +131,8 @@ class Client:
         return Model
 
     def _create_model_instance(
-        self, model: BaseModel,
+        self,
+        model: BaseModel,
         response_json: Any,
         result_expiry: datetime | None,
         shared_expiry: datetime | None,
@@ -158,7 +153,12 @@ class Client:
             # For non-root models: If it's a dict, expand it into keyword arguments
             content = model(**response_json) if isinstance(response_json, dict) else model(response_json)
 
-        return ResponseModel(content_expires=result_expiry, shared_expires=shared_expiry, content=content, response_timestamp=response_date_time)
+        return ResponseModel(
+            content_expires=result_expiry,
+            shared_expires=shared_expiry,
+            content=content,
+            response_timestamp=response_date_time,
+        )
 
     def _deserialize_error(self, response: Response) -> ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
@@ -174,9 +174,11 @@ class Client:
         )
 
     def _send_request_and_deserialize(
-        self, base_url: str,
+        self,
+        base_url: str,
         endpoint_and_model: dict[str, str],
-        params: str | int | list[str | int] | None = None, endpoint_args: dict | None = None
+        params: str | int | list[str | int] | None = None,
+        endpoint_args: dict | None = None,
     ) -> BaseModel | list[BaseModel] | ApiError:
         if params is None:
             params = []
@@ -191,4 +193,3 @@ class Client:
         if response.status_code != 200:
             return self._deserialize_error(response)
         return self._deserialize(model_name, response)
-
