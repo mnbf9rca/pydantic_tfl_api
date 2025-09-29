@@ -1,0 +1,130 @@
+"""Tests for utilities module focusing on regression prevention."""
+
+import pytest
+from scripts.build_system.utilities import sanitize_name, sanitize_field_name, clean_enum_name
+
+
+class TestSanitizeName:
+    """Test sanitize_name function with focus on regression prevention."""
+
+    def test_spaces_converted_to_camelcase(self):
+        """REGRESSION: Ensure spaces are converted to CamelCase, not preserved."""
+        # This test prevents the "Lift DisruptionsClient.py" bug
+        assert sanitize_name("Lift Disruptions") == "LiftDisruptions"
+        assert sanitize_name("Air Quality") == "AirQuality"
+        assert sanitize_name("Bike Point") == "BikePoint"
+
+    def test_single_word_capitalization(self):
+        """Test single word capitalization."""
+        assert sanitize_name("line") == "Line"
+        assert sanitize_name("mode") == "Mode"
+        assert sanitize_name("journey") == "Journey"
+
+    def test_multiple_spaces_handled(self):
+        """Test handling of multiple spaces."""
+        assert sanitize_name("  Multiple   Spaces  ") == "MultipleSpaces"
+
+    def test_mixed_case_preservation_with_spaces(self):
+        """Test that mixed case is preserved when converting spaces."""
+        assert sanitize_name("XML API") == "XMLAPI"
+        assert sanitize_name("HTTP Client") == "HTTPClient"
+
+    def test_underscore_and_space_combination(self):
+        """Test combination of underscores and spaces."""
+        assert sanitize_name("user_profile data") == "UserProfileData"
+
+    def test_no_spaces_in_output(self):
+        """CRITICAL: Ensure no spaces ever appear in output (prevents invalid filenames)."""
+        test_inputs = [
+            "Lift Disruptions",
+            "Air Quality Data",
+            "Multi Word Test Case",
+            "  Leading   Trailing  ",
+            "Single",
+            "two words",
+            "THREE WORD CASE"
+        ]
+
+        for input_name in test_inputs:
+            result = sanitize_name(input_name)
+            assert " " not in result, f"Output '{result}' contains spaces for input '{input_name}'"
+            assert result.replace("_", "").isalnum(), f"Output '{result}' contains invalid characters"
+
+    def test_python_keywords_with_spaces(self):
+        """Test Python keywords combined with spaces."""
+        assert sanitize_name("class data") == "Model_ClassData"
+        assert sanitize_name("def function") == "Model_DefFunction"
+
+    def test_digits_with_spaces(self):
+        """Test handling of digits with spaces."""
+        assert sanitize_name("123 test") == "Model_123Test"
+
+
+class TestSanitizeFieldName:
+    """Test field name sanitization."""
+
+    def test_keywords_get_suffix(self):
+        """Test that Python keywords get _field suffix."""
+        assert sanitize_field_name("from") == "from_field"
+        assert sanitize_field_name("class") == "class_field"
+        assert sanitize_field_name("def") == "def_field"
+
+    def test_non_keywords_unchanged(self):
+        """Test that non-keywords remain unchanged."""
+        assert sanitize_field_name("name") == "name"
+        assert sanitize_field_name("value") == "value"
+        assert sanitize_field_name("data") == "data"
+
+
+class TestCleanEnumName:
+    """Test enum name cleaning."""
+
+    def test_special_characters_replaced(self):
+        """Test special characters are replaced with underscores."""
+        assert clean_enum_name("test-value") == "TEST_VALUE"
+        assert clean_enum_name("test.value") == "TEST_VALUE"
+        assert clean_enum_name("test value") == "TEST_VALUE"
+
+    def test_leading_digits_handled(self):
+        """Test leading digits get underscore prefix."""
+        assert clean_enum_name("123test") == "_123TEST"
+
+    def test_uppercase_conversion(self):
+        """Test conversion to uppercase."""
+        assert clean_enum_name("lowercase") == "LOWERCASE"
+        assert clean_enum_name("MixedCase") == "MIXEDCASE"
+
+
+class TestRegressionPrevention:
+    """Specific regression tests for known issues."""
+
+    @pytest.mark.parametrize("input_name,expected", [
+        ("Lift Disruptions", "LiftDisruptions"),
+        ("Air Quality", "AirQuality"),
+        ("Bike Point", "BikePoint"),
+        ("Stop Point", "StopPoint"),
+        ("Road Disruptions", "RoadDisruptions"),
+        ("Vehicle Match", "VehicleMatch"),
+        ("Search Response", "SearchResponse"),
+    ])
+    def test_known_problematic_api_names(self, input_name, expected):
+        """Test specific API names that have caused issues."""
+        result = sanitize_name(input_name)
+        assert result == expected
+        assert " " not in result  # Critical: no spaces
+
+    def test_filename_validity(self):
+        """Test that generated names are valid Python filenames."""
+        problematic_names = [
+            "Lift Disruptions",
+            "Multi Word API Name",
+            "  Spaces  Everywhere  ",
+            "special-chars & symbols",
+        ]
+
+        for name in problematic_names:
+            result = sanitize_name(name)
+            # Must be valid Python identifier
+            assert result.isidentifier(), f"'{result}' is not a valid Python identifier"
+            # Must not contain spaces (invalid for filenames)
+            assert " " not in result, f"'{result}' contains spaces"

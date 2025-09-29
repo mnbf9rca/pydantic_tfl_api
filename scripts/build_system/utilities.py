@@ -21,21 +21,24 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     Returns:
         Sanitized name that is a valid Python identifier
     """
-    # Replace invalid characters (like hyphens) with underscores
+    # Replace invalid characters (like hyphens) with underscores, preserve spaces temporarily
     sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
 
-    # Extract the portion after the last underscore for concise names
-    sanitized = sanitized.split("_")[-1]
-
-    # Convert to CamelCase - capitalize first letter only if the name is all lowercase
+    # Convert spaces to CamelCase first
     words = sanitized.split()
-    if words:
-        # Only capitalize if the name is entirely lowercase (simple case)
-        if sanitized.islower():
-            sanitized = sanitized.capitalize()
-        # If it has mixed case, preserve it (like TestModel)
-    else:
-        sanitized = ""
+    if len(words) > 1:
+        # Convert multiple words to CamelCase ("Lift Disruptions" -> "LiftDisruptions")
+        sanitized = ''.join(word.capitalize() for word in words)
+    elif words:
+        sanitized = words[0]
+
+    # Extract the portion after the last underscore for concise names
+    if '_' in sanitized:
+        sanitized = sanitized.split("_")[-1]
+
+    # Convert to CamelCase if it's all lowercase
+    if sanitized and sanitized.islower():
+        sanitized = sanitized.capitalize()
 
     # Prepend prefix if necessary (i.e., name starts with a digit or is a Python keyword)
     if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized.lower())):

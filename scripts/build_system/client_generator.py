@@ -346,23 +346,36 @@ class ClientGenerator:
         """Clear the list of generated client files."""
         self._generated_clients.clear()
 
-    def sanitize_name(self, name: str, prefix: str = "Query") -> str:
-        """Sanitize operation IDs for method names."""
+    def generate_method_name(self, operation_id: str) -> str:
+        """Generate snake_case method names from operation IDs."""
         import re
         import keyword
 
-        # Replace invalid characters (like hyphens) with underscores
-        sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
+        # Handle camelCase/PascalCase by inserting underscores before uppercase letters
+        # "getUserById" -> "get_user_by_id", "Naptan" -> "naptan"
+        sanitized = re.sub(r'(?<!^)(?=[A-Z])', '_', operation_id).lower()
 
-        # Extract the portion after the last underscore for concise names
-        sanitized = sanitized.split("_")[-1]
+        # Replace any remaining invalid characters with underscores
+        sanitized = re.sub(r'[^a-z0-9_]', '_', sanitized)
 
-        # Capitalize first letter to make it PascalCase
-        if sanitized:
-            sanitized = sanitized[0].upper() + sanitized[1:]
+        # Clean up multiple underscores and leading/trailing underscores
+        sanitized = re.sub(r'_+', '_', sanitized).strip('_')
 
-        # Prepend prefix if necessary (i.e., name starts with a digit or is a Python keyword)
-        if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized.lower())):
-            sanitized = f"{prefix}_{sanitized}"
+        # Ensure it's not empty
+        if not sanitized:
+            sanitized = "unknown_method"
+
+        # Handle Python keywords by adding suffix
+        if keyword.iskeyword(sanitized):
+            sanitized = f"{sanitized}_method"
+
+        # Handle names starting with digits
+        if sanitized and sanitized[0].isdigit():
+            sanitized = f"method_{sanitized}"
 
         return sanitized
+
+    def sanitize_name(self, name: str, prefix: str = "Query") -> str:
+        """Sanitize operation IDs for method names - DEPRECATED: Use generate_method_name instead."""
+        # For backward compatibility during transition, delegate to new method
+        return self.generate_method_name(name)

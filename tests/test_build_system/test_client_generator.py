@@ -151,6 +151,46 @@ class TestClientGenerator:
         assert len(path_params) == 2
         assert len(query_params) == 2
 
+    def test_method_name_casing_regression(self, client_generator):
+        """REGRESSION: Ensure method names are snake_case, not PascalCase."""
+        # This prevents the CrowdingClient method name casing bug
+        test_cases = [
+            ("Naptan", "naptan"),          # Should be lowercase
+            ("Live", "live"),              # Should be lowercase
+            ("Dayofweek", "dayofweek"),    # Should be lowercase
+            ("GetData", "get_data"),       # Should convert to snake_case
+            ("getUserById", "get_user_by_id"),  # CamelCase to snake_case
+        ]
+
+        for operation_id, expected in test_cases:
+            # Test via create_method_signature which calls the method name logic
+            parameters = []
+            signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
+
+            # Extract method name from signature
+            method_line = signature.split('\n')[0]  # Get first line: "def method_name(self, ...):"
+            method_name = method_line.split('(')[0].replace('def ', '').strip()
+
+            assert method_name == expected, f"Expected '{expected}', got '{method_name}' for '{operation_id}'"
+            assert method_name.islower() or "_" in method_name, f"Method name '{method_name}' should be lowercase or snake_case"
+
+    def test_method_names_never_pascalcase(self, client_generator):
+        """CRITICAL: Method names should never be PascalCase."""
+        problematic_inputs = ["Naptan", "Live", "Dayofweek", "GetUsers", "CreateItem"]
+
+        for operation_id in problematic_inputs:
+            parameters = []
+            signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
+
+            # Extract method name from signature
+            method_line = signature.split('\n')[0]
+            method_name = method_line.split('(')[0].replace('def ', '').strip()
+
+            # Check it's not PascalCase (starts with uppercase but contains lowercase)
+            if method_name:
+                assert not (method_name[0].isupper() and any(c.islower() for c in method_name[1:])), \
+                    f"Method name '{method_name}' appears to be PascalCase for input '{operation_id}'"
+
     def test_create_method_signature(self, client_generator):
         """Test creating method signatures for API operations."""
         operation_id = "getUserById"
