@@ -1,19 +1,18 @@
 from .AdditionalProperties import AdditionalProperties
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional
 
 
 class Place(BaseModel):
-    id: Optional[str] = Field(None)
-    url: Optional[str] = Field(None)
-    commonName: Optional[str] = Field(None)
-    distance: Optional[float] = Field(None)
-    placeType: Optional[str] = Field(None)
-    additionalProperties: Optional[list[AdditionalProperties]] = Field(None)
-    children: Optional[list['Place']] = Field(None)
-    childrenUrls: Optional[list[str]] = Field(None)
-    lat: Optional[float] = Field(None)
-    lon: Optional[float] = Field(None)
+    id: str | None = Field(None)
+    url: str | None = Field(None)
+    commonName: str | None = Field(None)
+    distance: float | None = Field(None)
+    placeType: str | None = Field(None)
+    additionalProperties: list[AdditionalProperties] | None = Field(None)
+    children: list['Place'] | None = Field(None)
+    childrenUrls: list[str] | None = Field(None)
+    lat: float | None = Field(None)
+    lon: float | None = Field(None)
 
     model_config = ConfigDict(from_attributes=True)
 

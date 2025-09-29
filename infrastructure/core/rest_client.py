@@ -44,7 +44,7 @@ class RestClient:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 
-        return requests.get(request_path + "?" + self._get_query_strings(params), headers=request_headers)
+        return requests.get(request_path + "?" + self._get_query_strings(params), headers=request_headers, timeout=30)
 
     def _get_request_headers(self):
         request_headers = {

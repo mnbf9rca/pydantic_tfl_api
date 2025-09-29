@@ -322,7 +322,7 @@ def determine_typing_imports(
         if field_annotation in circular_models:
             import_set.add("ForwardRef")
 
-    return import_set
+    return list(import_set)
 
 
 def write_import_statements(
@@ -558,7 +558,7 @@ def handle_regular_model(
 
     # Determine necessary imports
     typing_imports = sorted(
-        determine_typing_imports(model.model_fields, models, circular_models)
+        set(determine_typing_imports(model.model_fields, models, circular_models))
         - get_builtin_types()
     )
 
@@ -1361,8 +1361,8 @@ def create_class(spec: dict[str, Any], output_path: str) -> None:
     """Generate API client class from OpenAPI specification."""
     class_name, api_path, paths = extract_api_metadata(spec)
 
-    all_types = set()
-    all_package_models = set()
+    all_types: set[str] = set()
+    all_package_models: set[str] = set()
     method_lines = [f"class {class_name}(Client):\n"]
 
     # Process all API methods
@@ -1611,7 +1611,7 @@ def _load_and_process_specs(spec_path: str) -> tuple[list[dict[str, Any]], dict[
         raise ValueError(f"No valid specifications found in {spec_path}")
 
     logging.info("Generating components...")
-    pydantic_names = {}
+    pydantic_names: dict[str, str] = {}
     combined_components, combined_paths = combine_components_and_paths(
         specs, pydantic_names
     )
@@ -1629,7 +1629,7 @@ def _load_and_process_specs(spec_path: str) -> tuple[list[dict[str, Any]], dict[
 def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
     """Generate Pydantic models and process them for deduplication."""
     logging.info("Generating Pydantic models...")
-    models = {}
+    models: dict[str, type[BaseModel] | type] = {}
     create_pydantic_models(combined_components, models)
 
 

@@ -12,7 +12,7 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
 
     1. Replace invalid characters (like hyphens) with underscores.
     2. Extract the portion after the last underscore for more concise names.
-    3. Prepend prefix if the name starts with a digit or is a Python keyword.
+    3. Prepend prefix only if the final result would be invalid.
 
     Args:
         name: The name to sanitize
@@ -40,8 +40,8 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     if sanitized and sanitized.islower():
         sanitized = sanitized.capitalize()
 
-    # Prepend prefix if necessary (i.e., name starts with a digit or is a Python keyword)
-    if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized.lower())):
+    # Prepend prefix only if the final result would be invalid
+    if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized)):
         sanitized = f"{prefix}_{sanitized}"
 
     return sanitized
@@ -101,7 +101,14 @@ def extract_inner_types(annotation: Any) -> list[Any]:
 
 def clean_enum_name(value: str) -> str:
     """Clean enum names by replacing special characters and making uppercase."""
-    return re.sub(r"\W|^(?=\d)", "_", value).strip("_").replace("-", "_").upper()
+    # Replace special characters with underscores
+    cleaned = re.sub(r"\W", "_", value).replace("-", "_")
+
+    # Add underscore prefix if starts with a digit
+    if cleaned and cleaned[0].isdigit():
+        cleaned = "_" + cleaned
+
+    return cleaned.upper()
 
 
 def join_url_paths(a: str, b: str) -> str:

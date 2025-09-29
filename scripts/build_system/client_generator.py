@@ -250,9 +250,9 @@ class ClientGenerator:
 
         param_str = ", ".join(
             [
-                f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} | None = None"
-                if not param.get("required", False)
-                else f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
+                f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
+                if param.get("required", False)
+                else f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} | None = None"
                 for param in sorted_parameters
             ]
         )
@@ -352,11 +352,7 @@ class ClientGenerator:
         sanitized = re.sub(r'[^a-z0-9_]', '_', sanitized)
 
         # Clean up multiple underscores and leading/trailing underscores
-        sanitized = re.sub(r'_+', '_', sanitized).strip('_')
-
-        # Ensure it's not empty
-        if not sanitized:
-            sanitized = "unknown_method"
+        sanitized = re.sub(r'_+', '_', sanitized).strip('_') or "unknown_method"
 
         # Handle Python keywords by adding suffix
         if keyword.iskeyword(sanitized):
@@ -369,6 +365,31 @@ class ClientGenerator:
         return sanitized
 
     def sanitize_name(self, name: str, prefix: str = "Query") -> str:
-        """Sanitize operation IDs for method names - DEPRECATED: Use generate_method_name instead."""
-        # For backward compatibility during transition, delegate to new method
-        return self.generate_method_name(name)
+        """
+        Sanitize operation IDs to create method names matching OpenAPI spec.
+        This matches the original behavior from build_models.py.
+        """
+        import keyword
+        import re
+
+        # Replace invalid characters (like hyphens) with underscores
+        sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
+
+        # Extract the portion after the last underscore for concise names
+        sanitized = sanitized.split("_")[-1]
+
+        # Convert to CamelCase - capitalize first word only, keep others as-is
+        # This matches the original logic: words[0] + "".join(word.capitalize() for word in words[1:])
+        words = sanitized.split()
+        if words:
+            # For camelCase like "getUserById", we need to capitalize the first letter
+            first_word = words[0]
+            if first_word and first_word[0].islower():
+                first_word = first_word[0].upper() + first_word[1:]
+            sanitized = first_word + "".join(word.capitalize() for word in words[1:])
+
+        # Prepend prefix if necessary (name starts with a digit or is a Python keyword)
+        if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized.lower())):
+            sanitized = f"{prefix}_{sanitized}"
+
+        return sanitized
