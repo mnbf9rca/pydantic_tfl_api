@@ -125,7 +125,6 @@ exclude = [
     "venv",
     ".venv",
     "build_script",
-    "pydantic_tfl_api/",
 ]
 
 [tool.ruff.lint]
@@ -153,6 +152,13 @@ ignore = [
 "tests/*.py" = ["S101", "N801", "N999", "N802", "N803"]
 # Scripts can be more lenient
 "scripts/*.py" = ["N803", "N999"]
+# classes, models and fields match TfL API name
+"pydantic_tfl_api/models/*.py" = ["N802", "N803", "N999"]
+"pydantic_tfl_api/endpoints/*.py" = ["N802", "N803", "N999"]
+# import in topological sort order
+"pydantic_tfl_api/__init__.py" = ["I001"]
+"pydantic_tfl_api/endpoints/__init__.py" = ["I001"]
+"pydantic_tfl_api/models/__init__.py" = ["I001"]
 
 [tool.mypy]
 # Progressive typing - start with basic checks, can be made stricter over time
@@ -175,12 +181,13 @@ files = [
     "pydantic_tfl_api/core/",
     "scripts/",
     "tests/",
+    "pydantic_tfl_api/models/",
+    "pydantic_tfl_api/endpoints/",
 ]
 
 # Exclude auto-generated models and endpoints
 exclude = [
-    "pydantic_tfl_api/models/",
-    "pydantic_tfl_api/endpoints/",
+
 ]
 
 [[tool.mypy.overrides]]
