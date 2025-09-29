@@ -1,6 +1,7 @@
 """
 Tests for the build_models.py script functionality.
 """
+
 import json
 import tempfile
 from pathlib import Path
@@ -9,12 +10,23 @@ import pytest
 
 # Import from scripts package
 from scripts.build_models import (
-    get_api_name, sanitize_name, update_refs, create_enum_class,
-    map_type, map_openapi_type, create_generic_response_model,
-    get_pydantic_imports, get_model_config, sanitize_field_name,
-    get_builtin_types, is_list_or_dict_model, extract_inner_types,
-    topological_sort, detect_circular_dependencies, join_url_paths,
-    classify_parameters, _create_schema_name_mapping
+    get_api_name,
+    sanitize_name,
+    update_refs,
+    create_enum_class,
+    map_type,
+    map_openapi_type,
+    get_pydantic_imports,
+    get_model_config,
+    sanitize_field_name,
+    get_builtin_types,
+    is_list_or_dict_model,
+    extract_inner_types,
+    topological_sort,
+    detect_circular_dependencies,
+    join_url_paths,
+    classify_parameters,
+    _create_schema_name_mapping,
 )
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union, ForwardRef
@@ -59,23 +71,14 @@ class TestUpdateRefs:
 
     def test_nested_ref_update(self):
         """Test nested reference updates."""
-        obj = {
-            "properties": {
-                "field": {"$ref": "#/components/schemas/OldName"}
-            }
-        }
+        obj = {"properties": {"field": {"$ref": "#/components/schemas/OldName"}}}
         entity_mapping = {"OldName": "NewName"}
         update_refs(obj, entity_mapping)
         assert obj["properties"]["field"]["$ref"] == "#/components/schemas/NewName"
 
     def test_array_ref_update(self):
         """Test reference updates in arrays."""
-        obj = {
-            "items": [
-                {"$ref": "#/components/schemas/OldName"},
-                {"other": "value"}
-            ]
-        }
+        obj = {"items": [{"$ref": "#/components/schemas/OldName"}, {"other": "value"}]}
         entity_mapping = {"OldName": "NewName"}
         update_refs(obj, entity_mapping)
         assert obj["items"][0]["$ref"] == "#/components/schemas/NewName"
@@ -87,12 +90,9 @@ class TestUpdateRefs:
             "items": [
                 [
                     {"$ref": "#/components/schemas/OldName"},
-                    [
-                        {"$ref": "#/components/schemas/OldName"},
-                        {"other": "value"}
-                    ]
+                    [{"$ref": "#/components/schemas/OldName"}, {"other": "value"}],
                 ],
-                {"$ref": "#/components/schemas/OldName"}
+                {"$ref": "#/components/schemas/OldName"},
             ]
         }
         entity_mapping = {"OldName": "NewName"}
@@ -115,13 +115,10 @@ class TestUpdateRefs:
                 ],
                 "dict": {
                     "key": {"$ref": "#/components/schemas/OldName"},
-                    "list": [
-                        {"$ref": "#/components/schemas/OldName"},
-                        {"other": "value"}
-                    ],
+                    "list": [{"$ref": "#/components/schemas/OldName"}, {"other": "value"}],
                     "empty_list": [],
                     "empty_dict": {},
-                }
+                },
             }
         }
         entity_mapping = {"OldName": "NewName"}
@@ -165,12 +162,7 @@ class TestGetApiName:
 
     def test_api_name_extraction(self):
         """Test API name extraction from spec."""
-        spec = {
-            "info": {
-                "title": "Test API",
-                "version": "1.0"
-            }
-        }
+        spec = {"info": {"title": "Test API", "version": "1.0"}}
         assert get_api_name(spec) == "Test API"
 
     def test_missing_info_section(self):
@@ -187,23 +179,14 @@ class TestBuildModelsIntegration:
         """Create a minimal valid OpenAPI spec for testing."""
         return {
             "openapi": "3.0.0",
-            "info": {
-                "title": api_name,
-                "version": "1.0.0"
-            },
+            "info": {"title": api_name, "version": "1.0.0"},
             "paths": {
                 "/test": {
                     "get": {
                         "responses": {
                             "200": {
                                 "description": "Success",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "$ref": "#/components/schemas/TestModel"
-                                        }
-                                    }
-                                }
+                                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/TestModel"}}},
                             }
                         }
                     }
@@ -213,17 +196,10 @@ class TestBuildModelsIntegration:
                 "schemas": {
                     "TestModel": {
                         "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "integer"
-                            },
-                            "name": {
-                                "type": "string"
-                            }
-                        }
+                        "properties": {"id": {"type": "integer"}, "name": {"type": "string"}},
                     }
                 }
-            }
+            },
         }
 
     def test_minimal_spec_processing(self):
@@ -248,7 +224,7 @@ class TestBuildModelsIntegration:
             spec = self.create_minimal_openapi_spec()
             spec_file = Path(temp_dir) / "test_spec.json"
 
-            with open(spec_file, 'w') as f:
+            with open(spec_file, "w") as f:
                 json.dump(spec, f)
 
             # This test verifies the file structure is correct
@@ -264,6 +240,7 @@ class TestMappingsImport:
         """Helper to load TfL mappings or skip test if not available."""
         try:
             from scripts.mapping_loader import load_tfl_mappings
+
             return load_tfl_mappings()
         except ImportError as e:
             pytest.skip(f"mapping_loader module not available: {e}")
@@ -283,7 +260,6 @@ class TestMappingsImport:
         tfl_mappings = self._load_tfl_mappings_or_skip()
         assert isinstance(tfl_mappings, dict)
         assert len(tfl_mappings) > 0
-
 
     @pytest.mark.parametrize("api_name", ["AccidentStats", "AirQuality", "BikePoint", "Journey", "Line"])
     def test_known_api_mappings_structure(self, api_name):
@@ -350,7 +326,7 @@ class TestCreateEnumClass:
         """Test enum creation with empty list."""
         result_enum = create_enum_class("EmptyEnum", [])
         assert issubclass(result_enum, Enum)
-        assert len(list(result_enum)) == 0
+        assert not list(result_enum)
 
 
 class TestMapType:
@@ -367,10 +343,7 @@ class TestMapType:
 
     def test_enum_mapping(self):
         """Test mapping of enum fields."""
-        field_spec = {
-            "type": "string",
-            "enum": ["option1", "option2", "option3"]
-        }
+        field_spec = {"type": "string", "enum": ["option1", "option2", "option3"]}
         result = map_type(field_spec, "status", {}, {})
 
         # Should return an Enum class
@@ -379,27 +352,21 @@ class TestMapType:
 
     def test_array_mapping(self):
         """Test mapping of array fields."""
-        field_spec = {
-            "type": "array",
-            "items": {"type": "string"}
-        }
+        field_spec = {"type": "array", "items": {"type": "string"}}
         result = map_type(field_spec, "items", {}, {})
 
         # Should return List[str]
-        assert hasattr(result, '__origin__')
+        assert hasattr(result, "__origin__")
         assert result.__origin__ is list
         assert result.__args__[0] is str
 
     def test_array_with_ref_items(self):
         """Test mapping of array fields with $ref items."""
-        field_spec = {
-            "type": "array",
-            "items": {"$ref": "#/components/schemas/Item"}
-        }
+        field_spec = {"type": "array", "items": {"$ref": "#/components/schemas/Item"}}
         result = map_type(field_spec, "items", {}, {})
 
         # Should return List[ForwardRef]
-        assert hasattr(result, '__origin__')
+        assert hasattr(result, "__origin__")
         assert result.__origin__ is list
         assert isinstance(result.__args__[0], ForwardRef)
 
@@ -409,7 +376,7 @@ class TestMapType:
         result = map_type(field_spec, "items", {}, {})
 
         # Should return List[Any]
-        assert hasattr(result, '__origin__')
+        assert hasattr(result, "__origin__")
         assert result.__origin__ is list
         assert result.__args__[0] is Any
 
@@ -430,22 +397,6 @@ class TestMapOpenapiType:
         """Test mapping of unknown types."""
         result = map_openapi_type("unknown_type")
         assert result is Any
-
-
-class TestCreateGenericResponseModel:
-    """Test the create_generic_response_model function."""
-
-    def test_generic_response_model_creation(self):
-        """Test that generic response model is created correctly."""
-        model_class = create_generic_response_model()
-
-        # Should be a RootModel subclass
-        assert issubclass(model_class, RootModel)
-        assert model_class.__name__ == "GenericResponseModel"
-
-        # Should have arbitrary_types_allowed config
-        assert hasattr(model_class, 'model_config')
-        assert model_class.model_config.get('arbitrary_types_allowed') is True
 
 
 class TestGetPydanticImports:
@@ -473,9 +424,11 @@ class TestGetModelConfig:
     """Test the get_model_config function."""
 
     def test_generic_response_model_config(self):
-        """Test config for GenericResponseModel."""
+        """Test config for GenericResponseModel (now uses standard config)."""
         result = get_model_config("GenericResponseModel")
-        assert "arbitrary_types_allowed=True" in result
+        assert "from_attributes=True" in result
+        # GenericResponseModel no longer has special arbitrary_types_allowed config
+        assert "arbitrary_types_allowed" not in result
 
     def test_regular_model_config(self):
         """Test config for regular models."""
@@ -554,21 +507,21 @@ class TestExtractInnerTypes:
 
     def test_optional_type(self):
         """Test extraction from Optional types."""
-        from typing import Optional
+
         result = extract_inner_types(Optional[str])
         assert Optional in result
         assert str in result
 
     def test_list_type(self):
         """Test extraction from List types."""
-        from typing import List
+
         result = extract_inner_types(List[str])
         assert list in result
         assert str in result
 
     def test_nested_generic_type(self):
         """Test extraction from nested generic types."""
-        from typing import List, Dict
+
         result = extract_inner_types(List[Dict[str, int]])
         assert list in result
         assert dict in result
@@ -581,11 +534,7 @@ class TestTopologicalSort:
 
     def test_simple_dependency_graph(self):
         """Test sorting simple dependency graph."""
-        graph = {
-            "A": set(),
-            "B": {"A"},
-            "C": {"A", "B"}
-        }
+        graph = {"A": set(), "B": {"A"}, "C": {"A", "B"}}
         result = topological_sort(graph)
 
         # The function returns nodes in reverse topological order
@@ -614,28 +563,19 @@ class TestDetectCircularDependencies:
 
     def test_no_circular_dependencies(self):
         """Test graph with no circular dependencies."""
-        graph = {
-            "A": set(),
-            "B": {"A"},
-            "C": {"B"}
-        }
+        graph = {"A": set(), "B": {"A"}, "C": {"B"}}
         result = detect_circular_dependencies(graph)
         assert result == set()
 
     def test_circular_dependencies(self):
         """Test graph with circular dependencies."""
-        graph = {
-            "A": {"B"},
-            "B": {"A"}
-        }
+        graph = {"A": {"B"}, "B": {"A"}}
         result = detect_circular_dependencies(graph)
         assert "A" in result or "B" in result
 
     def test_self_referencing(self):
         """Test graph with self-referencing node."""
-        graph = {
-            "A": {"A"}
-        }
+        graph = {"A": {"A"}}
         result = detect_circular_dependencies(graph)
         assert "A" in result
 
@@ -679,7 +619,7 @@ class TestClassifyParameters:
             {"name": "id", "in": "path"},
             {"name": "filter", "in": "query"},
             {"name": "userId", "in": "path"},
-            {"name": "limit", "in": "query"}
+            {"name": "limit", "in": "query"},
         ]
         path_params, query_params = classify_parameters(parameters)
 
@@ -688,10 +628,7 @@ class TestClassifyParameters:
 
     def test_only_path_parameters(self):
         """Test classification with only path parameters."""
-        parameters = [
-            {"name": "id", "in": "path"},
-            {"name": "userId", "in": "path"}
-        ]
+        parameters = [{"name": "id", "in": "path"}, {"name": "userId", "in": "path"}]
         path_params, query_params = classify_parameters(parameters)
 
         assert set(path_params) == {"id", "userId"}
@@ -699,10 +636,7 @@ class TestClassifyParameters:
 
     def test_only_query_parameters(self):
         """Test classification with only query parameters."""
-        parameters = [
-            {"name": "filter", "in": "query"},
-            {"name": "limit", "in": "query"}
-        ]
+        parameters = [{"name": "filter", "in": "query"}, {"name": "limit", "in": "query"}]
         path_params, query_params = classify_parameters(parameters)
 
         assert path_params == []
@@ -714,11 +648,7 @@ class TestCreateSchemaNamMapping:
 
     def test_basic_schema_mapping(self):
         """Test basic schema name mapping creation."""
-        components = {
-            "Tfl.Api.Presentation.Entities.Mode": {},
-            "Complex_Name_With_Underscores": {},
-            "simple-name": {}
-        }
+        components = {"Tfl.Api.Presentation.Entities.Mode": {}, "Complex_Name_With_Underscores": {}, "simple-name": {}}
         result = _create_schema_name_mapping(components)
 
         # Should map sanitized names back to original names
@@ -805,7 +735,7 @@ class TestBuildModelsRealIntegration:
             models_dir = output_path / "models"
             for py_file in models_dir.glob("*.py"):
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file, "r") as f:
                         content = f.read()
                     ast.parse(content)
                 except SyntaxError as e:
@@ -815,7 +745,7 @@ class TestBuildModelsRealIntegration:
             endpoints_dir = output_path / "endpoints"
             for py_file in endpoints_dir.glob("*.py"):
                 try:
-                    with open(py_file, 'r') as f:
+                    with open(py_file, "r") as f:
                         content = f.read()
                     ast.parse(content)
                 except SyntaxError as e:
@@ -857,5 +787,6 @@ class TestBuildModelsRealIntegration:
 
                 # Should generate at least 80% of the baseline models
                 min_expected = len(baseline_model_files) * 0.8
-                assert len(generated_models) >= min_expected, \
+                assert len(generated_models) >= min_expected, (
                     f"Generated {len(generated_models)} models, expected at least {min_expected} based on baseline"
+                )

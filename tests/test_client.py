@@ -193,47 +193,43 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
 
 
 @pytest.mark.parametrize(
-    "models_dict, expected_result",
+    "model_name, expected_type",
     [
-        (
-            {"MockModel": MockModel},
-            {"MockModel": MockModel},
-        ),
-        (
-            {"MockModel1": MockModel, "MockModel2": MockModel},
-            {"MockModel1": MockModel, "MockModel2": MockModel},
-        ),
-        (
-            {"NotAModel": object},
-            {},
-        ),
-        (
-            {},
-            {},
-        ),
+        ("Line", BaseModel),
+        ("StopPoint", BaseModel),
+        ("Place", BaseModel),
+        ("Mode", BaseModel),
+        ("Prediction", BaseModel),
+        ("GenericResponseModel", BaseModel),
     ],
-    ids=["single_model", "multiple_models", "no_pydantic_model", "no_models"],
+    ids=["line_model", "stop_point_model", "place_model", "mode_model", "prediction_model", "generic_response_model"],
 )
-def test_load_models(models_dict, expected_result):
-    # Mock import_module
-    with patch("pydantic_tfl_api.core.client.import_module") as mock_import_module:
-        mock_module = MagicMock()
-        mock_module.__dict__.update(models_dict)
-        mock_import_module.return_value = mock_module
+def test_load_models_contains_expected_models(model_name, expected_type):
+    """Test that Client loads expected real models and they are proper BaseModel subclasses."""
+    # Act
+    test_client = Client()
 
-        # Mock pkgutil.iter_modules
-        with patch("pydantic_tfl_api.core.client.pkgutil.iter_modules") as mock_iter_modules:
-            mock_iter_modules.return_value = [
-                (None, name, None) for name in models_dict
-            ]
+    # Assert
+    assert model_name in test_client.models, f"Expected model {model_name} not found in loaded models"
+    model_class = test_client.models[model_name]
+    assert isinstance(model_class, type), f"Model {model_name} should be a class"
+    assert issubclass(model_class, expected_type), f"Model {model_name} should be a BaseModel subclass"
 
-            # Act
 
-            test_client = Client()
-            result = test_client._load_models()
+def test_load_models_returns_non_empty_dict():
+    """Test that _load_models returns a non-empty dictionary of models."""
+    # Act
+    test_client = Client()
+    result = test_client.models
 
-            # Assert
-            assert result == expected_result
+    # Assert
+    assert isinstance(result, dict), "Models should be returned as a dictionary"
+    assert len(result) > 10, f"Expected many models to be loaded, got {len(result)}"
+
+    # Verify all values are BaseModel subclasses
+    for model_name, model_class in result.items():
+        assert isinstance(model_class, type), f"Model {model_name} should be a class"
+        assert issubclass(model_class, BaseModel), f"Model {model_name} should be a BaseModel subclass"
 
 
 @pytest.mark.parametrize(

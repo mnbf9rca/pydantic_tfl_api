@@ -1,6 +1,7 @@
 from .DepartureStatusEnum import DepartureStatusEnum
 from .PredictionTiming import PredictionTiming
 from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 
 
 class ArrivalDeparture(BaseModel):
@@ -17,6 +18,6 @@ class ArrivalDeparture(BaseModel):
     minutesAndSecondsToDeparture: str | None = Field(None)
     cause: str | None = Field(None)
     departureStatus: DepartureStatusEnum | None = Field(None)
-    timing: PredictionTiming | None = Field(None)
+    timing: Optional[PredictionTiming] = Field(None)
 
     model_config = ConfigDict(from_attributes=True)

@@ -3,6 +3,6 @@ from typing import List
 from .RoadCorridor import RoadCorridor
 
 
-class RoadCorridorsArray(RootModel[List[RoadCorridor]]):
+class RoadCorridorsArray(RootModel[list[RoadCorridor]]):
 
     model_config = ConfigDict(from_attributes=True)

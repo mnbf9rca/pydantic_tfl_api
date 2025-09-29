@@ -14,7 +14,6 @@ from .ChargeConnectorOccupancy import ChargeConnectorOccupancy
 from .DisruptedPointArray import DisruptedPointArray
 from .DisruptedPoint import DisruptedPoint
 from .DisruptionArray import DisruptionArray
-from .GenericResponseModel import GenericResponseModel
 from .ItineraryResult import ItineraryResult
 from .Journey import Journey
 from .JourneyFare import JourneyFare
@@ -115,6 +114,7 @@ from .Vehicle import Vehicle
 from .VehicleMatch import VehicleMatch
 from .AdditionalProperties import AdditionalProperties
 from .Place import Place
+from ..core.package_models import GenericResponseModel
 from .Mode import Mode
 from .Place import Place
 from .StopPoint import StopPoint
@@ -231,7 +231,6 @@ from .LineServiceTypeArray import LineServiceTypeArray
 from .ArrivalDepartureArray import ArrivalDepartureArray
 from .StopPointRouteSectionArray import StopPointRouteSectionArray
 from .DisruptedPointArray import DisruptedPointArray
-from .GenericResponseModel import GenericResponseModel
 from typing import Literal
 
 ResponseModelName = Literal[
@@ -262,7 +261,6 @@ ResponseModelName = Literal[
     "FareCaveat",
     "FareTap",
     "FareTapDetails",
-    "GenericResponseModel",
     "Identifier",
     "Instruction",
     "InstructionStep",
@@ -382,7 +380,6 @@ __all__ = [
     "FareCaveat",
     "FareTap",
     "FareTapDetails",
-    "GenericResponseModel",
     "Identifier",
     "Instruction",
     "InstructionStep",

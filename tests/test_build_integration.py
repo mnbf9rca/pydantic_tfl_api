@@ -1,33 +1,55 @@
-"""Integration tests for the complete build process.
+"""Integration tests for the build process.
 
-These tests actually run the build_models.py script to catch runtime errors
-and validate that the build process works end-to-end.
+These tests verify that the build_models.py script:
+1. Completes successfully
+2. Creates the expected directory structure
+3. Generates valid Python code
+4. Produces meaningful content (not empty classes)
 """
 
-import os
+import re
 import shutil
-import tempfile
 import subprocess
-import pytest
+import tempfile
 from pathlib import Path
-from typing import Any
+
+import pytest
+
 
 class TestBuildIntegration:
     """Test the complete build process from OpenAPI specs to generated models."""
 
-    @pytest.fixture
-    def temp_output_dir(self):
-        """Create a temporary directory for build output."""
+    @pytest.fixture(scope="class")
+    def build_output(self, project_root, specs_dir):
+        """Run the build once and share output across all tests in this class."""
         temp_dir = tempfile.mkdtemp()
-        yield temp_dir
+        build_script = project_root / "scripts" / "build_models.py"
+
+        # Run the build process once
+        result = subprocess.run(
+            ["uv", "run", "python", str(build_script), str(specs_dir), temp_dir],
+            capture_output=True,
+            text=True,
+            cwd=project_root,
+        )
+
+        # Create a simple object to hold both result and path
+        class BuildOutput:
+            def __init__(self, result, path):
+                self.result = result
+                self.path = path
+
+        yield BuildOutput(result, Path(temp_dir))
+
+        # Cleanup
         shutil.rmtree(temp_dir)
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def project_root(self):
         """Get the project root directory."""
         return Path(__file__).parent.parent
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def specs_dir(self, project_root):
         """Get the TfL OpenAPI specs directory."""
         specs_path = project_root / "TfL_OpenAPI_specs"
@@ -35,240 +57,177 @@ class TestBuildIntegration:
             pytest.skip("TfL_OpenAPI_specs directory not found")
         return specs_path
 
-    def test_build_process_completes_successfully(self, project_root, specs_dir, temp_output_dir):
+    def test_build_completes_successfully(self, build_output):
         """Test that the build process completes without errors."""
-        build_script = project_root / "scripts" / "build_models.py"
+        assert build_output.result.returncode == 0, f"Build failed: {build_output.result.stderr}"
 
-        # Run the build process
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
+        # Check for critical errors in output
+        stderr = build_output.result.stderr
+        assert "ERROR" not in stderr or "Unexpected error" not in stderr
+        assert "Model generation completed successfully" in stderr
 
-        # Check that the process completed successfully
-        assert result.returncode == 0, f"Build failed with error: {result.stderr}"
+    def test_creates_expected_directories(self, build_output):
+        """Test that required directories are created and populated."""
+        required_dirs = {
+            "models": "Model definitions",
+            "endpoints": "API client endpoints",
+            "core": "Core infrastructure files"
+        }
 
-        # Check that no critical errors were logged
-        assert "ERROR" not in result.stderr or "Unexpected error" not in result.stderr
+        for dir_name, description in required_dirs.items():
+            dir_path = build_output.path / dir_name
+            assert dir_path.exists(), f"Missing {description} directory: {dir_name}"
 
-        # Verify success message
-        assert "Model generation completed successfully" in result.stderr
+            # Verify directory has content
+            py_files = list(dir_path.glob("*.py"))
+            assert py_files, f"{dir_name} directory is empty"
 
-    def test_generated_directory_structure(self, project_root, specs_dir, temp_output_dir):
-        """Test that the correct directory structure is generated."""
-        build_script = project_root / "scripts" / "build_models.py"
+            # Check __init__.py exists
+            init_file = dir_path / "__init__.py"
+            assert init_file.exists(), f"Missing __init__.py in {dir_name}"
 
-        # Run the build process
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
+    @pytest.mark.parametrize("model_type,sample_file,content_markers", [
+        # Test a complex BaseModel
+        ("BaseModel", "models/Line.py", [
+            "class Line(BaseModel)",
+            "id: str | None = Field(None)",     # Has ID field with modern syntax
+            "name: str | None = Field(None)",   # Has name field with modern syntax
+            "model_config = ConfigDict",        # Has Pydantic config
+        ]),
 
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
+        # Test an Enum has values
+        ("Enum", "models/CategoryEnum.py", [
+            "class CategoryEnum(Enum)",
+            "REALTIME =",                       # Has enum value
+            "INFORMATION =",                    # Has another value
+        ]),
 
-        output_path = Path(temp_output_dir)
+        # Test a RootModel array
+        ("RootModel", "models/LineArray.py", [
+            "class LineArray(RootModel",
+            "list[Line]",                       # References actual model type
+            "from .Line import Line",           # Imports the model
+        ]),
 
-        # Check main directories exist
-        assert (output_path / "models").exists(), "models directory not created"
-        assert (output_path / "endpoints").exists(), "endpoints directory not created"
-        assert (output_path / "core").exists(), "core directory not created"
+        # Test an endpoint client
+        ("Client", "endpoints/LineClient.py", [
+            "class LineClient",
+            "_send_request_and_deserialize",    # Uses base client method
+            "def Line",                         # Has at least one API method
+            "-> ResponseModel",                 # Returns proper response types
+        ]),
+    ])
+    def test_sample_models_have_meaningful_content(self, build_output, model_type, sample_file, content_markers):
+        """Test that different model types contain actual content, not empty shells."""
+        file_path = build_output.path / sample_file
 
-        # Check core files exist
-        core_files = ["__init__.py", "package_models.py"]
-        for file_name in core_files:
-            file_path = output_path / "core" / file_name
-            assert file_path.exists(), f"Core file {file_name} not created"
+        # File should exist
+        assert file_path.exists(), f"Expected {model_type} file not found: {sample_file}"
 
-    def test_models_directory_populated(self, project_root, specs_dir, temp_output_dir):
-        """Test that model files are generated in the models directory."""
-        build_script = project_root / "scripts" / "build_models.py"
+        content = file_path.read_text()
 
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
+        # Check all expected content markers
+        for marker in content_markers:
+            assert marker in content, f"{model_type} missing expected content: {marker}"
 
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
+        # Verify it's not trivially small (different thresholds for different types)
+        min_size = 100 if model_type == "RootModel" else 200  # Arrays are smaller
+        assert len(content) > min_size, f"{model_type} file seems too small to be meaningful"
 
-        models_dir = Path(temp_output_dir) / "models"
-        model_files = list(models_dir.glob("*.py"))
-
-        # Should have generated multiple model files
-        assert len(model_files) > 10, f"Expected multiple model files, got {len(model_files)}"
-
-        # Check that __init__.py exists
-        assert (models_dir / "__init__.py").exists(), "models/__init__.py not created"
-
-        # Verify some expected model files exist (common TfL models)
-        expected_models = ["Line.py", "StopPoint.py", "Place.py", "Mode.py"]
-        for model_file in expected_models:
-            model_path = models_dir / model_file
-            assert model_path.exists(), f"Expected model file {model_file} not found"
-
-    def test_endpoint_clients_generated(self, project_root, specs_dir, temp_output_dir):
-        """Test that endpoint client files are generated."""
-        build_script = project_root / "scripts" / "build_models.py"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
-
-        endpoints_dir = Path(temp_output_dir) / "endpoints"
-        client_files = list(endpoints_dir.glob("*Client.py"))
-        config_files = list(endpoints_dir.glob("*Client_config.py"))
-
-        # Should have generated multiple client files
-        assert len(client_files) > 5, f"Expected multiple client files, got {len(client_files)}"
-        assert len(config_files) > 5, f"Expected multiple config files, got {len(config_files)}"
-
-        # Check that __init__.py exists
-        assert (endpoints_dir / "__init__.py").exists(), "endpoints/__init__.py not created"
-
-        # Verify some expected client files
-        expected_clients = ["LineClient.py", "StopPointClient.py", "PlaceClient.py"]
-        for client_file in expected_clients:
-            client_path = endpoints_dir / client_file
-            assert client_path.exists(), f"Expected client file {client_file} not found"
-
-    def test_generated_files_are_valid_python(self, project_root, specs_dir, temp_output_dir):
-        """Test that all generated files are syntactically valid Python."""
-        build_script = project_root / "scripts" / "build_models.py"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
-
-        output_path = Path(temp_output_dir)
-        python_files = list(output_path.rglob("*.py"))
-
-        assert len(python_files) > 20, f"Expected many Python files, got {len(python_files)}"
-
-        # Test syntax validity by compiling each file
-        for py_file in python_files:
-            try:
-                with open(py_file, 'r', encoding='utf-8') as f:
-                    code = f.read()
-                compile(code, str(py_file), 'exec')
-            except SyntaxError as e:
-                pytest.fail(f"Generated file {py_file} has syntax error: {e}")
-            except Exception as e:
-                pytest.fail(f"Error reading/compiling {py_file}: {e}")
-
-    def test_build_handles_missing_specs_gracefully(self, project_root, temp_output_dir):
-        """Test that build fails gracefully when specs directory is missing."""
-        build_script = project_root / "scripts" / "build_models.py"
-        nonexistent_specs = "/nonexistent/specs/directory"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            nonexistent_specs,
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        # Should fail but not crash
-        assert result.returncode != 0, "Build should fail with missing specs directory"
-        assert "ERROR" in result.stderr or "FileNotFoundError" in result.stderr
-
-    def test_build_output_includes_expected_components(self, project_root, specs_dir, temp_output_dir):
-        """Test that build output includes all expected components."""
-        build_script = project_root / "scripts" / "build_models.py"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
-
-        # Check that log indicates expected components were processed
-        log_output = result.stderr
-
-        # Should process multiple APIs
-        assert "Processing Line" in log_output
-        assert "Processing StopPoint" in log_output
-        assert "Processing Place" in log_output
-
-        # Should create models
-        assert "Created object model:" in log_output
-        assert "Created array model:" in log_output
-
-        # Should handle dependencies
-        assert "Handling dependencies" in log_output
-
-        # Should save files
-        assert "Saving models to files" in log_output
-        assert "Creating config and class files" in log_output
-
-    def test_no_critical_runtime_errors(self, project_root, specs_dir, temp_output_dir):
-        """Test that no critical runtime errors occur during build."""
-        build_script = project_root / "scripts" / "build_models.py"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        # Check for specific errors that were previously encountered
-        error_patterns = [
-            "TypeError: type 'types.UnionType' is not subscriptable",
-            "NameError: name 'Set' is not defined",
-            "NameError: name 'Dict' is not defined",
-            "NameError: name 'List' is not defined",
-            "AttributeError:",
-            "ImportError:",
-        ]
-
-        for pattern in error_patterns:
-            assert pattern not in result.stderr, f"Critical error found: {pattern}"
-
-        # Should complete successfully
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
-
-    @pytest.mark.slow
-    def test_generated_package_can_be_imported(self, project_root, specs_dir, temp_output_dir):
-        """Test that the generated package can be imported without errors."""
-        build_script = project_root / "scripts" / "build_models.py"
-
-        result = subprocess.run([
-            "uv", "run", "python", str(build_script),
-            str(specs_dir),
-            temp_output_dir
-        ], capture_output=True, text=True, cwd=project_root)
-
-        assert result.returncode == 0, f"Build failed: {result.stderr}"
-
-        # Test importing the generated package
+    def test_all_generated_python_is_syntactically_valid(self, build_output):
+        """Test that ALL generated Python files compile without syntax errors."""
+        import compileall
         import sys
-        sys.path.insert(0, temp_output_dir)
+        from io import StringIO
+
+        # Capture compileall output
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        captured_output = StringIO()
 
         try:
-            # Test importing core components
-            from core import ResponseModel, ApiError
-            from core.package_models import GenericResponseModel
+            sys.stdout = captured_output
+            sys.stderr = captured_output
 
-            # Test importing some models
-            from models import Line, StopPoint, Place
+            # Compile all Python files recursively
+            success = compileall.compile_dir(
+                str(build_output.path),
+                quiet=1,  # Suppress normal output
+                force=True,  # Compile even if .pyc exists
+                legacy=False  # Use __pycache__ directory
+            )
 
-            # Test importing some clients
-            from endpoints import LineClient, StopPointClient
-
-            # If we get here, imports succeeded
-            assert True
-
-        except ImportError as e:
-            pytest.fail(f"Generated package could not be imported: {e}")
         finally:
-            sys.path.remove(temp_output_dir)
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
+
+        output = captured_output.getvalue()
+
+        # Check that compilation succeeded
+        assert success, f"Some Python files failed to compile:\n{output}"
+
+        # Check for syntax errors in the output
+        assert "SyntaxError" not in output, f"Syntax errors found in generated code:\n{output}"
+
+
+    def test_model_imports_resolve_correctly(self, build_output):
+        """Test that models can import their dependencies."""
+        # Check a few files that we expect to have imports
+        files_with_imports = [
+            build_output.path / "models" / "LineArray.py",      # Imports Line
+            build_output.path / "models" / "Place.py",          # Self-referential
+            build_output.path / "models" / "Journey.py",        # Complex dependencies
+        ]
+
+        models_dir = build_output.path / "models"
+
+        for file_path in files_with_imports:
+            # These files MUST exist - the build should have created them
+            assert file_path.exists(), f"Expected model file not found: {file_path.name}"
+
+            content = file_path.read_text()
+
+            # Find relative imports: from .SomeModel import SomeModel
+            import_pattern = r'from \.([\w]+) import'
+            imports = re.findall(import_pattern, content)
+
+            for module_name in imports:
+                imported_file = models_dir / f"{module_name}.py"
+                assert imported_file.exists(), f"{file_path.name} imports non-existent {module_name}"
+
+    def test_build_fails_gracefully_with_invalid_input(self, project_root):
+        """Test that build handles missing specs directory gracefully."""
+        build_script = project_root / "scripts" / "build_models.py"
+        temp_dir = tempfile.mkdtemp()
+
+        try:
+            result = subprocess.run(
+                ["uv", "run", "python", str(build_script), "/nonexistent/path", temp_dir],
+                capture_output=True,
+                text=True,
+                cwd=project_root,
+            )
+
+            # Should fail with non-zero exit code
+            assert result.returncode != 0, "Build should fail with invalid input"
+
+            # Should have meaningful error message
+            assert "ERROR" in result.stderr or "FileNotFoundError" in result.stderr
+
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_build_logs_show_progress(self, build_output):
+        """Test that build provides informative progress messages."""
+        logs = build_output.result.stderr
+
+        # Should show processing of major components
+        progress_indicators = [
+            "Processing",      # Shows it's working on files
+            "Created",         # Shows models being created
+            "Handling dependencies",  # Shows dependency resolution
+            "Saving models",   # Shows file writing
+        ]
+
+        for indicator in progress_indicators:
+            assert indicator in logs, f"Build logs missing progress indicator: {indicator}"

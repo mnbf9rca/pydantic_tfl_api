@@ -3,6 +3,6 @@ from typing import List
 from .Place import Place
 
 
-class PlaceArray(RootModel[List[Place]]):
+class PlaceArray(RootModel[list[Place]]):
 
     model_config = ConfigDict(from_attributes=True)

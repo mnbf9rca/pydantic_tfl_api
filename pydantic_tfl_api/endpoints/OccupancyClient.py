@@ -1,6 +1,6 @@
 from .OccupancyClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
-from ..models import BikePointOccupancyArray, ChargeConnectorOccupancyArray, GenericResponseModel
+from ..core import ApiError, ResponseModel, Client, GenericResponseModel
+from ..models import BikePointOccupancyArray, ChargeConnectorOccupancyArray
 
 class OccupancyClient(Client):
     def GetAllChargeConnectorStatus(self, ) -> ResponseModel[ChargeConnectorOccupancyArray] | ApiError:

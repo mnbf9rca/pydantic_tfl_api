@@ -34,7 +34,7 @@ SPEC_FOLDER=$2
 
 
 
-BUILD_SCRIPT="build_models.py"
+BUILD_SCRIPT="scripts/build_models.py"
 
 # Check if we should run the build script based on the third argument (boolean value)
 RUN_BUILDSCRIPT=$3
@@ -73,23 +73,20 @@ else
     fi
 fi
 
-# 1. Delete the content of the pydantic_tfl_api folder (models and endpoints)
+# 1. Complete cleanup of target directory for fresh rebuild
 if [ -d "$BUILD_FOLDER" ]; then
-    echo "The $BUILD_FOLDER directory exists. Deleting 'models' and 'endpoints' folders..."
-    rm -rf "$BUILD_FOLDER/models"
-    rm -rf "$BUILD_FOLDER/endpoints"
-    
+    echo "The $BUILD_FOLDER directory exists. Removing all contents for fresh rebuild..."
+    rm -rf "$BUILD_FOLDER"/*
 else
     echo "The $BUILD_FOLDER directory doesn't exist. Creating it..."
 fi
 
-# 2. Create the pydantic_tfl_api folder structure (models and endpoints)
-mkdir -p "$BUILD_FOLDER/models"
-mkdir -p "$BUILD_FOLDER/endpoints"
+# 2. Create the basic directory structure (core will be created by build script)
+mkdir -p "$BUILD_FOLDER"
 
 # 3. Optionally run the build_models.py script if RUN_BUILDSCRIPT is true
 if [ "$RUN_BUILDSCRIPT_LOWER" == "true" ]; then
-    python "$BUILD_SCRIPT" "$SPEC_FOLDER" "$BUILD_FOLDER"
+    uv run python "$BUILD_SCRIPT" "$SPEC_FOLDER" "$BUILD_FOLDER"
 fi
 
 echo "Script execution completed."

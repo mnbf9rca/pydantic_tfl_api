@@ -7,8 +7,10 @@ import re
 import keyword
 import builtins
 import argparse
+import shutil
 from collections import defaultdict
 from urllib.parse import urljoin
+from pathlib import Path
 
 from typing import __all__ as typing_all
 
@@ -359,6 +361,9 @@ def save_models(
         # Write import statements in dependency-aware order to minimize forward references
         write_import_statements(init_f, models, models_dir, sorted_models)
 
+        # Import GenericResponseModel from core for backward compatibility
+        init_f.write("from ..core.package_models import GenericResponseModel\n")
+
         for model_name, model in models.items():
             save_model_file(
                 model_name,
@@ -370,9 +375,16 @@ def save_models(
                 init_f,
             )
 
+        # Add ResponseModelName Literal type
+        model_names_for_literal = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
+        init_f.write("from typing import Literal\n\n")
+        init_f.write(
+            f"ResponseModelName = Literal[\n    {model_names_for_literal}\n]\n\n"
+        )
+
         model_names = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
         init_f.write(
-            f"\n__all__ = [\n    {model_names}\n]\n"
+            f"__all__ = [\n    {model_names}\n]\n"
         )
 
     # Write enums after saving the models
@@ -1425,22 +1437,34 @@ def save_classes(specs: list[dict[str, Any]], base_path: str, base_url: str) -> 
         # init_file.write("from ..core import Client\n")
         # init_file.write("from ..core import RestClient\n")
         init_file.write("from . import models\n")
+        init_file.write("from .core import __version__\n")
+
+
         # init_file.write("from .models import ApiError, GenericResponseModel, ResponseModel\n")
         # other_classes = ["Client", "RestClient", "ApiError", "GenericResponseModel", "ResponseModel"]
-        init_file.write("__all__ = [\n")
+        init_file.write("\n__all__ = [\n")
         init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
         # init_file.write(",\n".join([f"    '{name}'" for name in other_classes]))
-        init_file.write(",\n    'models'\n]\n")
+        init_file.write(",\n    'models',\n    '__version__'\n]\n")
 
     endpoint_path = os.path.join(base_path, "endpoints")
     os.makedirs(endpoint_path, exist_ok=True)
     endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
     with open(endpoint_init_file, "w") as endpoint_init:
         # endpoint_init.write(f"# {endpoint_init_file}\n")
+        endpoint_init.write("from typing import Literal\n\n")
         endpoint_init.write(
             "\n".join([f"from .{name} import {name}" for name in class_names])
         )
-        endpoint_init.write("\n__all__ = [\n")
+        endpoint_init.write("\n\n")
+
+        # Generate TfLEndpoint Literal type
+        endpoint_names = ',\n    '.join(f"'{name}'" for name in class_names)
+        endpoint_init.write(
+            f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n"
+        )
+
+        endpoint_init.write("__all__ = [\n")
         endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
         endpoint_init.write("\n]\n")
 
@@ -1643,6 +1667,44 @@ def _generate_classes_and_diagrams(
     )
 
 
+
+def copy_infrastructure(output_path: str) -> None:
+    """
+    Copy hand-crafted infrastructure components to the output directory.
+
+    This function copies the core infrastructure files (client.py, package_models.py, etc.)
+    from the infrastructure/core directory to the output directory, ensuring that
+    generated code has access to the necessary infrastructure components.
+
+    Args:
+        output_path: Directory where infrastructure should be copied
+
+    Raises:
+        FileNotFoundError: If infrastructure directory doesn't exist
+        PermissionError: If unable to copy files
+    """
+    # Get the directory containing this script (should be project root/scripts)
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+    infrastructure_dir = project_root / "infrastructure" / "core"
+
+    if not infrastructure_dir.exists():
+        raise FileNotFoundError(f"Infrastructure directory not found: {infrastructure_dir}")
+
+    output_core_dir = Path(output_path) / "core"
+
+    logging.info(f"Copying infrastructure from {infrastructure_dir} to {output_core_dir}")
+
+    # Create output core directory and copy all infrastructure files
+    output_core_dir.mkdir(parents=True, exist_ok=True)
+
+    for infrastructure_file in infrastructure_dir.glob("*.py"):
+        destination = output_core_dir / infrastructure_file.name
+
+        shutil.copy2(infrastructure_file, destination)
+        logging.info(f"Copied infrastructure: {infrastructure_file.name}")
+
+
 def main(spec_path: str, output_path: str):
     """
     Main function to build Pydantic models from OpenAPI specifications.
@@ -1658,6 +1720,7 @@ def main(spec_path: str, output_path: str):
     """
     try:
         _validate_and_setup_paths(spec_path, output_path)
+        copy_infrastructure(output_path)
         specs, combined_components, combined_paths = _load_and_process_specs(spec_path)
         models, reference_map = _generate_and_process_models(combined_components)
         dependency_graph, circular_models, sorted_models = _handle_dependencies_and_save_models(models, output_path)
