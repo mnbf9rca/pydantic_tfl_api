@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .DepartureStatusEnum import DepartureStatusEnum
 from .PredictionTiming import PredictionTiming
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class ArrivalDeparture(BaseModel):

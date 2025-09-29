@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .StopPoint import StopPoint
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RouteSectionNaptanEntrySequence(BaseModel):

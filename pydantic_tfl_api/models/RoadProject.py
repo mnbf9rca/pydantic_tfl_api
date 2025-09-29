@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .PhaseEnum import PhaseEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadProject(BaseModel):

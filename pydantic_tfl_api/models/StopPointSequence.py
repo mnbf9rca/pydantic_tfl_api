@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .MatchedStop import MatchedStop
 from .ServiceTypeEnum import ServiceTypeEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class StopPointSequence(BaseModel):

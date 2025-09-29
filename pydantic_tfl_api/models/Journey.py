@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .JourneyFare import JourneyFare
 from .Leg import Leg
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Journey(BaseModel):

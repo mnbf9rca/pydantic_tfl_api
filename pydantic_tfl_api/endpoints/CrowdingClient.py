@@ -1,5 +1,6 @@
-from .CrowdingClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client, GenericResponseModel
+from ..core import ApiError, Client, GenericResponseModel, ResponseModel
+from .CrowdingClient_config import base_url, endpoints
+
 
 class CrowdingClient(Client):
     def Naptan(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:

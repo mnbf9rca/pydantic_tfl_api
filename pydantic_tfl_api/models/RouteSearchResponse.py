@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .RouteSearchMatch import RouteSearchMatch
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RouteSearchResponse(BaseModel):

@@ -1,9 +1,10 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .AdditionalProperties import AdditionalProperties
 from .Identifier import Identifier
 from .LineGroup import LineGroup
 from .LineModeGroup import LineModeGroup
 from .Place import Place
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class StopPoint(BaseModel):

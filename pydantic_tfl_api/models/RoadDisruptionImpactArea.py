@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .DbGeography import DbGeography
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadDisruptionImpactArea(BaseModel):

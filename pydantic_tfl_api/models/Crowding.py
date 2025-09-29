@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .PassengerFlow import PassengerFlow
 from .TrainLoading import TrainLoading
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Crowding(BaseModel):

@@ -1,5 +1,6 @@
+from pydantic import ConfigDict, RootModel
+
 from .DisruptedPoint import DisruptedPoint
-from pydantic import RootModel, ConfigDict
 
 
 class DisruptedPointArray(RootModel[list[DisruptedPoint]]):

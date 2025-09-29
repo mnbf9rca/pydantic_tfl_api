@@ -1,6 +1,7 @@
-from .AccidentStatsClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import AccidentDetailArray
+from .AccidentStatsClient_config import base_url, endpoints
+
 
 class AccidentStatsClient(Client):
     def Get(self, year: int) -> ResponseModel[AccidentDetailArray] | ApiError:

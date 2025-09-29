@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Fare import Fare
 from .FareCaveat import FareCaveat
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class JourneyFare(BaseModel):

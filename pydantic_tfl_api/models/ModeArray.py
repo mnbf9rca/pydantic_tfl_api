@@ -1,4 +1,5 @@
-from pydantic import RootModel, ConfigDict
+from pydantic import ConfigDict, RootModel
+
 from .Mode import Mode
 
 

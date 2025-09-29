@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .LineServiceTypeInfo import LineServiceTypeInfo
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineSpecificServiceType(BaseModel):

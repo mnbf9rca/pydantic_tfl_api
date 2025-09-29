@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .FareTap import FareTap
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Fare(BaseModel):

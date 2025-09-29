@@ -349,5 +349,6 @@ __all__ = [
     "TwentyFourHourClockTime",
     "ValidityPeriod",
     "Vehicle",
-    "VehicleMatch"
+    "VehicleMatch",
+    'GenericResponseModel'
 ]

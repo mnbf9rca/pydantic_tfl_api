@@ -1,7 +1,8 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .ServiceFrequency import ServiceFrequency
 from .TwentyFourHourClockTime import TwentyFourHourClockTime
 from .TypeEnum import TypeEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Period(BaseModel):

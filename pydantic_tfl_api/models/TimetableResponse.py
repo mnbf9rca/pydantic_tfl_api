@@ -1,7 +1,8 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Disambiguation import Disambiguation
 from .MatchedStop import MatchedStop
 from .Timetable import Timetable
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class TimetableResponse(BaseModel):

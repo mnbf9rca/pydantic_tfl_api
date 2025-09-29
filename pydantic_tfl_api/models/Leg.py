@@ -1,3 +1,5 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Disruption import Disruption
 from .Identifier import Identifier
 from .Instruction import Instruction
@@ -6,7 +8,6 @@ from .Path import Path
 from .PlannedWork import PlannedWork
 from .Point import Point
 from .RouteOption import RouteOption
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Leg(BaseModel):

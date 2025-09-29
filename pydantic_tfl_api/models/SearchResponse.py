@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .SearchMatch import SearchMatch
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class SearchResponse(BaseModel):

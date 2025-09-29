@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .InstructionStep import InstructionStep
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Instruction(BaseModel):

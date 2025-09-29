@@ -1,5 +1,6 @@
-from pydantic import RootModel, ConfigDict
 from typing import Any
+
+from pydantic import ConfigDict, RootModel
 
 
 class LondonAirForecast(RootModel[dict[str, Any]]):

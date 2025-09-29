@@ -1,5 +1,6 @@
+from pydantic import ConfigDict, RootModel
+
 from .StopPointRouteSection import StopPointRouteSection
-from pydantic import RootModel, ConfigDict
 
 
 class StopPointRouteSectionArray(RootModel[list[StopPointRouteSection]]):

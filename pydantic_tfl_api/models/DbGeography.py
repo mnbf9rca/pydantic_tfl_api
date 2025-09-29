@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .DbGeographyWellKnownValue import DbGeographyWellKnownValue
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class DbGeography(BaseModel):

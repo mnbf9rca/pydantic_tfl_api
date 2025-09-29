@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Interval import Interval
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class StationInterval(BaseModel):

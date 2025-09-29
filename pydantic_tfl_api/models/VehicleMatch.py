@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .ComplianceEnum import ComplianceEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class VehicleMatch(BaseModel):

@@ -1,6 +1,14 @@
-from .RoadClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
-from ..models import Object, RoadCorridorsArray, RoadDisruption, RoadDisruptionsArray, StatusSeveritiesArray, StringsArray
+from ..core import ApiError, Client, ResponseModel
+from ..models import (
+    Object,
+    RoadCorridorsArray,
+    RoadDisruption,
+    RoadDisruptionsArray,
+    StatusSeveritiesArray,
+    StringsArray,
+)
+from .RoadClient_config import base_url, endpoints
+
 
 class RoadClient(Client):
     def Get(self, ) -> ResponseModel[RoadCorridorsArray] | ApiError:
@@ -42,8 +50,8 @@ class RoadClient(Client):
 
   Parameters:
     `ids`: str - Comma-separated list of road identifiers e.g. "A406, A2" or use "all" to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: `A2`
-    `startDate`: str - Format - date-time (as date-time in RFC3339). The start date to aggregate status from. 
-    `endDate`: str - Format - date-time (as date-time in RFC3339). The end date to aggregate status up to. 
+    `startDate`: str - Format - date-time (as date-time in RFC3339). The start date to aggregate status from.
+    `endDate`: str - Format - date-time (as date-time in RFC3339). The end date to aggregate status up to.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_StatusByPathIdsQueryStartDateQueryEndDate'], params=[ids], endpoint_args={ 'startDate': startDate, 'endDate': endDate })
 
@@ -58,10 +66,10 @@ class RoadClient(Client):
 
   Parameters:
     `ids`: str - Comma-separated list of road identifiers e.g. "A406, A2" use all for all to ignore id filter (a full list of supported road identifiers can be found at the /Road/ endpoint). Example: `A406`
-    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location, comments and streets. 
-    `severities`: list - an optional list of Severity names to filter on (a valid list of severities can be obtained from the /Road/Meta/severities endpoint). 
-    `categories`: list - an optional list of category names to filter on (a valid list of categories can be obtained from the /Road/Meta/categories endpoint). 
-    `closures`: bool - Optional, defaults to true. When true, always includes disruptions that have road closures, regardless of the severity filter. When false, the severity filter works as normal.. 
+    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location, comments and streets.
+    `severities`: list - an optional list of Severity names to filter on (a valid list of severities can be obtained from the /Road/Meta/severities endpoint).
+    `categories`: list - an optional list of category names to filter on (a valid list of categories can be obtained from the /Road/Meta/categories endpoint).
+    `closures`: bool - Optional, defaults to true. When true, always includes disruptions that have road closures, regardless of the severity filter. When false, the severity filter works as normal..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByPathIdsQueryStripContentQuerySeveritiesQueryCategoriesQuery'], params=[ids], endpoint_args={ 'stripContent': stripContent, 'severities': severities, 'categories': categories, 'closures': closures })
 
@@ -91,7 +99,7 @@ class RoadClient(Client):
 
   Parameters:
     `disruptionIds`: str - Comma-separated list of disruption identifiers to filter by.. Example: `TIMS-89632`
-    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location and comments.. 
+    `stripContent`: bool - Optional, defaults to false. When true, removes every property/node except for id, point, severity, severityDescription, startDate, endDate, corridor details, location and comments..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Road_DisruptionByIdByPathDisruptionIdsQueryStripContent'], params=[disruptionIds], endpoint_args={ 'stripContent': stripContent })
 

@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .TimetableRoute import TimetableRoute
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Timetable(BaseModel):

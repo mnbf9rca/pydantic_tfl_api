@@ -1,5 +1,6 @@
+from pydantic import ConfigDict, RootModel
+
 from .ArrivalDeparture import ArrivalDeparture
-from pydantic import RootModel, ConfigDict
 
 
 class ArrivalDepartureArray(RootModel[list[ArrivalDeparture]]):
