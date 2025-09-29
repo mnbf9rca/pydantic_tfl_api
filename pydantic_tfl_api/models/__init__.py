@@ -231,7 +231,8 @@ ResponseModelName = Literal[
     "TwentyFourHourClockTime",
     "ValidityPeriod",
     "Vehicle",
-    "VehicleMatch"
+    "VehicleMatch",
+    "GenericResponseModel"
 ]
 
 __all__ = [

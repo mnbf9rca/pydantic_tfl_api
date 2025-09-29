@@ -68,9 +68,10 @@ class FileManager:
                 )
 
             # Add ResponseModelName Literal type
+            # Include GenericResponseModel in the Literal since it's a valid response model
             model_names_for_literal = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
             init_f.write("from typing import Literal\n\n")
-            init_f.write(f"ResponseModelName = Literal[\n    {model_names_for_literal}\n]\n\n")
+            init_f.write(f"ResponseModelName = Literal[\n    {model_names_for_literal},\n    \"GenericResponseModel\"\n]\n\n")
 
             model_names = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
             init_f.write(f"__all__ = [\n    {model_names},\n    'GenericResponseModel'\n]\n")

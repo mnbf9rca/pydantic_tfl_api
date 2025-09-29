@@ -281,3 +281,64 @@ class TestDependencyResolver:
         # All model names should be in graph
         for model_name in models:
             assert model_name in graph
+
+
+class TestExtractModelNameFromForwardRef:
+    """Test the _extract_model_name_from_forward_ref helper method."""
+
+    @pytest.fixture
+    def dependency_resolver(self) -> DependencyResolver:
+        """Create a DependencyResolver instance for testing."""
+        return DependencyResolver()
+
+    def test_simple_model_name(self, dependency_resolver: Any) -> None:
+        """Test extraction of simple model name without union syntax."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("Profile")
+        assert result == "Profile"
+
+    def test_union_with_none(self, dependency_resolver: Any) -> None:
+        """Test extraction from modern union syntax with None."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("Profile | None")
+        assert result == "Profile"
+
+    def test_union_with_none_reversed(self, dependency_resolver: Any) -> None:
+        """Test extraction when None comes first."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("None | Profile")
+        assert result == "Profile"
+
+    def test_complex_union(self, dependency_resolver: Any) -> None:
+        """Test extraction from union with multiple types."""
+        # Should return the first non-None type
+        result = dependency_resolver._extract_model_name_from_forward_ref("User | Profile | None")
+        assert result == "User"
+
+    def test_with_whitespace(self, dependency_resolver: Any) -> None:
+        """Test extraction handles whitespace correctly."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("  Profile  |  None  ")
+        assert result == "Profile"
+
+    def test_generic_type_string(self, dependency_resolver: Any) -> None:
+        """Test extraction preserves generic type notation."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("list[User]")
+        assert result == "list[User]"
+
+    def test_generic_with_union(self, dependency_resolver: Any) -> None:
+        """Test extraction from generic type with union."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("list[User] | None")
+        assert result == "list[User]"
+
+    def test_empty_string(self, dependency_resolver: Any) -> None:
+        """Test extraction from empty string."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("")
+        assert result == ""
+
+    def test_only_none(self, dependency_resolver: Any) -> None:
+        """Test extraction when only None is present."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("None")
+        # Should return the original string when only None is found
+        assert result == "None"
+
+    def test_nested_brackets(self, dependency_resolver: Any) -> None:
+        """Test extraction with nested generic brackets."""
+        result = dependency_resolver._extract_model_name_from_forward_ref("dict[str, list[User]] | None")
+        assert result == "dict[str, list[User]]"

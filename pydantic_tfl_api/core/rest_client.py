@@ -46,15 +46,18 @@ class RestClient:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 
-        return requests.get(request_path + "?" + self._get_query_strings(params), headers=request_headers, timeout=30)
-
+        return requests.get(
+            f"{request_path}?{self._get_query_strings(params)}",
+            headers=request_headers,
+            timeout=30,
+        )
     def _get_request_headers(self) -> dict[str, str]:
         request_headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
         if self.app_key is not None:
-            request_headers.update(self.app_key)
+            request_headers |= self.app_key
         return request_headers
 
     def _get_query_strings(self, params: dict[str, Any] | None) -> str:

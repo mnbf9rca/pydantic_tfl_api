@@ -24,6 +24,23 @@ class DependencyResolver:
         """Extract inner types using the shared utility function."""
         return extract_inner_types(annotation)
 
+    def _extract_model_name_from_forward_ref(self, forward_ref_str: str) -> str:
+        """Extract the model name from a ForwardRef string that may contain union syntax.
+
+        Examples:
+            "Profile | None" -> "Profile"
+            "Profile" -> "Profile"
+            "list[User]" -> "list[User]"
+        """
+        # Split on | to handle union types
+        parts = forward_ref_str.split("|")
+        # Take the first non-None part and strip whitespace
+        for part in parts:
+            part = part.strip()
+            if part and part != "None":
+                return part
+        return forward_ref_str
+
     def build_dependency_graph(self, models: dict[str, type[BaseModel] | type[list]]) -> dict[str, set[str]]:
         """Build a dependency graph where each model depends on other models."""
         graph = defaultdict(set)
@@ -38,7 +55,9 @@ class DependencyResolver:
                     for inner_type in inner_types:
                         # Handle ForwardRef (string-based references)
                         if isinstance(inner_type, ForwardRef):
-                            graph[model_name].add(inner_type.__forward_arg__)
+                            # Extract just the model name from forward refs like "Profile | None"
+                            dep_name = self._extract_model_name_from_forward_ref(inner_type.__forward_arg__)
+                            graph[model_name].add(dep_name)
 
                         # Handle direct model references
                         elif hasattr(inner_type, "__name__") and inner_type.__name__ in models:
@@ -49,7 +68,9 @@ class DependencyResolver:
                             nested_types = self.extract_inner_types(inner_type)
                             for nested_type in nested_types:
                                 if isinstance(nested_type, ForwardRef):
-                                    graph[model_name].add(nested_type.__forward_arg__)
+                                    # Extract just the model name from forward refs like "Profile | None"
+                                    dep_name = self._extract_model_name_from_forward_ref(nested_type.__forward_arg__)
+                                    graph[model_name].add(dep_name)
                                 elif hasattr(nested_type, "__name__") and nested_type.__name__ in models:
                                     graph[model_name].add(sanitize_name(nested_type.__name__))
 

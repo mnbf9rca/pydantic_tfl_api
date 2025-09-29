@@ -3,6 +3,7 @@
 import builtins
 import keyword
 import re
+import types
 from typing import Any, Union, get_args, get_origin
 
 
@@ -73,7 +74,20 @@ def extract_inner_types(annotation: Any) -> list[Any]:
     """Recursively extract and preserve inner types from nested generics, returning actual type objects."""
     origin = get_origin(annotation)
 
-    # If it's a Union (e.g., Optional), check for NoneType and return Optional
+    # Handle modern union syntax (Python 3.10+): X | Y creates types.UnionType
+    if isinstance(origin, types.UnionType) or origin is types.UnionType:
+        args = get_args(annotation)
+        non_none_args = []
+        contains_none = False
+        for arg in args:
+            if arg is type(None):
+                contains_none = True
+            else:
+                non_none_args.extend(extract_inner_types(arg))  # Accumulate all inner types
+        # Return types.UnionType as the origin for modern union syntax
+        return [types.UnionType] + non_none_args
+
+    # Handle classic Union syntax (typing.Union)
     if origin is Union:
         args = get_args(annotation)
         non_none_args = []

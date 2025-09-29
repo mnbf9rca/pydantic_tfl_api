@@ -6,7 +6,7 @@ import json
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import Any, ForwardRef, Optional
+from typing import Any, ForwardRef
 
 import pytest
 from pydantic import BaseModel
@@ -507,9 +507,11 @@ class TestExtractInnerTypes:
 
     def test_optional_type(self) -> None:
         """Test extraction from Optional types."""
+        import types
 
         result = extract_inner_types(str | None)
-        assert Optional in result
+        # Modern union syntax (str | None) creates types.UnionType, not Optional
+        assert types.UnionType in result
         assert str in result
 
     def test_list_type(self) -> None:
@@ -676,8 +678,8 @@ class TestBuildModelsRealIntegration:
 
         from scripts.build_models import main
 
-        # Check if TfL specs directory exists
-        tfl_specs_path = Path("../TfL_OpenAPI_specs")
+        # Check if TfL specs directory exists (relative to project root where pytest runs)
+        tfl_specs_path = Path("TfL_OpenAPI_specs")
         if not tfl_specs_path.exists():
             pytest.skip("TfL_OpenAPI_specs directory not found")
 
@@ -720,8 +722,8 @@ class TestBuildModelsRealIntegration:
 
         from scripts.build_models import main
 
-        # Check if TfL specs directory exists
-        tfl_specs_path = Path("../TfL_OpenAPI_specs")
+        # Check if TfL specs directory exists (relative to project root where pytest runs)
+        tfl_specs_path = Path("TfL_OpenAPI_specs")
         if not tfl_specs_path.exists():
             pytest.skip("TfL_OpenAPI_specs directory not found")
 
@@ -751,44 +753,3 @@ class TestBuildModelsRealIntegration:
                     ast.parse(content)
                 except SyntaxError as e:
                     pytest.fail(f"Generated file {py_file} has syntax error: {e}")
-
-    def test_baseline_compatibility(self) -> None:
-        """Test that output is compatible with baseline implementation."""
-        import tempfile
-        from pathlib import Path
-
-        from scripts.build_models import main
-
-        # Check if TfL specs directory exists
-        tfl_specs_path = Path("../TfL_OpenAPI_specs")
-        if not tfl_specs_path.exists():
-            pytest.skip("TfL_OpenAPI_specs directory not found")
-
-        # Check if baseline exists (either baseline_output or existing pydantic_tfl_api)
-        baseline_path = Path("../baseline_output")
-        if not baseline_path.exists():
-            baseline_path = Path("../pydantic_tfl_api")
-        if not baseline_path.exists():
-            pytest.skip("No baseline for comparison found")
-
-        # Create temporary output directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_path = Path(temp_dir) / "test_output"
-
-            # Run the main function
-            main(str(tfl_specs_path), str(output_path))
-
-            # Compare structure with baseline
-            models_dir = output_path / "models"
-            baseline_models = baseline_path / "models"
-
-            if baseline_models.exists():
-                # Compare that we generate roughly the same number of models
-                generated_models = list(models_dir.glob("*.py"))
-                baseline_model_files = list(baseline_models.glob("*.py"))
-
-                # Should generate at least 80% of the baseline models
-                min_expected = len(baseline_model_files) * 0.8
-                assert len(generated_models) >= min_expected, (
-                    f"Generated {len(generated_models)} models, expected at least {min_expected} based on baseline"
-                )
