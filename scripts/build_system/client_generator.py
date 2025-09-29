@@ -185,7 +185,7 @@ class ClientGenerator:
         class_name = f"{sanitize_name(api_name_clean)}Client"
         paths = spec.get("paths", {})
 
-        config_lines = []
+        config_lines: list[str] = []
         # Extract path from server URL: extract everything after the domain
         if server_url := spec.get("servers", [{}])[0].get("url", ""):
             # Parse URL to extract path portion

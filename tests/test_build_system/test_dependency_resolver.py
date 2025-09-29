@@ -38,11 +38,11 @@ class TestDependencyResolver:
         # Create models that reference each other
         class User(BaseModel):
             id: str = Field(...)
-            profile: ForwardRef("Profile") = Field(None)
+            profile: "Profile | None" = Field(None)
 
         class Profile(BaseModel):
             id: str = Field(...)
-            user: ForwardRef("User") = Field(...)
+            user: "User" = Field(...)
 
         return {"User": User, "Profile": Profile}
 
@@ -52,16 +52,16 @@ class TestDependencyResolver:
 
         class Node(BaseModel):
             id: str = Field(...)
-            parent: ForwardRef("Node") = Field(None)
-            children: list[ForwardRef("Node")] = Field(default_factory=list)
+            parent: "Node | None" = Field(None)
+            children: "list[Node]" = Field(default_factory=list)
 
         class TreeA(BaseModel):
             id: str = Field(...)
-            tree_b: ForwardRef("TreeB") = Field(None)
+            tree_b: "TreeB | None" = Field(None)
 
         class TreeB(BaseModel):
             id: str = Field(...)
-            tree_a: ForwardRef("TreeA") = Field(None)
+            tree_a: "TreeA | None" = Field(None)
 
         return {"Node": Node, "TreeA": TreeA, "TreeB": TreeB}
 

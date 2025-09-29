@@ -4,6 +4,7 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -155,7 +156,7 @@ class TestSpecProcessor:
 
     def test_update_refs_nested(self, spec_processor):
         """Test updating $ref values in nested objects."""
-        obj = {
+        obj: dict[str, Any] = {
             "allOf": [
                 {"$ref": "#/components/schemas/Base-Model"},
                 {"properties": {"child": {"$ref": "#/components/schemas/Child-Model"}}},
@@ -180,7 +181,7 @@ class TestSpecProcessor:
 
     def test_update_entities(self, spec_processor):
         """Test updating entity names in a specification."""
-        spec = {
+        spec: dict[str, Any] = {
             "components": {
                 "schemas": {
                     "User-Profile": {
@@ -194,7 +195,7 @@ class TestSpecProcessor:
 
         # Mock the tfl_mappings for this test
         api_name = "Test API"
-        pydantic_names = {}
+        pydantic_names: dict[str, str] = {}
 
         # Simulate entity mapping
         spec_processor._entity_mappings = {api_name: {"User-Profile": "UserProfile", "User-Data": "UserData"}}
@@ -214,7 +215,7 @@ class TestSpecProcessor:
     def test_combine_components_and_paths(self, spec_processor, temp_dir, create_spec_files):
         """Test combining components and paths from multiple specifications."""
         specs = spec_processor.load_specs(str(temp_dir))
-        pydantic_names = {}
+        pydantic_names: dict[str, str] = {}
 
         combined_components, combined_paths = spec_processor.combine_components_and_paths(specs, pydantic_names)
 

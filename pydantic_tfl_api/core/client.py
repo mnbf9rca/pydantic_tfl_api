@@ -177,9 +177,9 @@ class Client:
         self,
         base_url: str,
         endpoint_and_model: dict[str, str],
-        params: str | int | list[str | int] | None = None,
-        endpoint_args: dict | None = None,
-    ) -> BaseModel | list[BaseModel] | ApiError:
+        params: str | int | float | list[str | int | float] | None = None,
+        endpoint_args: dict[str, Any] | None = None,
+    ) -> ResponseModel | ApiError:
         if params is None:
             params = []
         if not isinstance(params, list):

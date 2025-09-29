@@ -34,11 +34,11 @@ class TestFileManager:
         class User(BaseModel):
             id: str = Field(...)
             name: str = Field(...)
-            age: int = Field(None)
+            age: int | None = Field(None)
 
         class Profile(BaseModel):
             user_id: str = Field(...)
-            bio: str = Field(None)
+            bio: str | None = Field(None)
 
         class UserArray(RootModel[list[User]]):
             pass
@@ -63,7 +63,7 @@ class TestFileManager:
         self, file_manager, temp_dir, sample_models, sample_dependency_graph
     ):
         """Test that save_models creates the expected directory structure."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
         file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
@@ -79,7 +79,7 @@ class TestFileManager:
 
     def test_save_models_creates_model_files(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that individual model files are created."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
         file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
@@ -94,7 +94,7 @@ class TestFileManager:
 
     def test_save_model_file_content_structure(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that model files have the correct content structure."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User"]
 
         file_manager.save_models(
@@ -114,7 +114,7 @@ class TestFileManager:
 
     def test_save_root_model_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that RootModel files have the correct content structure."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User", "UserArray"]
 
         file_manager.save_models(
@@ -136,7 +136,7 @@ class TestFileManager:
 
     def test_save_enum_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that enum files have the correct content structure."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["StatusEnum"]
 
         file_manager.save_models(
@@ -179,7 +179,7 @@ class TestFileManager:
 
     def test_init_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that __init__.py has the correct import structure."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
         file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
@@ -259,7 +259,7 @@ class TestFileManager:
 
     def test_get_generated_files(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test tracking of generated files."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User", "Profile"]
 
         file_manager.save_models(
@@ -304,7 +304,7 @@ class TestFileManager:
 
     def test_handle_file_permissions(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
         """Test that files are created with proper permissions."""
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User"]
 
         file_manager.save_models(
@@ -326,7 +326,7 @@ class TestFileManager:
         user_file = models_dir / "User.py"
         user_file.write_text("# Old content")
 
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["User"]
 
         file_manager.save_models(
@@ -345,7 +345,7 @@ class TestFileManager:
             optional_field: str | None = Field(None)
             required_field: str = Field(...)
 
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["TestModel"]
 
         file_manager.save_models(
@@ -369,7 +369,7 @@ class TestFileManager:
         class TestModel(BaseModel):
             path_attribute: PathAttribute | None = Field(None)
 
-        circular_models = set()
+        circular_models: set[str] = set()
         sorted_models = ["PathAttribute", "TestModel"]
 
         file_manager.save_models(

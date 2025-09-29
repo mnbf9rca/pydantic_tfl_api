@@ -6,6 +6,7 @@ This replaces the brittle string-based tests with robust schema validation.
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from jsonschema import Draft7Validator, ValidationError, validate
@@ -207,16 +208,16 @@ class TestTflMappingsSchema:
     def test_schema_validation_catches_errors(self, schema):
         """Test that schema validation catches common errors."""
         # Test missing required field
-        invalid_data = {"version": "1.0.0"}
+        invalid_data_1 = {"version": "1.0.0"}
         with pytest.raises(ValidationError):
-            validate(instance=invalid_data, schema=schema)
+            validate(instance=invalid_data_1, schema=schema)
 
         # Test invalid version format
-        invalid_data = {
+        invalid_data_2: dict[str, Any] = {
             "version": "invalid",
             "last_updated": "2025-09-28T18:32:38.586085Z",
             "source": {"url": "https://example.com", "description": "test"},
             "apis": {"TestAPI": {"mappings": {}}},
         }
         with pytest.raises(ValidationError):
-            validate(instance=invalid_data, schema=schema)
+            validate(instance=invalid_data_2, schema=schema)

@@ -210,9 +210,9 @@ class TestCollectTypeImports:
 
     def test_builtin_type_import(self):
         """Test that builtin types don't generate imports."""
-        typing_imports = set()
-        module_imports = set()
-        models = {}
+        typing_imports: set[str] = set()
+        module_imports: set[str] = set()
+        models: dict[str, type] = {}
 
         type_name = collect_type_imports(str, models, typing_imports, module_imports)
 
@@ -222,8 +222,8 @@ class TestCollectTypeImports:
 
     def test_model_type_import(self):
         """Test that model types generate module imports."""
-        typing_imports = set()
-        module_imports = set()
+        typing_imports: set[str] = set()
+        module_imports: set[str] = set()
 
         class TestModel(BaseModel):
             pass
@@ -237,9 +237,9 @@ class TestCollectTypeImports:
 
     def test_unknown_type_import(self):
         """Test handling of unknown types."""
-        typing_imports = set()
-        module_imports = set()
-        models = {}
+        typing_imports: set[str] = set()
+        module_imports: set[str] = set()
+        models: dict[str, type] = {}
 
         # Create a mock type object
         class MockType:

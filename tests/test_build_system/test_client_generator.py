@@ -3,6 +3,7 @@
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -146,7 +147,7 @@ class TestClientGenerator:
 
         for operation_id, expected in test_cases:
             # Test via create_method_signature which calls the method name logic
-            parameters = []
+            parameters: list[dict] = []
             signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
 
             # Extract method name from signature
@@ -161,7 +162,7 @@ class TestClientGenerator:
         test_inputs = ["Naptan", "Live", "Dayofweek", "GetUsers", "CreateItem"]
 
         for operation_id in test_inputs:
-            parameters = []
+            parameters: list[dict] = []
             signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
 
             # Extract method name from signature
@@ -236,7 +237,7 @@ class TestClientGenerator:
     def test_create_method_implementation_no_params(self, client_generator):
         """Test creating method implementation with no parameters."""
         operation_id = "getAllUsers"
-        parameters = []
+        parameters: list[dict] = []
 
         implementation = client_generator.create_method_implementation(operation_id, parameters)
 
@@ -249,8 +250,8 @@ class TestClientGenerator:
         method = "get"
         details = sample_spec["paths"][path][method]
         api_path = "/test"
-        all_types = set()
-        all_package_models = set()
+        all_types: set[type] = set()
+        all_package_models: set[str] = set()
 
         method_definition = client_generator.process_single_method(
             path, method, details, api_path, all_types, all_package_models
@@ -350,7 +351,7 @@ class TestClientGenerator:
     def test_get_model_name_from_path_fallback(self, client_generator):
         """Test getting model name falls back to GenericResponseModel."""
         # Empty response content
-        response_content = {}
+        response_content: dict[str, Any] = {}
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "GenericResponseModel"
 
@@ -460,8 +461,8 @@ class TestClientGenerator:
 
     def test_error_handling_missing_operation_id(self, client_generator):
         """Test handling methods without operation IDs."""
-        all_types = set()
-        all_package_models = set()
+        all_types: set[type] = set()
+        all_package_models: set[str] = set()
 
         # Method without operationId should return empty string
         result = client_generator.process_single_method("/test", "get", {}, "/api", all_types, all_package_models)

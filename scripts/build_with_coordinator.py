@@ -12,7 +12,7 @@ from pathlib import Path
 # Add scripts directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from build_system.build_coordinator import BuildCoordinator
+from build_system.build_coordinator import BuildCoordinator  # type: ignore[import-not-found]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

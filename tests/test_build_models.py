@@ -86,7 +86,7 @@ class TestUpdateRefs:
 
     def test_deeply_nested_array_ref_update(self):
         """Test reference updates in deeply nested arrays."""
-        obj = {
+        obj: dict[str, Any] = {
             "items": [
                 [
                     {"$ref": "#/components/schemas/OldName"},
@@ -104,7 +104,7 @@ class TestUpdateRefs:
 
     def test_mixed_type_structures_ref_update(self):
         """Test reference updates in mixed-type structures (dicts, lists, primitives)."""
-        obj = {
+        obj: dict[str, Any] = {
             "properties": {
                 "array": [
                     {"$ref": "#/components/schemas/OldName"},
@@ -167,7 +167,7 @@ class TestGetApiName:
 
     def test_missing_info_section(self):
         """Test handling of missing info section."""
-        spec = {}
+        spec: dict[str, Any] = {}
         with pytest.raises(KeyError):
             get_api_name(spec)
 
@@ -553,7 +553,7 @@ class TestTopologicalSort:
 
     def test_single_node_graph(self):
         """Test sorting single node graph."""
-        graph = {"A": set()}
+        graph: dict[str, set[str]] = {"A": set()}
         result = topological_sort(graph)
         assert result == ["A"]
 
@@ -648,7 +648,7 @@ class TestCreateSchemaNamMapping:
 
     def test_basic_schema_mapping(self):
         """Test basic schema name mapping creation."""
-        components = {"Tfl.Api.Presentation.Entities.Mode": {}, "Complex_Name_With_Underscores": {}, "simple-name": {}}
+        components: dict[str, dict[str, Any]] = {"Tfl.Api.Presentation.Entities.Mode": {}, "Complex_Name_With_Underscores": {}, "simple-name": {}}
         result = _create_schema_name_mapping(components)
 
         # Should map sanitized names back to original names

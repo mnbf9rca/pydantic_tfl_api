@@ -28,7 +28,7 @@ from pydantic.fields import FieldInfo
 try:
     from .mapping_loader import load_tfl_mappings
 except ImportError:
-    from mapping_loader import load_tfl_mappings
+    from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found, no-redef]
 
 # Load mappings from JSON
 tfl_mappings = load_tfl_mappings()
@@ -155,7 +155,7 @@ def map_type(
         # Ensure that 'items' exist for arrays, fallback to Any if missing
         items_spec = field_spec.get("items", {})
         if items_spec:
-            return list[map_type(items_spec, field_name, components, models)]
+            return list[map_type(items_spec, field_name, components, models)]  # type: ignore[misc]
         else:
             logging.warning("'items' missing in array definition, using Any")
             return list[Any]
@@ -247,7 +247,7 @@ def create_pydantic_models(components: dict[str, Any], models: dict[str, type[Ba
                     raise KeyError(
                         f"Referenced model '{ref_model_name}' not found while creating array '{sanitized_name}'"
                     )
-                models[sanitized_name] = list[models[ref_model_name]]  # Create list type for array items
+                models[sanitized_name] = list[models[ref_model_name]]  # type: ignore[valid-type]  # Create list type for array items
                 logging.info(f"Created array model: {sanitized_name} -> list[{ref_model_name}]")
             else:
                 # Fallback if 'items' is missing or doesn't have a reference
@@ -558,8 +558,10 @@ def handle_regular_model(
 
     # Write class definition
     if is_root_model:
+        root_annotation = model.model_fields['root'].annotation
+        annotation_name = root_annotation.__name__ if root_annotation is not None else 'Any'
         model_file.write(
-            f"class {sanitized_model_name}(RootModel[{model.model_fields['root'].annotation.__name__}]):\n"
+            f"class {sanitized_model_name}(RootModel[{annotation_name}]):\n"
         )
     else:
         model_file.write(f"class {sanitized_model_name}(BaseModel):\n")
@@ -1067,10 +1069,10 @@ def are_models_equal(model1: type[BaseModel], model2: type[BaseModel]) -> bool:
 
 def deduplicate_models(
     models: dict[str, type[BaseModel] | type[list]],
-) -> dict[str, type[BaseModel] | type[list]]:
+) -> tuple[dict[str, type[BaseModel] | type], dict[str, str]]:
     """Deduplicate models by removing models with the same content."""
     deduplicated_models: dict[str, type[BaseModel] | type] = {}
-    reference_map = {}
+    reference_map: dict[str, str] = {}
 
     # Compare models to detect duplicates
     for model_name, model in models.items():
@@ -1551,7 +1553,7 @@ def _load_and_process_specs(spec_path: str) -> tuple[list[dict[str, Any]], dict[
     return specs, combined_components, combined_paths
 
 
-def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
+def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[dict[str, type[BaseModel] | type], dict[str, str]]:
     """Generate Pydantic models and process them for deduplication."""
     logging.info("Generating Pydantic models...")
     models: dict[str, type[BaseModel] | type] = {}

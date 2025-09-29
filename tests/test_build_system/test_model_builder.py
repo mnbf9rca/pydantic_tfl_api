@@ -65,8 +65,8 @@ class TestModelBuilder:
 
     def test_map_basic_openapi_types(self, model_builder):
         """Test mapping of basic OpenAPI types to Python types."""
-        components = {}
-        models = {}
+        components: dict[str, Any] = {}
+        models: dict[str, Any] = {}
 
         # Test string type
         string_spec = {"type": "string"}
@@ -90,8 +90,8 @@ class TestModelBuilder:
 
     def test_map_array_types(self, model_builder):
         """Test mapping of array types."""
-        components = {}
-        models = {}
+        components: dict[str, Any] = {}
+        models: dict[str, Any] = {}
 
         # Test string array
         array_spec = {"type": "array", "items": {"type": "string"}}
@@ -105,8 +105,8 @@ class TestModelBuilder:
 
     def test_map_reference_types(self, model_builder):
         """Test mapping of $ref references to ForwardRef."""
-        components = {"User": {}}
-        models = {}
+        components: dict[str, Any] = {"User": {}}
+        models: dict[str, Any] = {}
 
         ref_spec = {"$ref": "#/components/schemas/User"}
         result = model_builder.map_type(ref_spec, "user", components, models)
