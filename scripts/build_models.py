@@ -155,7 +155,7 @@ def map_type(
         # Ensure that 'items' exist for arrays, fallback to Any if missing
         items_spec = field_spec.get("items", {})
         if items_spec:
-            return list[map_type(items_spec, field_name, components, models)]  # type: ignore[misc]
+            return list[map_type(items_spec, field_name, components, models)] 
         else:
             logging.warning("'items' missing in array definition, using Any")
             return list[Any]
