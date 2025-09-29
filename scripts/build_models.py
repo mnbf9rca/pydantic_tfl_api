@@ -917,6 +917,9 @@ def detect_circular_dependencies(graph: dict[str, set[str]]) -> set[str]:
 
 def replace_circular_references(annotation: Any, circular_models: set[str]) -> Any:
     """Recursively replace circular model references in annotations with ForwardRef."""
+    import types
+    from typing import Union
+
     origin = get_origin(annotation)
     args = get_args(annotation)
 
@@ -928,7 +931,27 @@ def replace_circular_references(annotation: Any, circular_models: set[str]) -> A
 
     # Recurse into generic types
     new_args = tuple(replace_circular_references(arg, circular_models) for arg in args)
-    return origin[new_args] if origin else annotation
+
+    if origin is None:
+        return annotation
+
+    # Handle different origin types
+    if isinstance(origin, types.UnionType):
+        # For Python 3.10+ union syntax (X | Y), reconstruct using Union
+        return Union[new_args]
+    else:
+        # For traditional generic types like List[T], Dict[K, V], etc.
+        try:
+            return origin[new_args]
+        except TypeError as e:
+            if "not subscriptable" in str(e):
+                # Fallback for any other UnionType-like cases
+                if hasattr(origin, "__name__") and "Union" in str(origin):
+                    return Union[new_args]
+                # If we can't handle it, return the original annotation
+                logging.warning(f"Could not reconstruct type {origin} with args {new_args}: {e}")
+                return annotation
+            raise
 
 def break_circular_dependencies(
     models: dict[str, type[BaseModel]], circular_models: set[str]
