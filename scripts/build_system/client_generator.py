@@ -21,9 +21,9 @@ def get_array_model_name(model_name: str) -> str:
 class ClientGenerator:
     """Generator for API client classes from OpenAPI specifications."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ClientGenerator with empty state."""
-        self._generated_clients = []
+        self._generated_clients: list[str] = []
 
     def extract_api_metadata(self, spec: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
         """Extract basic API metadata from OpenAPI spec."""

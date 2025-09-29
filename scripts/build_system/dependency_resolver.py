@@ -13,7 +13,7 @@ from .utilities import extract_inner_types, get_builtin_types, sanitize_name
 class DependencyResolver:
     """Handles model dependency analysis, circular reference detection, and resolution."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the DependencyResolver with empty state."""
         self._dependency_graph: dict[str, set[str]] = {}
         self._circular_models: set[str] = set()

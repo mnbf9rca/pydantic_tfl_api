@@ -12,7 +12,7 @@ from .utilities import map_openapi_type, sanitize_field_name, sanitize_name
 class ModelBuilder:
     """Handles the creation of Pydantic models from OpenAPI component schemas."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ModelBuilder with an empty models dictionary."""
         self.models: dict[str, type[BaseModel] | type] = {}
         self.logger = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ class ModelBuilder:
 
     def create_enum_class(self, enum_name: str, enum_values: list[Any]) -> type[Enum]:
         """Dynamically create a Pydantic Enum class for the given enum values."""
+        from typing import cast
+
         from .utilities import clean_enum_name
 
         # Create a dictionary with cleaned enum names as keys and the original values as values
@@ -52,7 +54,8 @@ class ModelBuilder:
             enum_dict[unique_name] = v
 
         # Dynamically create the Enum class
-        return Enum(enum_name, enum_dict)
+        # The Enum() function returns a type[Enum], cast for type checker
+        return cast(type[Enum], Enum(enum_name, enum_dict))
 
     def map_type(
         self,
@@ -83,7 +86,9 @@ class ModelBuilder:
             # Ensure that 'items' exist for arrays, fallback to Any if missing
             items_spec = field_spec.get("items", {})
             if items_spec:
-                return list[self.map_type(items_spec, field_name, components, models)]
+                inner_type = self.map_type(items_spec, field_name, components, models)
+                # Return the list type annotation
+                return list[inner_type]  # type: ignore[valid-type]
             else:
                 self.logger.warning("'items' missing in array definition, using Any")
                 return list[Any]
@@ -139,9 +144,9 @@ class ModelBuilder:
                         raise KeyError(
                             f"Referenced model '{ref_model_name}' not found while creating array '{sanitized_name}'"
                         )
-                    self.models[sanitized_name] = list[
-                        self.models[ref_model_name]
-                    ]  # Create list type for array items
+                    # Get the referenced model and create a list type
+                    ref_model = self.models[ref_model_name]
+                    self.models[sanitized_name] = list[ref_model]  # type: ignore[valid-type]
                     self.logger.info(
                         f"Created array model: {sanitized_name} -> list[{ref_model_name}]"
                     )
@@ -188,9 +193,10 @@ class ModelBuilder:
                     base_model = self.models[base_model_name]
 
                     # Create RootModel-based array class
+                    # Use type: ignore since base_model is a runtime value used as a type
                     array_class = create_model(
                         array_model_name,
-                        __base__=RootModel[list[base_model]],
+                        __base__=RootModel[list[base_model]],  # type: ignore[valid-type]
                         __config__=ConfigDict(from_attributes=True)
                     )
 

@@ -17,7 +17,7 @@ from scripts.build_system.model_builder import ModelBuilder
 from scripts.build_system.spec_processor import SpecProcessor
 
 sys.path.append(str(Path(__file__).parent.parent))
-from build_models import (
+from build_models import (  # type: ignore[import-not-found]
     combine_components_and_paths,
     copy_infrastructure,
     create_mermaid_class_diagram,
@@ -31,7 +31,7 @@ from build_models import (
 class BuildCoordinator:
     """Coordinates the entire build process for Pydantic models."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the BuildCoordinator with all required components."""
         self.logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class BuildCoordinator:
         self.client_generator = ClientGenerator()
 
         # Build state
-        self._build_stats = {}
+        self._build_stats: dict[str, Any] = {}
         self._base_url = "https://api.tfl.gov.uk"
 
     def build(self, spec_path: str, output_path: str, config: dict[str, Any] | None = None) -> None:

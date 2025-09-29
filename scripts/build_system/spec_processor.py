@@ -14,14 +14,15 @@ try:
     from ..mapping_loader import load_tfl_mappings
     from .utilities import sanitize_name
 except ImportError:
-    from mapping_loader import load_tfl_mappings
-    from utilities import sanitize_name
+    # Fallback for when run as script
+    from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found, no-redef]
+    from utilities import sanitize_name  # type: ignore[import-not-found, no-redef]
 
 
 class SpecProcessor:
     """Handles OpenAPI specification loading and preprocessing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the SpecProcessor with empty state."""
         self._specs: list[dict[str, Any]] = []
         self._combined_components: dict[str, Any] = {}

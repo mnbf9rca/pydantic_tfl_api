@@ -18,7 +18,7 @@ from .utilities import extract_inner_types, get_builtin_types, sanitize_field_na
 class FileManager:
     """Handles all file I/O operations for the build system."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the FileManager with empty state."""
         self._generated_files: list[str] = []
 
