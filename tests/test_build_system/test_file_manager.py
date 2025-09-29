@@ -104,7 +104,7 @@ class TestFileManager:
         content = user_file.read_text()
 
         # Check for expected content
-        assert "from pydantic import BaseModel, Field, ConfigDict" in content
+        assert "from pydantic import BaseModel, ConfigDict, Field" in content
         assert "class User(BaseModel):" in content
         assert "id: str = Field(...)" in content
         assert "name: str = Field(...)" in content
@@ -128,7 +128,7 @@ class TestFileManager:
         content = array_file.read_text()
 
         # Check for expected RootModel content
-        assert "from pydantic import RootModel, ConfigDict" in content
+        assert "from pydantic import ConfigDict, RootModel" in content
         assert "from .User import User" in content
         assert "class UserArray(RootModel[list[User]]):" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
@@ -194,7 +194,7 @@ class TestFileManager:
         assert "from ..core.package_models import GenericResponseModel" in content
 
         # Check for Literal type
-        assert "from typing import Any, Literal" in content
+        assert "from typing import Literal" in content
         assert "ResponseModelName = Literal[" in content
 
         # Check for __all__

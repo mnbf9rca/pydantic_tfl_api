@@ -19,10 +19,10 @@ from pydantic_tfl_api.endpoints import LineClient
 class TestErrorHandling:
     """Test suite for error handling behavior."""
 
-    def _create_client_and_call_metamodes(self, api_key=None) -> None:
+    def _create_client_and_call_metamodes(self, api_key: str | None = None) -> ApiError:
         """Helper to create LineClient and call MetaModes consistently."""
         client = LineClient(api_key) if api_key else LineClient()
-        return client.MetaModes()
+        return client.MetaModes()  # type: ignore[return-value]
 
     def test_invalid_api_key_returns_api_error(self) -> None:
         """Test that invalid API key returns ApiError object."""
@@ -83,7 +83,7 @@ class TestErrorHandling:
         # Use helper to validate ApiError properties
         self._validate_api_error_properties(result)
 
-    def _validate_api_error_properties(self, result) -> None:
+    def _validate_api_error_properties(self, result: ApiError) -> None:
         """Helper to validate ApiError properties without conditionals in main test."""
         # Only validates if it's an ApiError (skip if it's a ResponseModel)
         if not isinstance(result, ApiError):

@@ -2,6 +2,7 @@
 
 import shutil
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
@@ -14,19 +15,19 @@ class TestClientGenerator:
     """Test the ClientGenerator class for API client generation."""
 
     @pytest.fixture
-    def client_generator(self) -> None:
+    def client_generator(self) -> ClientGenerator:
         """Create a ClientGenerator instance for testing."""
         return ClientGenerator()
 
     @pytest.fixture
-    def temp_dir(self) -> None:
+    def temp_dir(self) -> Generator[Path, None, None]:
         """Create a temporary directory for testing."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def sample_spec(self) -> None:
+    def sample_spec(self) -> dict[str, Any]:
         """Create a sample OpenAPI specification for testing."""
         return {
             "openapi": "3.0.0",
@@ -91,7 +92,7 @@ class TestClientGenerator:
         }
 
     @pytest.fixture
-    def sample_specs_list(self, sample_spec: Any) -> None:
+    def sample_specs_list(self, sample_spec: dict[str, Any]) -> list[dict[str, Any]]:
         """Create a list of sample specifications."""
         spec1 = sample_spec.copy()
         spec1["info"]["title"] = "User API"
@@ -273,8 +274,8 @@ class TestClientGenerator:
 
         import_text = "".join(import_lines)
 
-        assert f"from .{class_name}_config import endpoints, base_url" in import_text
-        assert "from ..core import ApiError, ResponseModel, Client, GenericResponseModel" in import_text
+        assert f"from .{class_name}_config import base_url, endpoints" in import_text
+        assert "from ..core import ApiError, Client, GenericResponseModel, ResponseModel" in import_text
         assert "from ..models import User, UserArray" in import_text
         assert (
             "GenericResponseModel" not in import_text.split("from ..models import")[1]
@@ -290,7 +291,7 @@ class TestClientGenerator:
 
         import_text = "".join(import_lines)
 
-        assert "from ..core import ApiError, ResponseModel, Client" in import_text
+        assert "from ..core import ApiError, Client, ResponseModel" in import_text
         assert "GenericResponseModel" not in import_text
 
     def test_create_config(self, client_generator: Any, temp_dir: Any, sample_spec: Any) -> None:

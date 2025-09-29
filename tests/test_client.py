@@ -91,14 +91,14 @@ def test_create_client_with_api_token() -> None:
     ],
 )
 def test_create_model_instance(
-    Model,
-    response_json,
-    result_expiry,
-    shared_expiry,
-    expected_name,
-    expected_age,
-    expected_expiry,
-    expected_shared_expiry,
+    Model: type[BaseModel],
+    response_json: dict[str, Any],
+    result_expiry: datetime | None,
+    shared_expiry: datetime | None,
+    expected_name: str,
+    expected_age: int,
+    expected_expiry: datetime | None,
+    expected_shared_expiry: datetime | None,
 ) -> None:
     # Act
     client = Client()
@@ -117,6 +117,7 @@ def test_create_model_instance(
     assert instance.response_timestamp == response_date_time
     instance_content = instance.content
     assert isinstance(instance_content, Model)
+    assert isinstance(instance_content, PydanticTestModel)  # Type narrowing for mypy
     assert instance_content.name == expected_name
     assert instance_content.age == expected_age
 
@@ -151,10 +152,10 @@ def test_create_model_instance(
     ],
 )
 def test_create_model_instance_validation_errors(
-    Model,
-    response_json,
-    result_expiry,
-    shared_expiry,
+    Model: type[BaseModel],
+    response_json: dict[str, Any],
+    result_expiry: datetime | None,
+    shared_expiry: datetime | None,
 ) -> None:
     # Act & Assert
     client = Client()
@@ -173,7 +174,7 @@ def test_create_model_instance_validation_errors(
     ],
     ids=["no_api_token", "valid_api_token"],
 )
-def test_client_initialization(api_token, expected_client_type, expected_models) -> None:
+def test_client_initialization(api_token: str | None, expected_client_type: type, expected_models: set[str]) -> None:
     # Arrange
     with (
         patch("pydantic_tfl_api.core.client.RestClient") as MockRestClient,
@@ -207,7 +208,7 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
     ],
     ids=["line_model", "stop_point_model", "place_model", "mode_model", "prediction_model", "generic_response_model"],
 )
-def test_load_models_contains_expected_models(model_name, expected_type) -> None:
+def test_load_models_contains_expected_models(model_name: str, expected_type: type[BaseModel]) -> None:
     """Test that Client loads expected real models and they are proper BaseModel subclasses."""
     # Act
     test_client = Client()
@@ -320,7 +321,7 @@ def test_load_models_returns_non_empty_dict() -> None:
         "complex_header",
     ],
 )
-def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result) -> None:
+def test_get_maxage_headers_from_cache_control_header(cache_control_header: str | None, expected_result: tuple[int | None, int | None]) -> None:
     # Mock Response
     response = Response()
     response.headers.clear()  # Start with empty headers
@@ -355,7 +356,7 @@ def test_get_maxage_headers_from_cache_control_header(cache_control_header, expe
         "list_of_models",
     ],
 )
-def test_deserialize(model_name, response_content, expected_result) -> None:
+def test_deserialize(model_name: str, response_content: Any, expected_result: Any) -> None:
     # Mock Response
     Response_Object = MagicMock(Response)
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
@@ -438,7 +439,7 @@ def test_deserialize(model_name, response_content, expected_result) -> None:
         "negative_timedelta",
     ],
 )
-def test_parse_timedelta(value, base_time, expected_result) -> None:
+def test_parse_timedelta(value: int, base_time: datetime, expected_result: datetime) -> None:
     # Act
     result = Client._parse_timedelta(value, base_time)
 
@@ -518,7 +519,7 @@ def test_parse_timedelta(value, base_time, expected_result) -> None:
         "neither_present_no_date",
     ],
 )
-def test_get_result_expiry(s_maxage, maxage, date_header, expected_result) -> None:
+def test_get_result_expiry(s_maxage: int | None, maxage: int | None, date_header: dict[str, str], expected_result: tuple[datetime | None, datetime | None]) -> None:
     # Mock Response
     response = Response()
     response.headers.update(date_header)
@@ -553,7 +554,7 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result) -> No
         "model_exists",
     ],
 )
-def test_get_model(model_name, models_dict, expected_result) -> None:
+def test_get_model(model_name: str, models_dict: dict[str, type[BaseModel]], expected_result: type[BaseModel]) -> None:
     # Create a simple Client object
     test_client = Client()
     test_client.models = models_dict
@@ -577,7 +578,7 @@ def test_get_model(model_name, models_dict, expected_result) -> None:
         "model_does_not_exist",
     ],
 )
-def test_get_model_raises_error(model_name, models_dict) -> None:
+def test_get_model_raises_error(model_name: str, models_dict: dict[str, type[BaseModel]]) -> None:
     # Create a simple Client object
     test_client = Client()
     test_client.models = models_dict
@@ -670,7 +671,7 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=ti
         "non_json_content",
     ],
 )
-def test_deserialize_error(content_type, response_content, expected_result) -> None:
+def test_deserialize_error(content_type: str, response_content: Any, expected_result: Any) -> None:
     # Mock Response
     response = Response()
     response._content = bytes(json.dumps(response_content), "utf-8")
@@ -694,7 +695,7 @@ def test_deserialize_error(content_type, response_content, expected_result) -> N
 
 
 class SampleClient(Client):
-    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> None:
+    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel[Any] | ApiError:
         """
         A test query. Gets the line status of for all lines for the given modes
 
@@ -748,7 +749,7 @@ class Test_TfL_connectivity:
     ],
     ids=["valid_date", "no_date", "invalid_date"],
 )
-def test_get_datetime_from_response_headers(headers, expected_result) -> None:
+def test_get_datetime_from_response_headers(headers: dict[str, str], expected_result: datetime | None) -> None:
     # Mock Response
     response = Response()
     response.headers.update(headers)

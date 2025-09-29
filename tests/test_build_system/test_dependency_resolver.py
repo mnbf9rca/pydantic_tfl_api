@@ -12,12 +12,12 @@ class TestDependencyResolver:
     """Test the DependencyResolver class for model dependency management."""
 
     @pytest.fixture
-    def dependency_resolver(self) -> None:
+    def dependency_resolver(self) -> DependencyResolver:
         """Create a DependencyResolver instance for testing."""
         return DependencyResolver()
 
     @pytest.fixture
-    def sample_models_simple(self) -> None:
+    def sample_models_simple(self) -> dict[str, type[BaseModel]]:
         """Create simple test models without circular dependencies."""
 
         # Create mock models that simulate Pydantic models
@@ -32,7 +32,7 @@ class TestDependencyResolver:
         return {"User": User, "Profile": Profile}
 
     @pytest.fixture
-    def sample_models_with_references(self) -> None:
+    def sample_models_with_references(self) -> dict[str, type[BaseModel]]:
         """Create test models with forward references."""
 
         # Create models that reference each other
@@ -47,7 +47,7 @@ class TestDependencyResolver:
         return {"User": User, "Profile": Profile}
 
     @pytest.fixture
-    def sample_models_circular(self) -> None:
+    def sample_models_circular(self) -> dict[str, type[BaseModel]]:
         """Create test models with circular dependencies."""
 
         class Node(BaseModel):
@@ -158,6 +158,7 @@ class TestDependencyResolver:
         # Check that circular references have been replaced with ForwardRef
         # This is a complex test that depends on the specific implementation
         # For now, just verify the method doesn't crash
+        # TODO: Add more specific assertions based on implementation details
         assert True  # Method completed without error
 
     def test_resolve_dependencies_complete_workflow(self, dependency_resolver: Any, sample_models_with_references: Any) -> None:

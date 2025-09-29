@@ -14,7 +14,7 @@ from pydantic_tfl_api.core import Client, ResponseModel
 from .config_for_tests import response_to_request_mapping
 
 
-def create_response_from_json(json_file) -> Response:
+def create_response_from_json(json_file: str) -> Response:
     with open(json_file) as f:
         serialised_response = json.load(f)
     response = Response()
@@ -25,7 +25,7 @@ def create_response_from_json(json_file) -> Response:
     return response
 
 
-def get_and_save_response(response: BaseModel | list[BaseModel], file_name: str):
+def get_and_save_response(response: BaseModel | list[BaseModel], file_name: str) -> None:
     """
     this is the method that was used to serialise the Pydantic models
     so that we can use them as expected responses in the tests
@@ -39,7 +39,7 @@ def get_and_save_response(response: BaseModel | list[BaseModel], file_name: str)
         file.write(json.dumps(content))
 
 
-def load_and_validate_expected_response(file_name: str, model: type[BaseModel]):
+def load_and_validate_expected_response(file_name: str, model: type[BaseModel]) -> BaseModel:
     with open(file_name) as file:
         content = json.load(file)
     if isinstance(model, type) and issubclass(model, RootModel):
@@ -49,7 +49,7 @@ def load_and_validate_expected_response(file_name: str, model: type[BaseModel]):
     return model.model_validate(content)
 
 
-def _validate_root_model_if_applicable(response_content, expect_empty_response: bool) -> None:
+def _validate_root_model_if_applicable(response_content: BaseModel | list[BaseModel], expect_empty_response: bool) -> None:
     """Helper to validate root model structure without conditionals in main test."""
     is_root_model = isinstance(response_content, type) and issubclass(response_content, RootModel)
     if not is_root_model:

@@ -101,6 +101,7 @@ def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[st
 
 def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
     """Dynamically create a Pydantic Enum class for the given enum values."""
+    from typing import cast
 
     def clean_enum_name(value: str) -> str:
         # Replace spaces and special characters with underscores and capitalize all letters
@@ -125,7 +126,8 @@ def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
         enum_dict[unique_name] = v
 
     # Dynamically create the Enum class
-    return Enum(enum_name, enum_dict)
+    # The Enum() function returns a type[Enum], cast for type checker
+    return cast(type[Enum], Enum(enum_name, enum_dict))
 
 
 def map_type(
@@ -155,7 +157,9 @@ def map_type(
         # Ensure that 'items' exist for arrays, fallback to Any if missing
         items_spec = field_spec.get("items", {})
         if items_spec:
-            return list[map_type(items_spec, field_name, components, models)] 
+            inner_type = map_type(items_spec, field_name, components, models)
+            # Use type: ignore since inner_type is a runtime value used as a type parameter
+            return list[inner_type]  # type: ignore[valid-type]
         else:
             logging.warning("'items' missing in array definition, using Any")
             return list[Any]
@@ -889,7 +893,7 @@ def detect_circular_dependencies(graph: dict[str, set[str]]) -> set[str]:
     stack = set()
 
     # Use a copy of the graph's keys to avoid modifying the dictionary during iteration
-    def visit(model: str):
+    def visit(model: str) -> None:
         if model in visited:
             return
         if model in stack:
@@ -1571,7 +1575,7 @@ def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[d
 
 def _handle_dependencies_and_save_models(
     models: dict[str, Any], output_path: str
-) -> tuple[dict[str, list[str]], list[str], list[str]]:
+) -> tuple[dict[str, set[str]], set[str], list[str]]:
     """Handle model dependencies and save models to files."""
     logging.info("Handling dependencies...")
     dependency_graph, circular_models, sorted_models = handle_dependencies(models)

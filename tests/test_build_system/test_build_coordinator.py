@@ -4,26 +4,26 @@ import contextlib
 import json
 import shutil
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from scripts.build_system.build_coordinator import BuildCoordinator
-from typing import Any
-
 
 
 class TestBuildCoordinator:
     """Test the BuildCoordinator class for orchestrating the build process."""
 
     @pytest.fixture
-    def build_coordinator(self) -> None:
+    def build_coordinator(self) -> BuildCoordinator:
         """Create a BuildCoordinator instance for testing."""
         return BuildCoordinator()
 
     @pytest.fixture
-    def temp_spec_dir(self) -> None:
+    def temp_spec_dir(self) -> Generator[Path, None, None]:
         """Create a temporary directory with sample spec files."""
         temp_dir = tempfile.mkdtemp()
         spec_dir = Path(temp_dir) / "specs"
@@ -69,7 +69,7 @@ class TestBuildCoordinator:
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def temp_output_dir(self) -> None:
+    def temp_output_dir(self) -> Generator[Path, None, None]:
         """Create a temporary output directory."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)

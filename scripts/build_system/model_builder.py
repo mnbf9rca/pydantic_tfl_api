@@ -88,7 +88,8 @@ class ModelBuilder:
             if items_spec:
                 inner_type = self.map_type(items_spec, field_name, components, models)
                 # Return the list type annotation
-                return list[inner_type]
+                # Use type: ignore since inner_type is a runtime value used as a type parameter
+                return list[inner_type]  # type: ignore[valid-type]
             else:
                 self.logger.warning("'items' missing in array definition, using Any")
                 return list[Any]
@@ -146,7 +147,8 @@ class ModelBuilder:
                         )
                     # Get the referenced model and create a list type
                     ref_model = self.models[ref_model_name]
-                    self.models[sanitized_name] = list[ref_model]
+                    # Use type: ignore since ref_model is a runtime value used as a type parameter
+                    self.models[sanitized_name] = list[ref_model]  # type: ignore[valid-type]
                     self.logger.info(f"Created array model: {sanitized_name} -> list[{ref_model_name}]")
                 else:
                     # Fallback if 'items' is missing or doesn't have a reference
@@ -192,10 +194,10 @@ class ModelBuilder:
                     base_model = self.models[base_model_name]
 
                     # Create RootModel-based array class
-                    # Use type: ignore since base_model is a runtime value used as a type
+                    # Use type: ignore since base_model is a runtime value used as a type parameter
                     array_class = create_model(
                         array_model_name,
-                        __base__=RootModel[list[base_model]],
+                        __base__=RootModel[list[base_model]],  # type: ignore[valid-type]
                         __config__=ConfigDict(from_attributes=True),
                     )
 
