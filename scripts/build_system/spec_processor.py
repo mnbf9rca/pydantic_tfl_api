@@ -14,9 +14,12 @@ try:
     from ..mapping_loader import load_tfl_mappings
     from .utilities import sanitize_name
 except ImportError:
-    # Fallback for when run as script
+    # Fallback for when run as script - need to add parent to path
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent.parent))
     from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found, no-redef]
-    from utilities import sanitize_name  # type: ignore[import-not-found, no-redef]
+    from build_system.utilities import sanitize_name  # type: ignore[no-redef]
 
 
 class SpecProcessor:

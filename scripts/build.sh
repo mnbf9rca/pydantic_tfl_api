@@ -34,7 +34,7 @@ SPEC_FOLDER=$2
 
 
 
-BUILD_SCRIPT="scripts/build_models.py"
+BUILD_SCRIPT="scripts/build_with_coordinator.py"
 
 # Check if we should run the build script based on the third argument (boolean value)
 RUN_BUILDSCRIPT=$3
