@@ -31,7 +31,7 @@ class TestExtractApiMetadata:
         spec = {
             "info": {"title": "Test API"},
             "paths": {"/test": {"get": {"operationId": "getTest"}}},
-            "servers": [{"url": "https://api.example.com/v1/test"}]
+            "servers": [{"url": "https://api.example.com/v1/test"}],
         }
 
         class_name, api_path, paths = extract_api_metadata(spec)
@@ -45,7 +45,7 @@ class TestExtractApiMetadata:
         spec = {
             "info": {"title": "Test API"},
             "paths": {"/test": {}},
-            "servers": [{"url": "https://api.example.com/v1/test/api"}]  # Provide enough path segments
+            "servers": [{"url": "https://api.example.com/v1/test/api"}],  # Provide enough path segments
         }
 
         class_name, api_path, paths = extract_api_metadata(spec)
@@ -60,10 +60,7 @@ class TestCreateMethodSignature:
 
     def test_method_with_parameters(self):
         """Test creating method signature with parameters."""
-        parameters = [
-            {"name": "id", "schema": {"type": "string"}},
-            {"name": "limit", "schema": {"type": "integer"}}
-        ]
+        parameters = [{"name": "id", "schema": {"type": "string"}}, {"name": "limit", "schema": {"type": "integer"}}]
 
         signature = create_method_signature("getItems", parameters, "ItemList")
 
@@ -84,9 +81,7 @@ class TestCreateMethodDocstring:
     def test_docstring_with_parameters(self):
         """Test creating docstring with parameters."""
         details = {"description": "Get items by ID"}
-        parameters = [
-            {"name": "item_id", "schema": {"type": "string"}, "description": "Unique identifier"}
-        ]
+        parameters = [{"name": "item_id", "schema": {"type": "string"}, "description": "Unique identifier"}]
 
         docstring = create_method_docstring(details, "/api/items", "ItemList", parameters)
 
@@ -112,7 +107,7 @@ class TestCreateMethodImplementation:
         """Test creating implementation with path parameters."""
         parameters = [
             {"name": "id", "in": "path", "schema": {"type": "string"}},
-            {"name": "limit", "in": "query", "schema": {"type": "integer"}}
+            {"name": "limit", "in": "query", "schema": {"type": "integer"}},
         ]
 
         implementation = create_method_implementation("getItem", parameters)
@@ -122,9 +117,7 @@ class TestCreateMethodImplementation:
 
     def test_implementation_query_only(self):
         """Test creating implementation with only query parameters."""
-        parameters = [
-            {"name": "limit", "in": "query", "schema": {"type": "integer"}}
-        ]
+        parameters = [{"name": "limit", "in": "query", "schema": {"type": "integer"}}]
 
         implementation = create_method_implementation("getItems", parameters)
 
@@ -293,8 +286,7 @@ class TestWriteImportsAndClass:
         module_imports = {"from .TestModel import TestModel"}
         class_definition = "class TestArray(RootModel[list[TestModel]]):\n"
 
-        write_imports_and_class(model_file, typing_imports, module_imports,
-                               class_definition, "TestArray")
+        write_imports_and_class(model_file, typing_imports, module_imports, class_definition, "TestArray")
 
         content = model_file.getvalue()
         assert "from typing import Optional" in content

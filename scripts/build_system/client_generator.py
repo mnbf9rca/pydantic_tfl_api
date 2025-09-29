@@ -42,6 +42,7 @@ class ClientGenerator:
             # Parse URL to extract path portion
             # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
             from urllib.parse import urlparse
+
             parsed = urlparse(server_url)
             api_path = parsed.path if parsed.path else ""
         else:
@@ -60,7 +61,9 @@ class ClientGenerator:
         sanitized_operation_id = self.sanitize_name(operation_id, prefix="Query")
         return f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
 
-    def create_method_docstring(self, details: dict[str, Any], full_path: str, model_name: str, parameters: list[dict]) -> str:
+    def create_method_docstring(
+        self, details: dict[str, Any], full_path: str, model_name: str, parameters: list[dict]
+    ) -> str:
         """Create docstring for a single API method."""
         description = details.get("description", "No description in the OpenAPI spec.")
         docstring = f"{description}\n"
@@ -68,10 +71,12 @@ class ClientGenerator:
         docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
 
         if parameters:
-            docstring_parameters = "\n".join([
-                f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
-                for param in parameters
-            ])
+            docstring_parameters = "\n".join(
+                [
+                    f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
+                    for param in parameters
+                ]
+            )
         else:
             docstring_parameters = "        No parameters required."
 
@@ -82,10 +87,7 @@ class ClientGenerator:
         path_params, query_params = self.classify_parameters(parameters)
 
         formatted_path_params = ", ".join([sanitize_field_name(param) for param in path_params])
-        formatted_query_params = ", ".join([
-            f"'{param}': {sanitize_field_name(param)}"
-            for param in query_params
-        ])
+        formatted_query_params = ", ".join([f"'{param}': {sanitize_field_name(param)}" for param in query_params])
 
         if formatted_query_params:
             query_params_dict = f"endpoint_args={{ {formatted_query_params} }}"
@@ -97,7 +99,9 @@ class ClientGenerator:
         else:
             return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
 
-    def process_single_method(self, path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set) -> str:
+    def process_single_method(
+        self, path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set
+    ) -> str:
         """Process a single API method and return its complete definition."""
         operation_id = details.get("operationId")
         if not operation_id:
@@ -159,6 +163,7 @@ class ClientGenerator:
             # Parse URL to extract path portion
             # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
             from urllib.parse import urlparse
+
             parsed = urlparse(server_url)
             api_path = parsed.path if parsed.path else ""
         else:
@@ -171,11 +176,7 @@ class ClientGenerator:
                 operation_id = details.get("operationId")
                 if operation_id:
                     path_uri = self.join_url_paths(api_path, path)
-                    path_params = [
-                        param["name"]
-                        for param in details.get("parameters", [])
-                        if param["in"] == "path"
-                    ]
+                    path_params = [param["name"] for param in details.get("parameters", []) if param["in"] == "path"]
                     for i, param in enumerate(path_params):
                         path_uri = path_uri.replace(f"{{{param}}}", f"{{{i}}}")
 
@@ -183,9 +184,7 @@ class ClientGenerator:
 
                     model_name = self.get_model_name_from_path(response_content)
 
-                    config_lines.append(
-                        f"    '{operation_id}': {{'uri': '{path_uri}', 'model': '{model_name}'}},\n"
-                    )
+                    config_lines.append(f"    '{operation_id}': {{'uri': '{path_uri}', 'model': '{model_name}'}},\n")
 
         config_lines.append("}\n")
 
@@ -209,7 +208,9 @@ class ClientGenerator:
         # Process all API methods
         for path, methods in paths.items():
             for method, details in methods.items():
-                method_definition = self.process_single_method(path, method, details, api_path, all_types, all_package_models)
+                method_definition = self.process_single_method(
+                    path, method, details, api_path, all_types, all_package_models
+                )
                 if method_definition:
                     method_lines.append(method_definition)
 
@@ -263,9 +264,7 @@ class ClientGenerator:
     def create_function_parameters(self, parameters: list[dict[str, Any]]) -> str:
         """Create a string of function parameters, ensuring they are safe Python identifiers."""
         # Sort parameters to ensure required ones come first
-        sorted_parameters = sorted(
-            parameters, key=lambda param: not param.get("required", False)
-        )
+        sorted_parameters = sorted(parameters, key=lambda param: not param.get("required", False))
 
         param_str = ", ".join(
             [
@@ -277,7 +276,9 @@ class ClientGenerator:
         )
         return param_str
 
-    def save_classes(self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None) -> None:
+    def save_classes(
+        self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None
+    ) -> None:
         """Create config and class files for each spec in the specs list.
 
         Args:
@@ -306,10 +307,8 @@ class ClientGenerator:
             class_names.append(class_name)
         init_file_path = os.path.join(base_path, "__init__.py")
         with open(init_file_path, "w") as init_file:
-            class_names_joined = ',\n    '.join(class_names)
-            init_file.write(
-                f"from .endpoints import (\n    {class_names_joined}\n)\n"
-            )
+            class_names_joined = ",\n    ".join(class_names)
+            init_file.write(f"from .endpoints import (\n    {class_names_joined}\n)\n")
             init_file.write("from . import models\n")
             init_file.write("from .core import __version__\n")
 
@@ -322,16 +321,12 @@ class ClientGenerator:
         endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
         with open(endpoint_init_file, "w") as endpoint_init:
             endpoint_init.write("from typing import Literal\n\n")
-            endpoint_init.write(
-                "\n".join([f"from .{name} import {name}" for name in class_names])
-            )
+            endpoint_init.write("\n".join([f"from .{name} import {name}" for name in class_names]))
             endpoint_init.write("\n\n")
 
             # Generate TfLEndpoint Literal type
-            endpoint_names = ',\n    '.join(f"'{name}'" for name in class_names)
-            endpoint_init.write(
-                f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n"
-            )
+            endpoint_names = ",\n    ".join(f"'{name}'" for name in class_names)
+            endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n")
 
             endpoint_init.write("__all__ = [\n")
             endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
@@ -375,13 +370,13 @@ class ClientGenerator:
 
         # Handle camelCase/PascalCase by inserting underscores before uppercase letters
         # "getUserById" -> "get_user_by_id", "Naptan" -> "naptan"
-        sanitized = re.sub(r'(?<!^)(?=[A-Z])', '_', operation_id).lower()
+        sanitized = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
 
         # Replace any remaining invalid characters with underscores
-        sanitized = re.sub(r'[^a-z0-9_]', '_', sanitized)
+        sanitized = re.sub(r"[^a-z0-9_]", "_", sanitized)
 
         # Clean up multiple underscores and leading/trailing underscores
-        sanitized = re.sub(r'_+', '_', sanitized).strip('_') or "unknown_method"
+        sanitized = re.sub(r"_+", "_", sanitized).strip("_") or "unknown_method"
 
         # Handle Python keywords by adding suffix
         if keyword.iskeyword(sanitized):

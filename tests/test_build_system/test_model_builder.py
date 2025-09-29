@@ -29,29 +29,23 @@ class TestModelBuilder:
                     "age": {"type": "integer"},
                     "isActive": {"type": "boolean"},
                 },
-                "required": ["id", "name"]
+                "required": ["id", "name"],
             },
-            "UserArray": {
-                "type": "array",
-                "items": {"$ref": "#/components/schemas/User"}
-            },
-            "Status": {
-                "type": "string",
-                "enum": ["active", "inactive", "pending"]
-            },
+            "UserArray": {"type": "array", "items": {"$ref": "#/components/schemas/User"}},
+            "Status": {"type": "string", "enum": ["active", "inactive", "pending"]},
             "NestedModel": {
                 "type": "object",
                 "properties": {
                     "user": {"$ref": "#/components/schemas/User"},
                     "status": {"$ref": "#/components/schemas/Status"},
-                    "metadata": {"type": "object"}
-                }
-            }
+                    "metadata": {"type": "object"},
+                },
+            },
         }
 
     def test_init_creates_empty_models_dict(self, model_builder):
         """Test that ModelBuilder initializes with empty models dictionary."""
-        assert hasattr(model_builder, 'models')
+        assert hasattr(model_builder, "models")
         assert isinstance(model_builder.models, dict)
         assert len(model_builder.models) == 0
 
@@ -100,10 +94,7 @@ class TestModelBuilder:
         models = {}
 
         # Test string array
-        array_spec = {
-            "type": "array",
-            "items": {"type": "string"}
-        }
+        array_spec = {"type": "array", "items": {"type": "string"}}
         result = model_builder.map_type(array_spec, "tags", components, models)
         assert result == list[str]
 
@@ -171,6 +162,7 @@ class TestModelBuilder:
 
         # Should be a list type
         from typing import get_origin
+
         assert get_origin(user_array_type) is list
 
     def test_create_pydantic_models_handles_missing_properties(self, model_builder):
@@ -193,11 +185,8 @@ class TestModelBuilder:
         components = {
             "TestModel": {
                 "type": "object",
-                "properties": {
-                    "required_field": {"type": "string"},
-                    "optional_field": {"type": "string"}
-                },
-                "required": ["required_field"]
+                "properties": {"required_field": {"type": "string"}, "optional_field": {"type": "string"}},
+                "required": ["required_field"],
             }
         }
 
@@ -209,6 +198,7 @@ class TestModelBuilder:
         # Required field should not be union with None
         required_field = fields["required_field"]
         from pydantic_core import PydanticUndefined
+
         assert required_field.default == PydanticUndefined  # PydanticUndefined indicates required in Pydantic v2
 
         # Optional field should be union with None
@@ -233,12 +223,7 @@ class TestModelBuilder:
         components = {
             "ModelWithEnum": {
                 "type": "object",
-                "properties": {
-                    "status": {
-                        "type": "string",
-                        "enum": ["active", "inactive"]
-                    }
-                }
+                "properties": {"status": {"type": "string", "enum": ["active", "inactive"]}},
             }
         }
 
@@ -265,37 +250,19 @@ class TestModelBuilder:
             enum_type = field_type
 
         # The enum should have a name containing 'Enum'
-        assert hasattr(enum_type, '__name__')
-        assert 'Enum' in enum_type.__name__
+        assert hasattr(enum_type, "__name__")
+        assert "Enum" in enum_type.__name__
 
     def test_generate_missing_array_models_regression(self, model_builder):
         """REGRESSION: Ensure all needed array models are generated."""
         # Components that should generate array models based on production system
         components_needing_arrays = {
-            "ArrivalDeparture": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "BikePointOccupancy": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "ChargeConnectorOccupancy": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "DisruptedPoint": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "LineServiceType": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "StopPointRouteSection": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            }
+            "ArrivalDeparture": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "BikePointOccupancy": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "ChargeConnectorOccupancy": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "DisruptedPoint": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "LineServiceType": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "StopPointRouteSection": {"type": "object", "properties": {"id": {"type": "string"}}},
         }
 
         model_builder.create_pydantic_models(components_needing_arrays)
@@ -308,7 +275,7 @@ class TestModelBuilder:
             "ChargeConnectorOccupancyArray",
             "DisruptedPointArray",
             "LineServiceTypeArray",
-            "StopPointRouteSectionArray"
+            "StopPointRouteSectionArray",
         ]
 
         # Check if the original models were created
@@ -325,14 +292,8 @@ class TestModelBuilder:
         from pydantic import RootModel
 
         components = {
-            "TestModel": {
-                "type": "object",
-                "properties": {"id": {"type": "string"}}
-            },
-            "TestModelArray": {
-                "type": "array",
-                "items": {"$ref": "#/components/schemas/TestModel"}
-            }
+            "TestModel": {"type": "object", "properties": {"id": {"type": "string"}}},
+            "TestModelArray": {"type": "array", "items": {"$ref": "#/components/schemas/TestModel"}},
         }
 
         model_builder.create_pydantic_models(components)
@@ -344,11 +305,11 @@ class TestModelBuilder:
         array_model = models["TestModelArray"]
 
         # Check if it's a RootModel-based class (not just a type alias)
-        assert hasattr(array_model, '__bases__'), "Array model should be a proper class"
+        assert hasattr(array_model, "__bases__"), "Array model should be a proper class"
 
         # For explicitly defined array models, they should be list types
         # But for auto-generated ones (via generate_additional_array_models), they should be RootModel-based
-        if hasattr(array_model, '__origin__'):
+        if hasattr(array_model, "__origin__"):
             # This is a type alias like list[TestModel] - acceptable for explicitly defined arrays
             assert array_model.__origin__ is list, "Array type alias should be list-based"
         else:
@@ -386,15 +347,18 @@ class TestModelBuilder:
         # Verify models are cleared
         assert len(model_builder.models) == 0
 
-    @pytest.mark.parametrize("openapi_type,expected_python_type", [
-        ("string", str),
-        ("integer", int),
-        ("boolean", bool),
-        ("number", float),
-        ("object", dict),
-        ("array", list),
-        ("unknown_type", Any),
-    ])
+    @pytest.mark.parametrize(
+        "openapi_type,expected_python_type",
+        [
+            ("string", str),
+            ("integer", int),
+            ("boolean", bool),
+            ("number", float),
+            ("object", dict),
+            ("array", list),
+            ("unknown_type", Any),
+        ],
+    )
     def test_map_openapi_type_mapping(self, model_builder, openapi_type, expected_python_type):
         """Test OpenAPI type to Python type mapping."""
         result = model_builder.map_openapi_type(openapi_type)

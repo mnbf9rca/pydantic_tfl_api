@@ -35,7 +35,6 @@ def persist_json(response: Response, filename):
 
 
 def create_request_name_from_args(request_args):
-
     # format is {endpoint}_{endpoint_args}_{endpoint_params}_{model}
     # ensuring that we remove any commas from the endpoint_args
     # and mapping {} in endpoint_params to None
@@ -46,11 +45,7 @@ def create_request_name_from_args(request_args):
 
     # Simplify endpoint_params processing
     endpoint_params = request_args.get("endpoint_params", {})
-    endpoint_params = (
-        "_".join(f"{k}_{v}" for k, v in endpoint_params.items())
-        if endpoint_params
-        else "None"
-    )
+    endpoint_params = "_".join(f"{k}_{v}" for k, v in endpoint_params.items()) if endpoint_params else "None"
 
     # Construct and return the request name
     return f"{request_args['endpoint']}_{endpoint_args}_{endpoint_params}_{request_args['model']}"

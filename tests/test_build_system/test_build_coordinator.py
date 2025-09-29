@@ -36,11 +36,8 @@ class TestBuildCoordinator:
                 "schemas": {
                     "User": {
                         "type": "object",
-                        "properties": {
-                            "id": {"type": "string"},
-                            "name": {"type": "string"}
-                        },
-                        "required": ["id"]
+                        "properties": {"id": {"type": "string"}, "name": {"type": "string"}},
+                        "required": ["id"],
                     }
                 }
             },
@@ -52,21 +49,18 @@ class TestBuildCoordinator:
                             "200": {
                                 "content": {
                                     "application/json": {
-                                        "schema": {
-                                            "type": "array",
-                                            "items": {"$ref": "#/components/schemas/User"}
-                                        }
+                                        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
                                     }
                                 }
                             }
-                        }
+                        },
                     }
                 }
-            }
+            },
         }
 
         spec_file = spec_dir / "test_api.json"
-        with open(spec_file, 'w') as f:
+        with open(spec_file, "w") as f:
             json.dump(sample_spec, f)
 
         yield spec_dir
@@ -81,11 +75,11 @@ class TestBuildCoordinator:
 
     def test_init_creates_components(self, build_coordinator):
         """Test that BuildCoordinator initializes with all required components."""
-        assert hasattr(build_coordinator, 'spec_processor')
-        assert hasattr(build_coordinator, 'model_builder')
-        assert hasattr(build_coordinator, 'dependency_resolver')
-        assert hasattr(build_coordinator, 'file_manager')
-        assert hasattr(build_coordinator, 'client_generator')
+        assert hasattr(build_coordinator, "spec_processor")
+        assert hasattr(build_coordinator, "model_builder")
+        assert hasattr(build_coordinator, "dependency_resolver")
+        assert hasattr(build_coordinator, "file_manager")
+        assert hasattr(build_coordinator, "client_generator")
 
         # Check that all components are properly instantiated
         assert build_coordinator.spec_processor is not None
@@ -199,7 +193,7 @@ class TestBuildCoordinator:
         diagram_file = temp_output_dir / "class_diagram.mmd"
         assert diagram_file.exists()
 
-    @patch('scripts.build_system.build_coordinator.copy_infrastructure')
+    @patch("scripts.build_system.build_coordinator.copy_infrastructure")
     def test_copy_infrastructure_called(self, mock_copy, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test that infrastructure copying is called during build."""
         # Run the full build
@@ -212,7 +206,7 @@ class TestBuildCoordinator:
     def test_build_complete_workflow(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test the complete build workflow."""
         # Mock the infrastructure copying to avoid file system dependencies
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Check that all expected outputs were created
@@ -238,8 +232,10 @@ class TestBuildCoordinator:
         """Test error handling for directory with no valid specs."""
         empty_dir = tempfile.mkdtemp()
         try:
-            with pytest.raises(ValueError, match="No valid specifications found"), \
-                 patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+            with (
+                pytest.raises(ValueError, match="No valid specifications found"),
+                patch("scripts.build_system.build_coordinator.copy_infrastructure"),
+            ):
                 build_coordinator.build(empty_dir, str(temp_output_dir))
         finally:
             shutil.rmtree(empty_dir)
@@ -247,8 +243,10 @@ class TestBuildCoordinator:
     def test_build_error_handling_permission_error(self, build_coordinator, temp_spec_dir):
         """Test error handling for permission errors."""
         # Try to write to a read-only directory (simulate permission error)
-        with pytest.raises((PermissionError, OSError, RuntimeError)), \
-             patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with (
+            pytest.raises((PermissionError, OSError, RuntimeError)),
+            patch("scripts.build_system.build_coordinator.copy_infrastructure"),
+        ):
             build_coordinator.build(str(temp_spec_dir), "/root/no_permission")
 
     def test_get_build_stats(self, build_coordinator, temp_spec_dir, temp_output_dir):
@@ -258,19 +256,19 @@ class TestBuildCoordinator:
         assert stats == {}
 
         # After build, should have statistics
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         stats = build_coordinator.get_build_stats()
         assert isinstance(stats, dict)
-        assert 'models_generated' in stats
-        assert 'clients_generated' in stats
-        assert 'specs_processed' in stats
+        assert "models_generated" in stats
+        assert "clients_generated" in stats
+        assert "specs_processed" in stats
 
     def test_clear_state(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test clearing coordinator state."""
         # Run a build first
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Verify state exists
@@ -286,7 +284,7 @@ class TestBuildCoordinator:
 
     def test_validate_output_after_build(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test validating the build output."""
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Validate output
@@ -316,30 +314,26 @@ class TestBuildCoordinator:
 
     def test_get_component_counts(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test getting component counts after build."""
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         counts = build_coordinator.get_component_counts()
 
         assert isinstance(counts, dict)
-        assert 'models' in counts
-        assert 'enums' in counts
-        assert 'arrays' in counts
-        assert 'clients' in counts
+        assert "models" in counts
+        assert "enums" in counts
+        assert "arrays" in counts
+        assert "clients" in counts
 
         # Should have positive counts
-        assert counts['models'] > 0
-        assert counts['clients'] > 0
+        assert counts["models"] > 0
+        assert counts["clients"] > 0
 
     def test_build_with_custom_configuration(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test build with custom configuration options."""
-        config = {
-            'generate_diagrams': False,
-            'validate_output': True,
-            'base_url': 'https://custom.example.com'
-        }
+        config = {"generate_diagrams": False, "validate_output": True, "base_url": "https://custom.example.com"}
 
-        with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir), config=config)
 
         # Diagram should not be created when disabled
@@ -352,7 +346,7 @@ class TestBuildCoordinator:
         output_dir2 = Path(tempfile.mkdtemp())
 
         try:
-            with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+            with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
                 # Should be able to run multiple builds
                 build_coordinator.build(str(temp_spec_dir), str(output_dir1))
                 build_coordinator.build(str(temp_spec_dir), str(output_dir2))
@@ -365,12 +359,7 @@ class TestBuildCoordinator:
             shutil.rmtree(output_dir1)
             shutil.rmtree(output_dir2)
 
-    @pytest.mark.parametrize("invalid_input", [
-        None,
-        "",
-        123,
-        ["not", "a", "string"]
-    ])
+    @pytest.mark.parametrize("invalid_input", [None, "", 123, ["not", "a", "string"]])
     def test_build_input_validation(self, build_coordinator, invalid_input):
         """Test build input validation with various invalid inputs."""
         with pytest.raises((TypeError, ValueError, FileNotFoundError, RuntimeError)):
@@ -379,7 +368,7 @@ class TestBuildCoordinator:
     def test_logging_configuration(self, build_coordinator):
         """Test that logging is properly configured."""
         # Should have a logger
-        assert hasattr(build_coordinator, 'logger')
+        assert hasattr(build_coordinator, "logger")
         assert build_coordinator.logger is not None
 
         # Logger should be configured with appropriate level

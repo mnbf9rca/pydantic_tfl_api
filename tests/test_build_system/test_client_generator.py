@@ -29,13 +29,8 @@ class TestClientGenerator:
         """Create a sample OpenAPI specification for testing."""
         return {
             "openapi": "3.0.0",
-            "info": {
-                "title": "Test API",
-                "version": "1.0.0"
-            },
-            "servers": [
-                {"url": "https://api.example.com/v1/test"}
-            ],
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "servers": [{"url": "https://api.example.com/v1/test"}],
             "paths": {
                 "/users": {
                     "get": {
@@ -47,21 +42,18 @@ class TestClientGenerator:
                                 "in": "query",
                                 "required": False,
                                 "schema": {"type": "integer"},
-                                "description": "Maximum number of users to return"
+                                "description": "Maximum number of users to return",
                             }
                         ],
                         "responses": {
                             "200": {
                                 "content": {
                                     "application/json": {
-                                        "schema": {
-                                            "type": "array",
-                                            "items": {"$ref": "#/components/schemas/User"}
-                                        }
+                                        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
                                     }
                                 }
                             }
-                        }
+                        },
                     }
                 },
                 "/users/{id}": {
@@ -74,39 +66,27 @@ class TestClientGenerator:
                                 "in": "path",
                                 "required": True,
                                 "schema": {"type": "string"},
-                                "description": "User ID"
+                                "description": "User ID",
                             },
                             {
                                 "name": "include_profile",
                                 "in": "query",
                                 "required": False,
                                 "schema": {"type": "boolean"},
-                                "description": "Include user profile"
-                            }
+                                "description": "Include user profile",
+                            },
                         ],
                         "responses": {
-                            "200": {
-                                "content": {
-                                    "application/json": {
-                                        "schema": {"$ref": "#/components/schemas/User"}
-                                    }
-                                }
-                            }
-                        }
+                            "200": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}}
+                        },
                     }
-                }
+                },
             },
             "components": {
                 "schemas": {
-                    "User": {
-                        "type": "object",
-                        "properties": {
-                            "id": {"type": "string"},
-                            "name": {"type": "string"}
-                        }
-                    }
+                    "User": {"type": "object", "properties": {"id": {"type": "string"}, "name": {"type": "string"}}}
                 }
-            }
+            },
         }
 
     @pytest.fixture
@@ -123,7 +103,7 @@ class TestClientGenerator:
 
     def test_init_creates_empty_state(self, client_generator):
         """Test that ClientGenerator initializes with empty state."""
-        assert hasattr(client_generator, '_generated_clients')
+        assert hasattr(client_generator, "_generated_clients")
         assert isinstance(client_generator._generated_clients, list)
 
     def test_extract_api_metadata(self, client_generator, sample_spec):
@@ -141,7 +121,7 @@ class TestClientGenerator:
             {"name": "id", "in": "path", "required": True},
             {"name": "limit", "in": "query", "required": False},
             {"name": "offset", "in": "query", "required": False},
-            {"name": "user_id", "in": "path", "required": True}
+            {"name": "user_id", "in": "path", "required": True},
         ]
 
         path_params, query_params = client_generator.classify_parameters(parameters)
@@ -157,11 +137,11 @@ class TestClientGenerator:
         """REGRESSION: Ensure method names match OpenAPI spec operation IDs (PascalCase)."""
         # This prevents method name inconsistencies with the OpenAPI specification
         test_cases = [
-            ("Naptan", "Naptan"),          # Should preserve case from spec
-            ("Live", "Live"),              # Should preserve case from spec
-            ("Dayofweek", "Dayofweek"),    # Should preserve case from spec
-            ("GetData", "GetData"),        # Should preserve PascalCase
-            ("getUserById", "GetUserById"), # Should normalize to PascalCase
+            ("Naptan", "Naptan"),  # Should preserve case from spec
+            ("Live", "Live"),  # Should preserve case from spec
+            ("Dayofweek", "Dayofweek"),  # Should preserve case from spec
+            ("GetData", "GetData"),  # Should preserve PascalCase
+            ("getUserById", "GetUserById"),  # Should normalize to PascalCase
         ]
 
         for operation_id, expected in test_cases:
@@ -170,8 +150,8 @@ class TestClientGenerator:
             signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
 
             # Extract method name from signature
-            method_line = signature.split('\n')[0]  # Get first line: "def method_name(self, ...):"
-            method_name = method_line.split('(')[0].replace('def ', '').strip()
+            method_line = signature.split("\n")[0]  # Get first line: "def method_name(self, ...):"
+            method_name = method_line.split("(")[0].replace("def ", "").strip()
 
             assert method_name == expected, f"Expected '{expected}', got '{method_name}' for '{operation_id}'"
             assert method_name.isidentifier(), f"Method name '{method_name}' should be a valid Python identifier"
@@ -185,23 +165,24 @@ class TestClientGenerator:
             signature = client_generator.create_method_signature(operation_id, parameters, "TestModel")
 
             # Extract method name from signature
-            method_line = signature.split('\n')[0]
-            method_name = method_line.split('(')[0].replace('def ', '').strip()
+            method_line = signature.split("\n")[0]
+            method_name = method_line.split("(")[0].replace("def ", "").strip()
 
             # Check method name is a valid Python identifier and matches expected casing
             if method_name:
                 assert method_name.isidentifier(), f"Method name '{method_name}' should be valid Python identifier"
                 # Method names should preserve the operation ID casing (PascalCase for OpenAPI spec)
                 # This ensures consistency with the API specification
-                assert method_name == operation_id or method_name.startswith(operation_id[0].upper()), \
+                assert method_name == operation_id or method_name.startswith(operation_id[0].upper()), (
                     f"Method name '{method_name}' should match OpenAPI operation ID format for '{operation_id}'"
+                )
 
     def test_create_method_signature(self, client_generator):
         """Test creating method signatures for API operations."""
         operation_id = "getUserById"
         parameters = [
             {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
-            {"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}}
+            {"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}},
         ]
         model_name = "User"
 
@@ -232,7 +213,7 @@ class TestClientGenerator:
         operation_id = "getUserById"
         parameters = [
             {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
-            {"name": "include_profile", "in": "query", "required": False, "schema": {"type": "boolean"}}
+            {"name": "include_profile", "in": "query", "required": False, "schema": {"type": "boolean"}},
         ]
 
         implementation = client_generator.create_method_implementation(operation_id, parameters)
@@ -244,9 +225,7 @@ class TestClientGenerator:
     def test_create_method_implementation_query_only(self, client_generator):
         """Test creating method implementation with only query parameters."""
         operation_id = "getUsers"
-        parameters = [
-            {"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}}
-        ]
+        parameters = [{"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}}]
 
         implementation = client_generator.create_method_implementation(operation_id, parameters)
 
@@ -296,7 +275,9 @@ class TestClientGenerator:
         assert f"from .{class_name}_config import endpoints, base_url" in import_text
         assert "from ..core import ApiError, ResponseModel, Client, GenericResponseModel" in import_text
         assert "from ..models import User, UserArray" in import_text
-        assert "GenericResponseModel" not in import_text.split("from ..models import")[1]  # Should be removed from models import
+        assert (
+            "GenericResponseModel" not in import_text.split("from ..models import")[1]
+        )  # Should be removed from models import
 
     def test_generate_import_lines_no_generic_response(self, client_generator):
         """Test generating imports when GenericResponseModel is not needed."""
@@ -350,13 +331,7 @@ class TestClientGenerator:
 
     def test_get_model_name_from_path_object(self, client_generator):
         """Test getting model name from response path for object responses."""
-        response_content = {
-            "content": {
-                "application/json": {
-                    "schema": {"$ref": "#/components/schemas/User"}
-                }
-            }
-        }
+        response_content = {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}}
 
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "User"
@@ -365,12 +340,7 @@ class TestClientGenerator:
         """Test getting model name from response path for array responses."""
         response_content = {
             "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "array",
-                        "items": {"$ref": "#/components/schemas/User"}
-                    }
-                }
+                "application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}}
             }
         }
 
@@ -385,32 +355,16 @@ class TestClientGenerator:
         assert model_name == "GenericResponseModel"
 
         # Missing schema
-        response_content = {
-            "content": {
-                "application/json": {}
-            }
-        }
+        response_content = {"content": {"application/json": {}}}
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "GenericResponseModel"
 
     def test_create_function_parameters(self, client_generator):
         """Test creating function parameter strings."""
         parameters = [
-            {
-                "name": "id",
-                "required": True,
-                "schema": {"type": "string"}
-            },
-            {
-                "name": "limit",
-                "required": False,
-                "schema": {"type": "integer"}
-            },
-            {
-                "name": "optional_param",
-                "required": False,
-                "schema": {"type": "boolean"}
-            }
+            {"name": "id", "required": True, "schema": {"type": "string"}},
+            {"name": "limit", "required": False, "schema": {"type": "integer"}},
+            {"name": "optional_param", "required": False, "schema": {"type": "boolean"}},
         ]
 
         param_str = client_generator.create_function_parameters(parameters)
@@ -510,9 +464,7 @@ class TestClientGenerator:
         all_package_models = set()
 
         # Method without operationId should return empty string
-        result = client_generator.process_single_method(
-            "/test", "get", {}, "/api", all_types, all_package_models
-        )
+        result = client_generator.process_single_method("/test", "get", {}, "/api", all_types, all_package_models)
 
         assert result == ""
 
@@ -534,7 +486,7 @@ class TestClientGenerator:
         spec_nested = {
             "info": {"title": "Lift Disruptions"},
             "servers": [{"url": "https://api.tfl.gov.uk/Disruptions/Lifts/v2"}],
-            "paths": {"/": {}}
+            "paths": {"/": {}},
         }
         _, api_path, _ = client_generator.extract_api_metadata(spec_nested)
         assert api_path == "/Disruptions/Lifts/v2", f"Expected '/Disruptions/Lifts/v2', got '{api_path}'"
@@ -543,17 +495,13 @@ class TestClientGenerator:
         spec_simple = {
             "info": {"title": "Bike Point"},
             "servers": [{"url": "https://api.tfl.gov.uk/BikePoint"}],
-            "paths": {"/": {}}
+            "paths": {"/": {}},
         }
         _, api_path, _ = client_generator.extract_api_metadata(spec_simple)
         assert api_path == "/BikePoint", f"Expected '/BikePoint', got '{api_path}'"
 
         # Test root path
-        spec_root = {
-            "info": {"title": "Root API"},
-            "servers": [{"url": "https://api.example.com"}],
-            "paths": {"/": {}}
-        }
+        spec_root = {"info": {"title": "Root API"}, "servers": [{"url": "https://api.example.com"}], "paths": {"/": {}}}
         _, api_path, _ = client_generator.extract_api_metadata(spec_root)
         assert api_path == "", f"Expected '', got '{api_path}'"
 
@@ -572,15 +520,15 @@ class TestClientGenerator:
                                     "application/json": {
                                         "schema": {
                                             "type": "array",
-                                            "items": {"$ref": "#/components/schemas/LiftDisruption"}
+                                            "items": {"$ref": "#/components/schemas/LiftDisruption"},
                                         }
                                     }
                                 }
                             }
-                        }
+                        },
                     }
                 }
-            }
+            },
         }
 
         client_generator.create_config(spec, str(temp_dir), "https://api.tfl.gov.uk")

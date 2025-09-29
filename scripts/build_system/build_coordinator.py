@@ -94,13 +94,15 @@ class BuildCoordinator:
             )
 
             # Update build statistics
-            self._build_stats.update({
-                'models_generated': len(models),
-                'clients_generated': len(specs),
-                'specs_processed': len(specs),
-                'circular_dependencies': len(circular_models),
-                'total_dependencies': len(dependency_graph)
-            })
+            self._build_stats.update(
+                {
+                    "models_generated": len(models),
+                    "clients_generated": len(specs),
+                    "specs_processed": len(specs),
+                    "circular_dependencies": len(circular_models),
+                    "total_dependencies": len(dependency_graph),
+                }
+            )
 
             self.logger.info(f"Build completed successfully. Generated {len(models)} models.")
 
@@ -167,7 +169,9 @@ class BuildCoordinator:
 
         return models, reference_map
 
-    def _handle_dependencies_and_save_models(self, models: dict[str, Any], output_path: str) -> tuple[dict[str, list[str]], set[str], list[str]]:
+    def _handle_dependencies_and_save_models(
+        self, models: dict[str, Any], output_path: str
+    ) -> tuple[dict[str, list[str]], set[str], list[str]]:
         """Handle model dependencies and save models to files."""
         self.logger.info("Handling dependencies...")
         dependency_graph, circular_models, sorted_models = handle_dependencies(models)
@@ -178,10 +182,16 @@ class BuildCoordinator:
 
         return dependency_graph, circular_models, sorted_models
 
-    def _generate_classes_and_diagrams(self, specs: list[dict[str, Any]], components: dict[str, Any],
-                                     reference_map: dict[str, str], output_path: str,
-                                     dependency_graph: dict[str, list[str]], sorted_models: list[str],
-                                     config: dict[str, Any] | None = None) -> None:
+    def _generate_classes_and_diagrams(
+        self,
+        specs: list[dict[str, Any]],
+        components: dict[str, Any],
+        reference_map: dict[str, str],
+        output_path: str,
+        dependency_graph: dict[str, list[str]],
+        sorted_models: list[str],
+        config: dict[str, Any] | None = None,
+    ) -> None:
         """Generate API classes and create documentation diagrams."""
         self.logger.info("Creating config and class files...")
 
@@ -190,8 +200,8 @@ class BuildCoordinator:
 
         # Create class diagram if not disabled
         generate_diagrams = True
-        if config and 'generate_diagrams' in config:
-            generate_diagrams = config['generate_diagrams']
+        if config and "generate_diagrams" in config:
+            generate_diagrams = config["generate_diagrams"]
 
         if generate_diagrams:
             self.logger.info("Creating class diagram...")
@@ -201,8 +211,8 @@ class BuildCoordinator:
 
     def _apply_config(self, config: dict[str, Any]) -> None:
         """Apply configuration options."""
-        if 'base_url' in config:
-            self.set_base_url(config['base_url'])
+        if "base_url" in config:
+            self.set_base_url(config["base_url"])
 
     def get_build_stats(self) -> dict[str, Any]:
         """Get build statistics."""
@@ -232,7 +242,7 @@ class BuildCoordinator:
                 return False
 
             # Check for required subdirectories
-            required_dirs = ['models', 'endpoints']
+            required_dirs = ["models", "endpoints"]
             for required_dir in required_dirs:
                 dir_path = output_dir / required_dir
                 if not dir_path.exists():
@@ -265,16 +275,16 @@ class BuildCoordinator:
             Dictionary with counts of models, enums, arrays, and clients
         """
         if not self._build_stats:
-            return {'models': 0, 'enums': 0, 'arrays': 0, 'clients': 0}
+            return {"models": 0, "enums": 0, "arrays": 0, "clients": 0}
 
         # Extract component counts from build stats
-        total_models = self._build_stats.get('models_generated', 0)
-        clients = self._build_stats.get('clients_generated', 0)
+        total_models = self._build_stats.get("models_generated", 0)
+        clients = self._build_stats.get("clients_generated", 0)
 
         # For simple cases, just report what we have
         return {
-            'models': total_models,
-            'enums': 0,  # Would need more detailed tracking to count enums accurately
-            'arrays': 0,  # Would need more detailed tracking to count arrays accurately
-            'clients': clients
+            "models": total_models,
+            "enums": 0,  # Would need more detailed tracking to count enums accurately
+            "arrays": 0,  # Would need more detailed tracking to count arrays accurately
+            "clients": clients,
         }

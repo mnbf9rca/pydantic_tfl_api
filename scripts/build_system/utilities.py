@@ -28,12 +28,12 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     words = sanitized.split()
     if len(words) > 1:
         # Convert multiple words to CamelCase ("Lift Disruptions" -> "LiftDisruptions")
-        sanitized = ''.join(word.capitalize() for word in words)
+        sanitized = "".join(word.capitalize() for word in words)
     elif words:
         sanitized = words[0]
 
     # Extract the portion after the last underscore for concise names
-    if '_' in sanitized:
+    if "_" in sanitized:
         sanitized = sanitized.split("_")[-1]
 
     # Convert to CamelCase if it's all lowercase
@@ -117,5 +117,6 @@ def clean_enum_name(value: str) -> str:
 def join_url_paths(a: str, b: str) -> str:
     """Join URL paths ensuring proper slash handling."""
     from urllib.parse import urljoin
+
     # Ensure the base path ends with a slash for urljoin to work properly
     return urljoin(a + "/", b.lstrip("/"))

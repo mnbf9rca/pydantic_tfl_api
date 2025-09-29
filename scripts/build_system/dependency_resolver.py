@@ -24,9 +24,7 @@ class DependencyResolver:
         """Extract inner types using the shared utility function."""
         return extract_inner_types(annotation)
 
-    def build_dependency_graph(
-        self, models: dict[str, type[BaseModel] | type[list]]
-    ) -> dict[str, set[str]]:
+    def build_dependency_graph(self, models: dict[str, type[BaseModel] | type[list]]) -> dict[str, set[str]]:
         """Build a dependency graph where each model depends on other models."""
         graph = defaultdict(set)
 
@@ -43,10 +41,7 @@ class DependencyResolver:
                             graph[model_name].add(inner_type.__forward_arg__)
 
                         # Handle direct model references
-                        elif (
-                            hasattr(inner_type, "__name__")
-                            and inner_type.__name__ in models
-                        ):
+                        elif hasattr(inner_type, "__name__") and inner_type.__name__ in models:
                             graph[model_name].add(sanitize_name(inner_type.__name__))
 
                         # If it's a generic type, keep unwrapping
@@ -55,18 +50,11 @@ class DependencyResolver:
                             for nested_type in nested_types:
                                 if isinstance(nested_type, ForwardRef):
                                     graph[model_name].add(nested_type.__forward_arg__)
-                                elif (
-                                    hasattr(nested_type, "__name__")
-                                    and nested_type.__name__ in models
-                                ):
-                                    graph[model_name].add(
-                                        sanitize_name(nested_type.__name__)
-                                    )
+                                elif hasattr(nested_type, "__name__") and nested_type.__name__ in models:
+                                    graph[model_name].add(sanitize_name(nested_type.__name__))
 
             # Handle List models (arrays)
-            elif hasattr(model, "__origin__") and (
-                model.__origin__ is list or model.__origin__ is dict
-            ):
+            elif hasattr(model, "__origin__") and (model.__origin__ is list or model.__origin__ is dict):
                 args = get_args(model)
                 if args:
                     inner_type = args[0]
@@ -75,9 +63,7 @@ class DependencyResolver:
                 if hasattr(inner_type, "__name__") and inner_type.__name__ in models:
                     graph[model_name].add(sanitize_name(inner_type.__name__))
             else:
-                self.logger.warning(
-                    f"Model '{model_name}' is not a Pydantic model, dict or list type"
-                )
+                self.logger.warning(f"Model '{model_name}' is not a Pydantic model, dict or list type")
 
         # finally, add any models which have zero dependencies
         for model_name in models:
@@ -136,9 +122,7 @@ class DependencyResolver:
         sorted_models = []
 
         while queue:
-            model = queue.pop(
-                0
-            )  # Use pop(0) instead of popleft() for deterministic behavior
+            model = queue.pop(0)  # Use pop(0) instead of popleft() for deterministic behavior
             sorted_models.append(model)
 
             # Find all models that depend on the current model and decrement their in-degree
@@ -153,9 +137,7 @@ class DependencyResolver:
 
         if len(sorted_models) != len(in_degree):
             missing_models = sorted(set(in_degree.keys()) - set(sorted_models))
-            self.logger.warning(
-                f"Circular dependencies detected among models: {missing_models}"
-            )
+            self.logger.warning(f"Circular dependencies detected among models: {missing_models}")
             sorted_models.extend(missing_models)
 
         self._sorted_models = sorted_models
@@ -187,6 +169,7 @@ class DependencyResolver:
                 # Fall back to Union for complex cases
                 import operator
                 from functools import reduce
+
                 return reduce(operator.or_, new_args)
         else:
             # For traditional generic types like List[T], Dict[K, V], etc.
@@ -202,15 +185,14 @@ class DependencyResolver:
                             # Fall back to Union for complex multi-type unions
                             import operator
                             from functools import reduce
+
                             return reduce(operator.or_, new_args)
                     # If we can't handle it, return the original annotation
                     self.logger.warning(f"Could not reconstruct type {origin} with args {new_args}: {e}")
                     return annotation
                 raise
 
-    def break_circular_dependencies(
-        self, models: dict[str, type[BaseModel]], circular_models: set[str]
-    ):
+    def break_circular_dependencies(self, models: dict[str, type[BaseModel]], circular_models: set[str]):
         """Replace circular references in models with ForwardRef."""
         for model_name in circular_models:
             model = models[model_name]
@@ -218,7 +200,9 @@ class DependencyResolver:
                 # Modify field.annotation directly
                 field.annotation = self.replace_circular_references(field.annotation, circular_models)
 
-    def resolve_dependencies(self, models: dict[str, type[BaseModel] | type]) -> tuple[dict[str, set[str]], set[str], list[str]]:
+    def resolve_dependencies(
+        self, models: dict[str, type[BaseModel] | type]
+    ) -> tuple[dict[str, set[str]], set[str], list[str]]:
         """Complete workflow for resolving model dependencies."""
         graph = self.build_dependency_graph(models)
         circular_models = self.detect_circular_dependencies(graph)

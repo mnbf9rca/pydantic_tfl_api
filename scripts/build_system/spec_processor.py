@@ -17,6 +17,7 @@ except ImportError:
     # Fallback for when run as script - need to add parent to path
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from build_system.utilities import sanitize_name  # type: ignore[no-redef]
     from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found, no-redef]
@@ -59,10 +60,10 @@ class SpecProcessor:
         specs = []
         try:
             for filename in os.listdir(folder_path):
-                if filename.endswith('.json'):
+                if filename.endswith(".json"):
                     file_path = os.path.join(folder_path, filename)
                     try:
-                        with open(file_path, encoding='utf-8') as f:
+                        with open(file_path, encoding="utf-8") as f:
                             spec = json.load(f)
                             if self.validate_spec(spec):
                                 specs.append(spec)
@@ -135,8 +136,7 @@ class SpecProcessor:
 
         # Sanitize old and new names to match how they will be used in the models
         sanitized_entity_mapping = {
-            old_name: self.sanitize_name(new_name)
-            for old_name, new_name in entity_mapping.items()
+            old_name: self.sanitize_name(new_name) for old_name, new_name in entity_mapping.items()
         }
 
         # Rename entities in the schema components
@@ -167,9 +167,9 @@ class SpecProcessor:
             api_name = self.get_api_name(spec)
 
             # Extract API path from server URL (same logic as original)
-            servers = spec.get('servers', [{}])
-            server_url = servers[0].get('url', '') if servers else ''
-            url_parts = server_url.split('/', 3)
+            servers = spec.get("servers", [{}])
+            server_url = servers[0].get("url", "") if servers else ""
+            url_parts = server_url.split("/", 3)
             api_path = f"/{url_parts[3]}" if len(url_parts) > 3 else ""
 
             logging.info(f"Processing {api_name}")
@@ -281,9 +281,7 @@ class SpecProcessor:
         )
 
         # Create array types from paths
-        array_types = self.create_array_types_from_model_paths(
-            self._combined_paths, self._combined_components
-        )
+        array_types = self.create_array_types_from_model_paths(self._combined_paths, self._combined_components)
 
         # Add array types to combined components
         self._combined_components.update(array_types)

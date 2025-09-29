@@ -160,9 +160,7 @@ def test_create_model_instance_validation_errors(
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
 
     with pytest.raises(ValidationError):
-        client._create_model_instance(
-            Model, response_json_parsed, result_expiry, shared_expiry, response_date_time
-        )
+        client._create_model_instance(Model, response_json_parsed, result_expiry, shared_expiry, response_date_time)
 
 
 @pytest.mark.parametrize(
@@ -175,11 +173,14 @@ def test_create_model_instance_validation_errors(
 )
 def test_client_initialization(api_token, expected_client_type, expected_models):
     # Arrange
-    with patch("pydantic_tfl_api.core.client.RestClient") as MockRestClient, patch(
-        # f"{test_target}.client.Client._load_models", return_value=expected_models
-        "pydantic_tfl_api.core.client.Client._load_models", return_value=expected_models
-
-    ) as MockLoadModels:
+    with (
+        patch("pydantic_tfl_api.core.client.RestClient") as MockRestClient,
+        patch(
+            # f"{test_target}.client.Client._load_models", return_value=expected_models
+            "pydantic_tfl_api.core.client.Client._load_models",
+            return_value=expected_models,
+        ) as MockLoadModels,
+    ):
         MockRestClient.return_value = Mock(spec=RestClient)
 
         # Act
@@ -317,9 +318,7 @@ def test_load_models_returns_non_empty_dict():
         "complex_header",
     ],
 )
-def test_get_maxage_headers_from_cache_control_header(
-    cache_control_header, expected_result
-):
+def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result):
     # Mock Response
     response = Response()
     response.headers.clear()  # Start with empty headers
@@ -369,15 +368,15 @@ def test_deserialize(model_name, response_content, expected_result):
     return_datetime = datetime(2024, 7, 12, 13, 00, 00)
     return_datetime_2 = datetime(2025, 7, 12, 13, 00, 00)
 
-    with patch.object(
-        test_client,
-        "_get_result_expiry",
-        return_value=(return_datetime_2, return_datetime),
-    ), patch.object(
-        test_client, "_get_model", return_value=MockModel
-    ) as mock_get_model, patch.object(
-        test_client, "_create_model_instance", return_value=expected_result
-    ) as mock_create_model_instance:
+    with (
+        patch.object(
+            test_client,
+            "_get_result_expiry",
+            return_value=(return_datetime_2, return_datetime),
+        ),
+        patch.object(test_client, "_get_model", return_value=MockModel) as mock_get_model,
+        patch.object(test_client, "_create_model_instance", return_value=expected_result) as mock_create_model_instance,
+    ):
         result = test_client._deserialize(model_name, Response_Object)
 
     # Assert
@@ -453,10 +452,8 @@ def test_parse_timedelta(value, base_time, expected_result):
             43200,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
-                + timedelta(seconds=86400),
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
-                + timedelta(seconds=43200),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200),
             ),
         ),
         (
@@ -465,8 +462,7 @@ def test_parse_timedelta(value, base_time, expected_result):
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
                 None,
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
-                + timedelta(seconds=43200),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=43200),
             ),
         ),
         (
@@ -474,8 +470,7 @@ def test_parse_timedelta(value, base_time, expected_result):
             None,
             {"Date": "Tue, 15 Nov 1994 12:45:26 GMT"},
             (
-                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT")
-                + timedelta(seconds=86400),
+                parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT") + timedelta(seconds=86400),
                 None,
             ),
         ),
@@ -527,12 +522,15 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
     response.headers.update(date_header)
 
     # Act
-    with patch(
-        "pydantic_tfl_api.core.client.Client._get_maxage_headers_from_cache_control_header",
-        return_value=(s_maxage, maxage),
-    ), patch(
-        "pydantic_tfl_api.core.client.Client._parse_timedelta",
-        side_effect=[expected_result[0], expected_result[1]],
+    with (
+        patch(
+            "pydantic_tfl_api.core.client.Client._get_maxage_headers_from_cache_control_header",
+            return_value=(s_maxage, maxage),
+        ),
+        patch(
+            "pydantic_tfl_api.core.client.Client._parse_timedelta",
+            side_effect=[expected_result[0], expected_result[1]],
+        ),
     ):
         result = Client._get_result_expiry(response)
 
@@ -634,9 +632,7 @@ def test_get_model_raises_error(model_name, models_dict):
 #         )
 
 
-datetime_object_with_time_and_tz_utc = datetime(
-    2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc
-)
+datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
 
 
 @pytest.mark.parametrize(
@@ -676,10 +672,12 @@ def test_deserialize_error(content_type, response_content, expected_result):
     # Mock Response
     response = Response()
     response._content = bytes(json.dumps(response_content), "utf-8")
-    response.headers.update({
-        "Content-Type": content_type,
-        "Date": "Tue, 15 Nov 1994 12:45:26 GMT",
-    })
+    response.headers.update(
+        {
+            "Content-Type": content_type,
+            "Date": "Tue, 15 Nov 1994 12:45:26 GMT",
+        }
+    )
     response.status_code = 404
     response.reason = "Not Found"
     response.url = "/uri"
@@ -694,9 +692,7 @@ def test_deserialize_error(content_type, response_content, expected_result):
 
 
 class SampleClient(Client):
-    def Line_test_endpoint(
-        self, modes: str, detail: bool | None = None, severityLevel: str | None = None
-    ):
+    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None):
         """
         A test query. Gets the line status of for all lines for the given modes
 
@@ -719,28 +715,23 @@ class SampleClient(Client):
             endpoint_args={"detail": detail, "severityLevel": severityLevel},
         )
 
+
 class Test_TfL_connectivity:
     def test_get_line_status_by_mode_rejected_with_invalid_api_key(self):
         api_token = "your_app_key"
         test_client = SampleClient(api_token)
         assert test_client.client.app_key is not None and test_client.client.app_key["app_key"] == api_token
         # should get a 429 error inside an ApiError object
-        result = test_client.Line_test_endpoint(
-            "overground,tube"
-        )
+        result = test_client.Line_test_endpoint("overground,tube")
         assert isinstance(result, ApiError)
         assert result.http_status_code == 429
         assert result.http_status == "Invalid App Key"
-
-
 
     def test_get_line_status_by_mode(self):
         # this API doesnt need authentication so we can use it to test that the API is working
         test_client = SampleClient()
         # should get a list of Line objects
-        result = test_client.Line_test_endpoint(
-            "overground,tube"
-        )
+        result = test_client.Line_test_endpoint("overground,tube")
         assert isinstance(result, ResponseModel)
         response_content = result.content
         assert isinstance(response_content, models.GenericResponseModel)
@@ -765,5 +756,3 @@ def test_get_datetime_from_response_headers(headers, expected_result):
 
     # Assert
     assert result == expected_result
-
-

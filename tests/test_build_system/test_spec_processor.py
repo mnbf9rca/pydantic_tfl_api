@@ -30,30 +30,19 @@ class TestSpecProcessor:
         """Create sample OpenAPI specification data."""
         return {
             "openapi": "3.0.0",
-            "info": {
-                "title": "Test API",
-                "version": "1.0.0"
-            },
-            "servers": [
-                {"url": "https://api.example.com/v1/test"}
-            ],
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "servers": [{"url": "https://api.example.com/v1/test"}],
             "components": {
                 "schemas": {
                     "User": {
                         "type": "object",
-                        "properties": {
-                            "id": {"type": "string"},
-                            "name": {"type": "string"}
-                        },
-                        "required": ["id"]
+                        "properties": {"id": {"type": "string"}, "name": {"type": "string"}},
+                        "required": ["id"],
                     },
                     "Profile-Data": {  # Test name sanitization
                         "type": "object",
-                        "properties": {
-                            "userId": {"$ref": "#/components/schemas/User"},
-                            "bio": {"type": "string"}
-                        }
-                    }
+                        "properties": {"userId": {"$ref": "#/components/schemas/User"}, "bio": {"type": "string"}},
+                    },
                 }
             },
             "paths": {
@@ -64,39 +53,23 @@ class TestSpecProcessor:
                             "200": {
                                 "content": {
                                     "application/json": {
-                                        "schema": {
-                                            "type": "array",
-                                            "items": {"$ref": "#/components/schemas/User"}
-                                        }
+                                        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
                                     }
                                 }
                             }
-                        }
+                        },
                     }
                 },
                 "/users/{id}": {
                     "get": {
                         "operationId": "getUserById",
-                        "parameters": [
-                            {
-                                "name": "id",
-                                "in": "path",
-                                "required": True,
-                                "schema": {"type": "string"}
-                            }
-                        ],
+                        "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "string"}}],
                         "responses": {
-                            "200": {
-                                "content": {
-                                    "application/json": {
-                                        "schema": {"$ref": "#/components/schemas/User"}
-                                    }
-                                }
-                            }
-                        }
+                            "200": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}}
+                        },
                     }
-                }
-            }
+                },
+            },
         }
 
     @pytest.fixture
@@ -112,10 +85,10 @@ class TestSpecProcessor:
         spec1_file = temp_dir / "api1.json"
         spec2_file = temp_dir / "api2.json"
 
-        with open(spec1_file, 'w') as f:
+        with open(spec1_file, "w") as f:
             json.dump(spec1, f)
 
-        with open(spec2_file, 'w') as f:
+        with open(spec2_file, "w") as f:
             json.dump(spec2, f)
 
         # Create a non-JSON file to test filtering
@@ -126,10 +99,10 @@ class TestSpecProcessor:
 
     def test_init_creates_empty_state(self, spec_processor):
         """Test that SpecProcessor initializes with empty state."""
-        assert hasattr(spec_processor, '_specs')
-        assert hasattr(spec_processor, '_combined_components')
-        assert hasattr(spec_processor, '_combined_paths')
-        assert hasattr(spec_processor, '_pydantic_names')
+        assert hasattr(spec_processor, "_specs")
+        assert hasattr(spec_processor, "_combined_components")
+        assert hasattr(spec_processor, "_combined_paths")
+        assert hasattr(spec_processor, "_pydantic_names")
 
         assert spec_processor._specs == []
         assert spec_processor._combined_components == {}
@@ -173,11 +146,7 @@ class TestSpecProcessor:
 
     def test_update_refs_basic(self, spec_processor):
         """Test updating $ref values in a simple object."""
-        obj = {
-            "properties": {
-                "user": {"$ref": "#/components/schemas/User-Data"}
-            }
-        }
+        obj = {"properties": {"user": {"$ref": "#/components/schemas/User-Data"}}}
         entity_mapping = {"User-Data": "UserData"}
 
         spec_processor.update_refs(obj, entity_mapping)
@@ -189,17 +158,10 @@ class TestSpecProcessor:
         obj = {
             "allOf": [
                 {"$ref": "#/components/schemas/Base-Model"},
-                {
-                    "properties": {
-                        "child": {"$ref": "#/components/schemas/Child-Model"}
-                    }
-                }
+                {"properties": {"child": {"$ref": "#/components/schemas/Child-Model"}}},
             ]
         }
-        entity_mapping = {
-            "Base-Model": "BaseModel",
-            "Child-Model": "ChildModel"
-        }
+        entity_mapping = {"Base-Model": "BaseModel", "Child-Model": "ChildModel"}
 
         spec_processor.update_refs(obj, entity_mapping)
 
@@ -208,14 +170,8 @@ class TestSpecProcessor:
 
     def test_update_refs_array(self, spec_processor):
         """Test updating $ref values in arrays."""
-        obj = [
-            {"$ref": "#/components/schemas/Model-One"},
-            {"$ref": "#/components/schemas/Model-Two"}
-        ]
-        entity_mapping = {
-            "Model-One": "ModelOne",
-            "Model-Two": "ModelTwo"
-        }
+        obj = [{"$ref": "#/components/schemas/Model-One"}, {"$ref": "#/components/schemas/Model-Two"}]
+        entity_mapping = {"Model-One": "ModelOne", "Model-Two": "ModelTwo"}
 
         spec_processor.update_refs(obj, entity_mapping)
 
@@ -229,14 +185,9 @@ class TestSpecProcessor:
                 "schemas": {
                     "User-Profile": {
                         "type": "object",
-                        "properties": {
-                            "user": {"$ref": "#/components/schemas/User-Data"}
-                        }
+                        "properties": {"user": {"$ref": "#/components/schemas/User-Data"}},
                     },
-                    "User-Data": {
-                        "type": "object",
-                        "properties": {"id": {"type": "string"}}
-                    }
+                    "User-Data": {"type": "object", "properties": {"id": {"type": "string"}}},
                 }
             }
         }
@@ -246,12 +197,7 @@ class TestSpecProcessor:
         pydantic_names = {}
 
         # Simulate entity mapping
-        spec_processor._entity_mappings = {
-            api_name: {
-                "User-Profile": "UserProfile",
-                "User-Data": "UserData"
-            }
-        }
+        spec_processor._entity_mappings = {api_name: {"User-Profile": "UserProfile", "User-Data": "UserData"}}
 
         spec_processor.update_entities(spec, api_name, pydantic_names)
 
@@ -407,7 +353,7 @@ class TestSpecProcessor:
             "openapi": "3.0.0",
             "info": {"title": "Test", "version": "1.0.0"},
             "components": {"schemas": {}},
-            "paths": {}
+            "paths": {},
         }
         assert spec_processor.validate_spec(valid_spec)
 

@@ -18,14 +18,14 @@ class TestTflMappingsSchema:
     def schema(self):
         """Load the JSON schema for TfL mappings."""
         schema_path = Path(__file__).parent.parent / "schemas" / "tfl_mappings_schema.json"
-        with open(schema_path, encoding='utf-8') as f:
+        with open(schema_path, encoding="utf-8") as f:
             return json.load(f)
 
     @pytest.fixture(scope="class")
     def mappings_data(self):
         """Load the TfL mappings JSON data."""
         mappings_path = Path(__file__).parent.parent / "data" / "tfl_mappings.json"
-        with open(mappings_path, encoding='utf-8') as f:
+        with open(mappings_path, encoding="utf-8") as f:
             return json.load(f)
 
     def test_schema_is_valid(self, schema):
@@ -56,10 +56,11 @@ class TestTflMappingsSchema:
     def test_last_updated_format(self, mappings_data):
         """Test that last_updated is a valid ISO 8601 timestamp."""
         from datetime import datetime
+
         timestamp = mappings_data["last_updated"]
         try:
             # Parse ISO 8601 timestamp
-            datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
         except ValueError:
             pytest.fail(f"Invalid ISO 8601 timestamp: {timestamp}")
 
@@ -73,10 +74,22 @@ class TestTflMappingsSchema:
         url = source["url"]
         assert url.startswith(("http://", "https://")), f"Invalid URL format: {url}"
 
-    @pytest.mark.parametrize("api_name", [
-        "AccidentStats", "AirQuality", "BikePoint", "Journey",
-        "Line", "Mode", "Place", "Road", "Search", "StopPoint", "Vehicle"
-    ])
+    @pytest.mark.parametrize(
+        "api_name",
+        [
+            "AccidentStats",
+            "AirQuality",
+            "BikePoint",
+            "Journey",
+            "Line",
+            "Mode",
+            "Place",
+            "Road",
+            "Search",
+            "StopPoint",
+            "Vehicle",
+        ],
+    )
     def test_known_apis_exist(self, mappings_data, api_name):
         """Test that expected APIs are present in mappings."""
         apis = mappings_data["apis"]
@@ -96,17 +109,21 @@ class TestTflMappingsSchema:
 
         # Check description type when present
         apis_with_invalid_descriptions = [
-            name for name, data in apis.items()
-            if "description" in data and not isinstance(data["description"], str)
+            name for name, data in apis.items() if "description" in data and not isinstance(data["description"], str)
         ]
-        assert not apis_with_invalid_descriptions, f"APIs with non-string descriptions: {apis_with_invalid_descriptions}"
+        assert not apis_with_invalid_descriptions, (
+            f"APIs with non-string descriptions: {apis_with_invalid_descriptions}"
+        )
 
         # Check response mappings type when present
         apis_with_invalid_response_mappings = [
-            name for name, data in apis.items()
+            name
+            for name, data in apis.items()
             if "response_mappings" in data and not isinstance(data["response_mappings"], dict)
         ]
-        assert not apis_with_invalid_response_mappings, f"APIs with non-dict response_mappings: {apis_with_invalid_response_mappings}"
+        assert not apis_with_invalid_response_mappings, (
+            f"APIs with non-dict response_mappings: {apis_with_invalid_response_mappings}"
+        )
 
     def test_mapping_values_are_non_empty_strings(self, mappings_data):
         """Test that all mapping values are non-empty strings."""
@@ -146,7 +163,9 @@ class TestTflMappingsSchema:
         # Assert all validations
         assert not non_string_mappings, f"Non-string mapping values found: {non_string_mappings}"
         assert not empty_mappings, f"Empty mapping values found: {empty_mappings}"
-        assert not non_string_response_mappings, f"Non-string response mapping values found: {non_string_response_mappings}"
+        assert not non_string_response_mappings, (
+            f"Non-string response mapping values found: {non_string_response_mappings}"
+        )
         assert not empty_response_mappings, f"Empty response mapping values found: {empty_response_mappings}"
 
     def test_response_mapping_keys_follow_pattern(self, mappings_data):
@@ -171,9 +190,7 @@ class TestTflMappingsSchema:
         # Calculate total mappings using sum and generator expressions
         regular_mappings = sum(len(api_data["mappings"]) for api_data in apis.values())
         response_mappings = sum(
-            len(api_data["response_mappings"])
-            for api_data in apis.values()
-            if "response_mappings" in api_data
+            len(api_data["response_mappings"]) for api_data in apis.values() if "response_mappings" in api_data
         )
         total_mappings = regular_mappings + response_mappings
 
@@ -199,7 +216,7 @@ class TestTflMappingsSchema:
             "version": "invalid",
             "last_updated": "2025-09-28T18:32:38.586085Z",
             "source": {"url": "https://example.com", "description": "test"},
-            "apis": {"TestAPI": {"mappings": {}}}
+            "apis": {"TestAPI": {"mappings": {}}},
         }
         with pytest.raises(ValidationError):
             validate(instance=invalid_data, schema=schema)

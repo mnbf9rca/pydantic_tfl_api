@@ -19,6 +19,7 @@ class TestDependencyResolver:
     @pytest.fixture
     def sample_models_simple(self):
         """Create simple test models without circular dependencies."""
+
         # Create mock models that simulate Pydantic models
         class User(BaseModel):
             id: str = Field(...)
@@ -33,40 +34,42 @@ class TestDependencyResolver:
     @pytest.fixture
     def sample_models_with_references(self):
         """Create test models with forward references."""
+
         # Create models that reference each other
         class User(BaseModel):
             id: str = Field(...)
-            profile: ForwardRef('Profile') = Field(None)
+            profile: ForwardRef("Profile") = Field(None)
 
         class Profile(BaseModel):
             id: str = Field(...)
-            user: ForwardRef('User') = Field(...)
+            user: ForwardRef("User") = Field(...)
 
         return {"User": User, "Profile": Profile}
 
     @pytest.fixture
     def sample_models_circular(self):
         """Create test models with circular dependencies."""
+
         class Node(BaseModel):
             id: str = Field(...)
-            parent: ForwardRef('Node') = Field(None)
-            children: list[ForwardRef('Node')] = Field(default_factory=list)
+            parent: ForwardRef("Node") = Field(None)
+            children: list[ForwardRef("Node")] = Field(default_factory=list)
 
         class TreeA(BaseModel):
             id: str = Field(...)
-            tree_b: ForwardRef('TreeB') = Field(None)
+            tree_b: ForwardRef("TreeB") = Field(None)
 
         class TreeB(BaseModel):
             id: str = Field(...)
-            tree_a: ForwardRef('TreeA') = Field(None)
+            tree_a: ForwardRef("TreeA") = Field(None)
 
         return {"Node": Node, "TreeA": TreeA, "TreeB": TreeB}
 
     def test_init_creates_empty_state(self, dependency_resolver):
         """Test that DependencyResolver initializes with empty state."""
-        assert hasattr(dependency_resolver, '_dependency_graph')
-        assert hasattr(dependency_resolver, '_circular_models')
-        assert hasattr(dependency_resolver, '_sorted_models')
+        assert hasattr(dependency_resolver, "_dependency_graph")
+        assert hasattr(dependency_resolver, "_circular_models")
+        assert hasattr(dependency_resolver, "_sorted_models")
 
         assert dependency_resolver._dependency_graph == {}
         assert dependency_resolver._circular_models == set()
@@ -101,10 +104,7 @@ class TestDependencyResolver:
     def test_detect_circular_dependencies_self_reference(self, dependency_resolver):
         """Test detection of self-referencing circular dependencies."""
         # Mock a dependency graph with self-reference
-        graph = {
-            "Node": {"Node"},
-            "User": set()
-        }
+        graph = {"Node": {"Node"}, "User": set()}
 
         circular = dependency_resolver.detect_circular_dependencies(graph)
         assert "Node" in circular
@@ -112,22 +112,14 @@ class TestDependencyResolver:
     def test_detect_circular_dependencies_mutual(self, dependency_resolver):
         """Test detection of mutual circular dependencies."""
         # Mock a dependency graph with mutual references
-        graph = {
-            "TreeA": {"TreeB"},
-            "TreeB": {"TreeA"},
-            "Independent": set()
-        }
+        graph = {"TreeA": {"TreeB"}, "TreeB": {"TreeA"}, "Independent": set()}
 
         circular = dependency_resolver.detect_circular_dependencies(graph)
         assert "TreeA" in circular or "TreeB" in circular
 
     def test_topological_sort_simple(self, dependency_resolver):
         """Test topological sorting with simple dependencies."""
-        graph = {
-            "A": set(),
-            "B": {"A"},
-            "C": {"A", "B"}
-        }
+        graph = {"A": set(), "B": {"A"}, "C": {"A", "B"}}
 
         sorted_models = dependency_resolver.topological_sort(graph)
 
@@ -146,7 +138,7 @@ class TestDependencyResolver:
         graph = {
             "A": {"B"},
             "B": {"A"},  # Circular
-            "C": set()
+            "C": set(),
         }
 
         sorted_models = dependency_resolver.topological_sort(graph)
@@ -196,7 +188,7 @@ class TestDependencyResolver:
         assert str in inner_types
 
         # Test ForwardRef
-        forward_ref = ForwardRef('User')
+        forward_ref = ForwardRef("User")
         inner_types = dependency_resolver.extract_inner_types(forward_ref)
         assert forward_ref in inner_types
 
@@ -265,11 +257,9 @@ class TestDependencyResolver:
         assert dependency_resolver.get_circular_models() == set()
         assert dependency_resolver.get_sorted_models() == []
 
-    @pytest.mark.parametrize("models_fixture_name", [
-        "sample_models_simple",
-        "sample_models_with_references",
-        "sample_models_circular"
-    ])
+    @pytest.mark.parametrize(
+        "models_fixture_name", ["sample_models_simple", "sample_models_with_references", "sample_models_circular"]
+    )
     def test_resolve_dependencies_different_scenarios(self, dependency_resolver, request, models_fixture_name):
         """Test dependency resolution with different model scenarios."""
         models = request.getfixturevalue(models_fixture_name)

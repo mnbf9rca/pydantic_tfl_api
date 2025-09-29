@@ -38,7 +38,7 @@ class MappingLoader:
     def _load_schema(self) -> dict[str, Any]:
         """Load and cache the JSON schema."""
         if self._schema is None:
-            with open(self._schema_file, encoding='utf-8') as f:
+            with open(self._schema_file, encoding="utf-8") as f:
                 self._schema = json.load(f)
         assert self._schema is not None  # mypy assertion: schema is loaded
         return self._schema
@@ -46,7 +46,7 @@ class MappingLoader:
     def _load_data(self) -> dict[str, Any]:
         """Load and cache the mappings data."""
         if self._mappings_data is None:
-            with open(self._data_file, encoding='utf-8') as f:
+            with open(self._data_file, encoding="utf-8") as f:
                 self._mappings_data = json.load(f)
         assert self._mappings_data is not None  # mypy assertion: data is loaded
         return self._mappings_data
@@ -154,11 +154,7 @@ class MappingLoader:
             Dictionary containing version, last_updated, and source info
         """
         data = self._load_data()
-        return {
-            "version": data["version"],
-            "last_updated": data["last_updated"],
-            "source": data["source"]
-        }
+        return {"version": data["version"], "last_updated": data["last_updated"], "source": data["source"]}
 
 
 # Convenience functions for backward compatibility

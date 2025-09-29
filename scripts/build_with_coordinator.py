@@ -15,9 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from build_system.build_coordinator import BuildCoordinator
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 def main(spec_path: str, output_path: str) -> None:

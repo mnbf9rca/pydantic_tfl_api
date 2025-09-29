@@ -5,7 +5,8 @@ from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator
 
 # Define a type variable for the content
-T = TypeVar('T', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
+
 
 class ResponseModel(BaseModel, Generic[T]):
     content_expires: datetime | None
@@ -14,7 +15,6 @@ class ResponseModel(BaseModel, Generic[T]):
     content: T  # The content will now be of the specified type
 
     model_config = ConfigDict(from_attributes=True)
-
 
 
 class GenericResponseModel(RootModel[Any]):
@@ -28,22 +28,22 @@ class GenericResponseModel(RootModel[Any]):
     Uses default configuration which is sufficient for handling any JSON
     data structure returned by the TfL API.
     """
+
     model_config = ConfigDict(from_attributes=True)
 
 
-
 class ApiError(BaseModel):
-    timestamp_utc: datetime = Field(alias='timestampUtc')
-    exception_type: str = Field(alias='exceptionType')
-    http_status_code: int = Field(alias='httpStatusCode')
-    http_status: str = Field(alias='httpStatus')
-    relative_uri: str = Field(alias='relativeUri')
-    message: str = Field(alias='message')
+    timestamp_utc: datetime = Field(alias="timestampUtc")
+    exception_type: str = Field(alias="exceptionType")
+    http_status_code: int = Field(alias="httpStatusCode")
+    http_status: str = Field(alias="httpStatus")
+    relative_uri: str = Field(alias="relativeUri")
+    message: str = Field(alias="message")
 
-    @field_validator('timestamp_utc', mode='before')
+    @field_validator("timestamp_utc", mode="before")
     @classmethod
     def parse_timestamp(cls, v):
         return v if isinstance(v, datetime) else parsedate_to_datetime(v)
         # return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
 
-    model_config = {'populate_by_name': True}
+    model_config = {"populate_by_name": True}

@@ -46,6 +46,7 @@ class TestBasicFunctionality:
     def api_health_check(self):
         """Skip tests if TfL API is unavailable."""
         import requests
+
         with suppress(Exception):
             response = requests.get("https://api.tfl.gov.uk/", timeout=10)
             if response.status_code == 200:
@@ -104,7 +105,9 @@ class TestBasicFunctionality:
         """Test JourneyClient can query TfL and parse response."""
         client = JourneyClient()
         # Use specific station codes to avoid ambiguity
-        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu("940GZZLUKSX", "940GZZLUVIC")
+        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "940GZZLUKSX", "940GZZLUVIC"
+        )
 
         # Should parse without errors (ResponseModel or ApiError both indicate parsing worked)
         assert isinstance(result, (ResponseModel, ApiError)), f"Expected ResponseModel or ApiError, got {type(result)}"
@@ -117,7 +120,9 @@ class TestBasicFunctionality:
     def test_journey_client_invalid_station_codes(self, api_health_check):
         """Test JourneyClient returns ApiError for ambiguous or invalid station codes."""
         client = JourneyClient()
-        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu("INVALID_CODE", "940GZZLUXXX")
+        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "INVALID_CODE", "940GZZLUXXX"
+        )
 
         # Should return ApiError for invalid/ambiguous station codes
         assert isinstance(result, ApiError), f"Expected ApiError for invalid station codes, got {type(result)}"
@@ -130,6 +135,5 @@ class TestBasicFunctionality:
 
         # Should return ApiError for invalid key
         assert isinstance(result, ApiError), f"Expected ApiError for invalid key, got {type(result)}"
-        assert hasattr(result, 'http_status_code'), "ApiError should have status code"
-        assert hasattr(result, 'http_status'), "ApiError should have status message"
-
+        assert hasattr(result, "http_status_code"), "ApiError should have status code"
+        assert hasattr(result, "http_status"), "ApiError should have status message"

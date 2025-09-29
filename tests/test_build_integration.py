@@ -71,7 +71,7 @@ class TestBuildIntegration:
         required_dirs = {
             "models": "Model definitions",
             "endpoints": "API client endpoints",
-            "core": "Core infrastructure files"
+            "core": "Core infrastructure files",
         }
 
         for dir_name, description in required_dirs.items():
@@ -86,37 +86,53 @@ class TestBuildIntegration:
             init_file = dir_path / "__init__.py"
             assert init_file.exists(), f"Missing __init__.py in {dir_name}"
 
-    @pytest.mark.parametrize("model_type,sample_file,content_markers", [
-        # Test a complex BaseModel
-        ("BaseModel", "models/Line.py", [
-            "class Line(BaseModel)",
-            "id: str | None = Field(None)",     # Has ID field with modern syntax
-            "name: str | None = Field(None)",   # Has name field with modern syntax
-            "model_config = ConfigDict",        # Has Pydantic config
-        ]),
-
-        # Test an Enum has values
-        ("Enum", "models/CategoryEnum.py", [
-            "class CategoryEnum(Enum)",
-            "REALTIME =",                       # Has enum value
-            "INFORMATION =",                    # Has another value
-        ]),
-
-        # Test a RootModel array
-        ("RootModel", "models/LineArray.py", [
-            "class LineArray(RootModel",
-            "list[Line]",                       # References actual model type
-            "from .Line import Line",           # Imports the model
-        ]),
-
-        # Test an endpoint client
-        ("Client", "endpoints/LineClient.py", [
-            "class LineClient",
-            "_send_request_and_deserialize",    # Uses base client method
-            "def Line",                         # Has at least one API method
-            "-> ResponseModel",                 # Returns proper response types
-        ]),
-    ])
+    @pytest.mark.parametrize(
+        "model_type,sample_file,content_markers",
+        [
+            # Test a complex BaseModel
+            (
+                "BaseModel",
+                "models/Line.py",
+                [
+                    "class Line(BaseModel)",
+                    "id: str | None = Field(None)",  # Has ID field with modern syntax
+                    "name: str | None = Field(None)",  # Has name field with modern syntax
+                    "model_config = ConfigDict",  # Has Pydantic config
+                ],
+            ),
+            # Test an Enum has values
+            (
+                "Enum",
+                "models/CategoryEnum.py",
+                [
+                    "class CategoryEnum(Enum)",
+                    "REALTIME =",  # Has enum value
+                    "INFORMATION =",  # Has another value
+                ],
+            ),
+            # Test a RootModel array
+            (
+                "RootModel",
+                "models/LineArray.py",
+                [
+                    "class LineArray(RootModel",
+                    "list[Line]",  # References actual model type
+                    "from .Line import Line",  # Imports the model
+                ],
+            ),
+            # Test an endpoint client
+            (
+                "Client",
+                "endpoints/LineClient.py",
+                [
+                    "class LineClient",
+                    "_send_request_and_deserialize",  # Uses base client method
+                    "def Line",  # Has at least one API method
+                    "-> ResponseModel",  # Returns proper response types
+                ],
+            ),
+        ],
+    )
     def test_sample_models_have_meaningful_content(self, build_output, model_type, sample_file, content_markers):
         """Test that different model types contain actual content, not empty shells."""
         file_path = build_output.path / sample_file
@@ -154,7 +170,7 @@ class TestBuildIntegration:
                 str(build_output.path),
                 quiet=1,  # Suppress normal output
                 force=True,  # Compile even if .pyc exists
-                legacy=False  # Use __pycache__ directory
+                legacy=False,  # Use __pycache__ directory
             )
 
         finally:
@@ -169,14 +185,13 @@ class TestBuildIntegration:
         # Check for syntax errors in the output
         assert "SyntaxError" not in output, f"Syntax errors found in generated code:\n{output}"
 
-
     def test_model_imports_resolve_correctly(self, build_output):
         """Test that models can import their dependencies."""
         # Check a few files that we expect to have imports
         files_with_imports = [
-            build_output.path / "models" / "LineArray.py",      # Imports Line
-            build_output.path / "models" / "Place.py",          # Self-referential
-            build_output.path / "models" / "Journey.py",        # Complex dependencies
+            build_output.path / "models" / "LineArray.py",  # Imports Line
+            build_output.path / "models" / "Place.py",  # Self-referential
+            build_output.path / "models" / "Journey.py",  # Complex dependencies
         ]
 
         models_dir = build_output.path / "models"
@@ -188,7 +203,7 @@ class TestBuildIntegration:
             content = file_path.read_text()
 
             # Find relative imports: from .SomeModel import SomeModel
-            import_pattern = r'from \.([\w]+) import'
+            import_pattern = r"from \.([\w]+) import"
             imports = re.findall(import_pattern, content)
 
             for module_name in imports:
@@ -223,10 +238,10 @@ class TestBuildIntegration:
 
         # Should show processing of major components
         progress_indicators = [
-            "Processing",      # Shows it's working on files
-            "Created",         # Shows models being created
+            "Processing",  # Shows it's working on files
+            "Created",  # Shows models being created
             "Handling dependencies",  # Shows dependency resolution
-            "Saving models",   # Shows file writing
+            "Saving models",  # Shows file writing
         ]
 
         for indicator in progress_indicators:

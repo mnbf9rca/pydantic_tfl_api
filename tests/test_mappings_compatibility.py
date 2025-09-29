@@ -6,13 +6,13 @@ for existing code that depends on the legacy mappings format.
 """
 
 
-
 class TestMappingsBackwardCompatibility:
     """Test backward compatibility of the new mapping system."""
 
     def test_load_tfl_mappings_function_exists(self):
         """Test that the load_tfl_mappings function can be imported."""
         from scripts.mapping_loader import load_tfl_mappings
+
         assert callable(load_tfl_mappings)
 
     def test_legacy_format_structure(self):
@@ -26,8 +26,17 @@ class TestMappingsBackwardCompatibility:
 
         # Should have expected APIs
         expected_apis = [
-            "AccidentStats", "AirQuality", "BikePoint", "Journey",
-            "Line", "Mode", "Place", "Road", "Search", "StopPoint", "Vehicle"
+            "AccidentStats",
+            "AirQuality",
+            "BikePoint",
+            "Journey",
+            "Line",
+            "Mode",
+            "Place",
+            "Road",
+            "Search",
+            "StopPoint",
+            "Vehicle",
         ]
 
         # Validate all expected APIs exist

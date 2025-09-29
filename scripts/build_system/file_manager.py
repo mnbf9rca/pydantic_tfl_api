@@ -68,16 +68,12 @@ class FileManager:
                 )
 
             # Add ResponseModelName Literal type
-            model_names_for_literal = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
+            model_names_for_literal = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
             init_f.write("from typing import Literal\n\n")
-            init_f.write(
-                f"ResponseModelName = Literal[\n    {model_names_for_literal}\n]\n\n"
-            )
+            init_f.write(f"ResponseModelName = Literal[\n    {model_names_for_literal}\n]\n\n")
 
-            model_names = ',\n    '.join(f'"{key}"' for key in sorted(models.keys()))
-            init_f.write(
-                f"__all__ = [\n    {model_names}\n]\n"
-            )
+            model_names = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
+            init_f.write(f"__all__ = [\n    {model_names}\n]\n")
 
         # Write enums after saving the models
         self._write_enum_files(models, models_dir)
@@ -170,7 +166,7 @@ class FileManager:
         init_f: TextIOWrapper,
         models: dict[str, type[BaseModel]],
         models_dir: str,
-        sorted_models: list[str] | None = None
+        sorted_models: list[str] | None = None,
     ):
         """
         Write import statements in dependency-aware order to minimize forward references.
@@ -253,7 +249,9 @@ class FileManager:
 
         return inner_type, key_type, value_type
 
-    def _collect_type_imports(self, type_obj: Any, models: dict[str, type[BaseModel]], typing_imports: set[str], module_imports: set[str]) -> str:
+    def _collect_type_imports(
+        self, type_obj: Any, models: dict[str, type[BaseModel]], typing_imports: set[str], module_imports: set[str]
+    ) -> str:
         """Collect imports for a given type and return its name."""
         built_in_types = get_builtin_types()
         type_name = getattr(type_obj, "__name__", None)
@@ -267,7 +265,9 @@ class FileManager:
 
         return type_name or "Any"
 
-    def _generate_list_dict_class_definition(self, model_type: str, sanitized_model_name: str, type_names: dict[str, str]) -> str:
+    def _generate_list_dict_class_definition(
+        self, model_type: str, sanitized_model_name: str, type_names: dict[str, str]
+    ) -> str:
         """Generate class definition for list/dict models."""
         if model_type == "list":
             return f"class {sanitized_model_name}(RootModel[list[{type_names['inner']}]]):\n"
@@ -276,8 +276,14 @@ class FileManager:
         else:
             raise ValueError("Model is not a list or dict model.")
 
-    def _write_imports_and_class(self, model_file: TextIOWrapper, typing_imports: set[str], module_imports: set[str],
-                               class_definition: str, sanitized_model_name: str) -> None:
+    def _write_imports_and_class(
+        self,
+        model_file: TextIOWrapper,
+        typing_imports: set[str],
+        module_imports: set[str],
+        class_definition: str,
+        sanitized_model_name: str,
+    ) -> None:
         """Write all imports and class definition to the model file."""
         # Write typing imports
         if typing_imports:
@@ -321,14 +327,16 @@ class FileManager:
         # Handle imports and get type names
         type_names = {}
         if model_type == "list":
-            type_names['inner'] = self._collect_type_imports(inner_type, models, typing_imports, module_imports)
+            type_names["inner"] = self._collect_type_imports(inner_type, models, typing_imports, module_imports)
         elif model_type == "dict":
-            type_names['key'] = self._collect_type_imports(key_type, models, typing_imports, module_imports)
-            type_names['value'] = self._collect_type_imports(value_type, models, typing_imports, module_imports)
+            type_names["key"] = self._collect_type_imports(key_type, models, typing_imports, module_imports)
+            type_names["value"] = self._collect_type_imports(value_type, models, typing_imports, module_imports)
 
         # Generate and write class using helper functions
         class_definition = self._generate_list_dict_class_definition(model_type, sanitized_model_name, type_names)
-        self._write_imports_and_class(model_file, typing_imports, module_imports, class_definition, sanitized_model_name)
+        self._write_imports_and_class(
+            model_file, typing_imports, module_imports, class_definition, sanitized_model_name
+        )
 
     def _handle_enum_model(
         self,
@@ -357,10 +365,9 @@ class FileManager:
 
         # Only process typing imports if the model has model_fields (i.e., it's a pydantic model)
         typing_imports = []
-        if hasattr(model, 'model_fields'):
+        if hasattr(model, "model_fields"):
             typing_imports = sorted(
-                self._determine_typing_imports(model.model_fields, models, circular_models)
-                - get_builtin_types()
+                self._determine_typing_imports(model.model_fields, models, circular_models) - get_builtin_types()
             )
 
         import_set = set()
@@ -383,7 +390,7 @@ class FileManager:
                 import_set.add(f"from .{ref_model} import {ref_model}")
 
         # Add Enum imports only if model has model_fields
-        if hasattr(model, 'model_fields'):
+        if hasattr(model, "model_fields"):
             import_set.update(self._find_enum_imports(model))
 
         # Write imports in proper order: relative imports first, then pydantic, then typing
@@ -398,8 +405,8 @@ class FileManager:
         # Write class definition
         if is_root_model:
             # Get the root annotation for RootModel
-            if hasattr(model, 'model_fields') and 'root' in model.model_fields:
-                root_annotation = model.model_fields['root'].annotation
+            if hasattr(model, "model_fields") and "root" in model.model_fields:
+                root_annotation = model.model_fields["root"].annotation
                 type_str = self._get_type_str(root_annotation, models)
                 model_file.write(f"class {sanitized_model_name}(RootModel[{type_str}]):\n")
             else:
@@ -407,7 +414,7 @@ class FileManager:
                 model_file.write(f"class {sanitized_model_name}(RootModel[list]):\n")
         else:
             model_file.write(f"class {sanitized_model_name}(BaseModel):\n")
-            if hasattr(model, 'model_fields'):
+            if hasattr(model, "model_fields"):
                 self._write_model_fields(model_file, model, models, circular_models)
 
         # Pydantic model config
@@ -424,12 +431,12 @@ class FileManager:
             inner_types = extract_inner_types(field.annotation)
             for inner_type in inner_types:
                 if isinstance(inner_type, type) and issubclass(inner_type, Enum):
-                    import_set.add(
-                        f"from .{inner_type.__name__} import {inner_type.__name__}"
-                    )
+                    import_set.add(f"from .{inner_type.__name__} import {inner_type.__name__}")
         return import_set
 
-    def _resolve_forward_refs_in_annotation(self, annotation: Any, models: dict[str, type[BaseModel]], circular_models: set[str]) -> str:
+    def _resolve_forward_refs_in_annotation(
+        self, annotation: Any, models: dict[str, type[BaseModel]], circular_models: set[str]
+    ) -> str:
         """
         Recursively resolve ForwardRef in an annotation to a string representation,
         handling Optional, List, and other generics, and quoting forward references.
@@ -448,7 +455,9 @@ class FileManager:
                 return f"{resolved_inner} | None"
             else:
                 # General union type (X | Y | Z)
-                resolved_types = [self._resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in union_args]
+                resolved_types = [
+                    self._resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in union_args
+                ]
                 return " | ".join(resolved_types)
 
         # Handle Optional as Union[T, NoneType] and convert it to T | None
@@ -460,14 +469,20 @@ class FileManager:
         if origin is None:
             # Base case: if it's a ForwardRef, return it quoted
             if isinstance(annotation, ForwardRef):
-                return f"'{annotation.__forward_arg__}'" if annotation.__forward_arg__ in circular_models else annotation.__forward_arg__
+                return (
+                    f"'{annotation.__forward_arg__}'"
+                    if annotation.__forward_arg__ in circular_models
+                    else annotation.__forward_arg__
+                )
             # Handle basic types including None
             if annotation is type(None):
                 return "None"
             return annotation.__name__ if hasattr(annotation, "__name__") else str(annotation)
 
         # For generics like List, Dict, etc., resolve the inner types
-        resolved_args = ", ".join(self._resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args)
+        resolved_args = ", ".join(
+            self._resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in args
+        )
         return f"{origin.__name__}[{resolved_args}]"
 
     def _write_model_fields(
@@ -497,9 +512,7 @@ class FileManager:
                     f"    {sanitized_field_name}: {field_type} = Field({field_default}, alias='{field.alias}')\n"
                 )
             else:
-                model_file.write(
-                    f"    {sanitized_field_name}: {field_type} = Field({field_default})\n"
-                )
+                model_file.write(f"    {sanitized_field_name}: {field_type} = Field({field_default})\n")
 
     def _write_enum_files(self, models: dict[str, type[BaseModel]], models_dir: str):
         """Write enum files directly from the model's fields."""
@@ -520,9 +533,7 @@ class FileManager:
                                 ef.write("from enum import Enum\n\n\n")
                                 ef.write(f"class {enum_name}(Enum):\n")
                                 for enum_member in inner_type:
-                                    ef.write(
-                                        f"    {enum_member.name} = '{enum_member.value}'\n"
-                                    )
+                                    ef.write(f"    {enum_member.name} = '{enum_member.value}'\n")
 
     def _get_type_str(self, annotation: Any, models: dict[str, type[BaseModel]]) -> str:
         """Convert the annotation to a valid Python type string for writing to a file, handling model references."""
@@ -600,7 +611,7 @@ class FileManager:
             for type_name in typing_all:
                 # Match only as standalone identifiers: preceded/followed by non-identifier chars
                 # This prevents "Type" from matching within "PathAttribute"
-                pattern = rf'\b{re.escape(type_name)}\b'
+                pattern = rf"\b{re.escape(type_name)}\b"
                 if re.search(pattern, field_annotation):
                     import_set.add(type_name)
 

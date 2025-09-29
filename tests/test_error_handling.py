@@ -37,7 +37,7 @@ class TestErrorHandling:
         """Test that network timeouts propagate to caller."""
         client = LineClient()
 
-        with patch('requests.Session.request') as mock_request:
+        with patch("requests.Session.request") as mock_request:
             mock_request.side_effect = Timeout("Connection timed out")
 
             # Should raise Timeout exception, not catch it
@@ -48,7 +48,7 @@ class TestErrorHandling:
         """Test that connection errors propagate to caller."""
         client = LineClient()
 
-        with patch('requests.Session.request') as mock_request:
+        with patch("requests.Session.request") as mock_request:
             mock_request.side_effect = ConnectionError("Connection refused")
 
             # Should raise ConnectionError exception, not catch it
@@ -67,7 +67,7 @@ class TestErrorHandling:
         mock_response.headers = {"content-type": "text/html", "Date": "Sat, 28 Sep 2025 18:00:00 GMT"}
         mock_response.json.side_effect = ValueError("No JSON object could be decoded")
 
-        with patch('requests.Session.request') as mock_request:
+        with patch("requests.Session.request") as mock_request:
             mock_request.return_value = mock_response
 
             result = client.MetaModes()

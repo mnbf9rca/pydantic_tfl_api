@@ -46,7 +46,7 @@ class TestSanitizeName:
             "  Leading   Trailing  ",
             "Single",
             "two words",
-            "THREE WORD CASE"
+            "THREE WORD CASE",
         ]
 
         for input_name in test_inputs:
@@ -102,7 +102,10 @@ class TestCleanEnumName:
     def test_trailing_underscore_removed(self):
         """REGRESSION: Test that trailing underscores are removed from enum names."""
         # This prevents the "PLANNED___SUBJECT_TO_FEASIBILITY_AND_CONSULTATION_" bug
-        assert clean_enum_name("Planned - Subject to feasibility and consultation.") == "PLANNED___SUBJECT_TO_FEASIBILITY_AND_CONSULTATION"
+        assert (
+            clean_enum_name("Planned - Subject to feasibility and consultation.")
+            == "PLANNED___SUBJECT_TO_FEASIBILITY_AND_CONSULTATION"
+        )
         assert clean_enum_name("test value.") == "TEST_VALUE"
         assert clean_enum_name("trailing dot...") == "TRAILING_DOT"
 
@@ -116,15 +119,18 @@ class TestCleanEnumName:
 class TestRegressionPrevention:
     """Specific regression tests for known issues."""
 
-    @pytest.mark.parametrize("input_name,expected", [
-        ("Lift Disruptions", "LiftDisruptions"),
-        ("Air Quality", "AirQuality"),
-        ("Bike Point", "BikePoint"),
-        ("Stop Point", "StopPoint"),
-        ("Road Disruptions", "RoadDisruptions"),
-        ("Vehicle Match", "VehicleMatch"),
-        ("Search Response", "SearchResponse"),
-    ])
+    @pytest.mark.parametrize(
+        "input_name,expected",
+        [
+            ("Lift Disruptions", "LiftDisruptions"),
+            ("Air Quality", "AirQuality"),
+            ("Bike Point", "BikePoint"),
+            ("Stop Point", "StopPoint"),
+            ("Road Disruptions", "RoadDisruptions"),
+            ("Vehicle Match", "VehicleMatch"),
+            ("Search Response", "SearchResponse"),
+        ],
+    )
     def test_known_problematic_api_names(self, input_name, expected):
         """Test specific API names that have caused issues."""
         result = sanitize_name(input_name)

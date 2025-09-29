@@ -31,6 +31,7 @@ from requests import Response
 #     from urllib import urlencode
 # from config import base_url
 
+
 class RestClient:
     """RestClient.
 
@@ -60,4 +61,3 @@ class RestClient:
             params = {}
         # drop params that are None
         return urlencode({k: v for k, v in params.items() if v is not None})
-

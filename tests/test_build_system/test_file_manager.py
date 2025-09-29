@@ -30,6 +30,7 @@ class TestFileManager:
     @pytest.fixture
     def sample_models(self):
         """Create sample models for testing file operations."""
+
         class User(BaseModel):
             id: str = Field(...)
             name: str = Field(...)
@@ -46,40 +47,26 @@ class TestFileManager:
             ACTIVE = "active"
             INACTIVE = "inactive"
 
-        return {
-            "User": User,
-            "Profile": Profile,
-            "UserArray": UserArray,
-            "StatusEnum": StatusEnum
-        }
+        return {"User": User, "Profile": Profile, "UserArray": UserArray, "StatusEnum": StatusEnum}
 
     @pytest.fixture
     def sample_dependency_graph(self):
         """Create sample dependency graph for testing."""
-        return {
-            "User": set(),
-            "Profile": {"User"},
-            "UserArray": {"User"},
-            "StatusEnum": set()
-        }
+        return {"User": set(), "Profile": {"User"}, "UserArray": {"User"}, "StatusEnum": set()}
 
     def test_init_creates_empty_state(self, file_manager):
         """Test that FileManager initializes properly."""
-        assert hasattr(file_manager, '_generated_files')
+        assert hasattr(file_manager, "_generated_files")
         assert isinstance(file_manager._generated_files, list)
 
-    def test_save_models_creates_directory_structure(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_models_creates_directory_structure(
+        self, file_manager, temp_dir, sample_models, sample_dependency_graph
+    ):
         """Test that save_models creates the expected directory structure."""
         circular_models = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
-        file_manager.save_models(
-            sample_models,
-            str(temp_dir),
-            sample_dependency_graph,
-            circular_models,
-            sorted_models
-        )
+        file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
 
         # Check that models directory was created
         models_dir = temp_dir / "models"
@@ -95,13 +82,7 @@ class TestFileManager:
         circular_models = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
-        file_manager.save_models(
-            sample_models,
-            str(temp_dir),
-            sample_dependency_graph,
-            circular_models,
-            sorted_models
-        )
+        file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
 
         models_dir = temp_dir / "models"
 
@@ -117,11 +98,7 @@ class TestFileManager:
         sorted_models = ["User"]
 
         file_manager.save_models(
-            {"User": sample_models["User"]},
-            str(temp_dir),
-            {"User": set()},
-            circular_models,
-            sorted_models
+            {"User": sample_models["User"]}, str(temp_dir), {"User": set()}, circular_models, sorted_models
         )
 
         user_file = temp_dir / "models" / "User.py"
@@ -145,7 +122,7 @@ class TestFileManager:
             str(temp_dir),
             {"User": set(), "UserArray": {"User"}},
             circular_models,
-            sorted_models
+            sorted_models,
         )
 
         array_file = temp_dir / "models" / "UserArray.py"
@@ -167,7 +144,7 @@ class TestFileManager:
             str(temp_dir),
             {"StatusEnum": set()},
             circular_models,
-            sorted_models
+            sorted_models,
         )
 
         enum_file = temp_dir / "models" / "StatusEnum.py"
@@ -179,7 +156,9 @@ class TestFileManager:
         assert "ACTIVE = 'active'" in content
         assert "INACTIVE = 'inactive'" in content
 
-    def test_save_models_with_circular_dependencies(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_models_with_circular_dependencies(
+        self, file_manager, temp_dir, sample_models, sample_dependency_graph
+    ):
         """Test that models with circular dependencies have model_rebuild() calls."""
         circular_models = {"User"}  # Simulate User having circular dependency
         sorted_models = ["User", "Profile"]
@@ -189,7 +168,7 @@ class TestFileManager:
             str(temp_dir),
             sample_dependency_graph,
             circular_models,
-            sorted_models
+            sorted_models,
         )
 
         user_file = temp_dir / "models" / "User.py"
@@ -203,13 +182,7 @@ class TestFileManager:
         circular_models = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
 
-        file_manager.save_models(
-            sample_models,
-            str(temp_dir),
-            sample_dependency_graph,
-            circular_models,
-            sorted_models
-        )
+        file_manager.save_models(sample_models, str(temp_dir), sample_dependency_graph, circular_models, sorted_models)
 
         init_file = temp_dir / "models" / "__init__.py"
         content = init_file.read_text()
@@ -266,7 +239,7 @@ class TestFileManager:
         content = init_file.read_text()
 
         # Should maintain the specified order
-        lines = content.strip().split('\n')
+        lines = content.strip().split("\n")
         import_lines = [line for line in lines if line.startswith("from .")]
 
         assert import_lines[0] == "from .A import A"
@@ -294,7 +267,7 @@ class TestFileManager:
             str(temp_dir),
             sample_dependency_graph,
             circular_models,
-            sorted_models
+            sorted_models,
         )
 
         generated_files = file_manager.get_generated_files()
@@ -335,11 +308,7 @@ class TestFileManager:
         sorted_models = ["User"]
 
         file_manager.save_models(
-            {"User": sample_models["User"]},
-            str(temp_dir),
-            {"User": set()},
-            circular_models,
-            sorted_models
+            {"User": sample_models["User"]}, str(temp_dir), {"User": set()}, circular_models, sorted_models
         )
 
         user_file = temp_dir / "models" / "User.py"
@@ -361,11 +330,7 @@ class TestFileManager:
         sorted_models = ["User"]
 
         file_manager.save_models(
-            {"User": sample_models["User"]},
-            str(temp_dir),
-            {"User": set()},
-            circular_models,
-            sorted_models
+            {"User": sample_models["User"]}, str(temp_dir), {"User": set()}, circular_models, sorted_models
         )
 
         # File should have new content
@@ -384,11 +349,7 @@ class TestFileManager:
         sorted_models = ["TestModel"]
 
         file_manager.save_models(
-            {"TestModel": TestModel},
-            str(temp_dir),
-            {"TestModel": set()},
-            circular_models,
-            sorted_models
+            {"TestModel": TestModel}, str(temp_dir), {"TestModel": set()}, circular_models, sorted_models
         )
 
         test_file = temp_dir / "models" / "TestModel.py"
@@ -416,7 +377,7 @@ class TestFileManager:
             str(temp_dir),
             {"PathAttribute": set(), "TestModel": {"PathAttribute"}},
             circular_models,
-            sorted_models
+            sorted_models,
         )
 
         test_file = temp_dir / "models" / "TestModel.py"

@@ -147,9 +147,7 @@ class ModelBuilder:
                     # Get the referenced model and create a list type
                     ref_model = self.models[ref_model_name]
                     self.models[sanitized_name] = list[ref_model]  # type: ignore[valid-type]
-                    self.logger.info(
-                        f"Created array model: {sanitized_name} -> list[{ref_model_name}]"
-                    )
+                    self.logger.info(f"Created array model: {sanitized_name} -> list[{ref_model_name}]")
                 else:
                     # Fallback if 'items' is missing or doesn't have a reference
                     self.models[sanitized_name] = list[Any]
@@ -178,7 +176,7 @@ class ModelBuilder:
             "LineServiceType",
             # Note: PlaceCategory already has PlaceCategoryArray, and StopPointCategory
             # is deduplicated to PlaceCategory, so no need for StopPointCategoryArray
-            "StopPointRouteSection"
+            "StopPointRouteSection",
         ]
 
         for model_config in models_needing_arrays:
@@ -198,7 +196,7 @@ class ModelBuilder:
                     array_class = create_model(
                         array_model_name,
                         __base__=RootModel[list[base_model]],  # type: ignore[valid-type]
-                        __config__=ConfigDict(from_attributes=True)
+                        __config__=ConfigDict(from_attributes=True),
                     )
 
                     self.models[array_model_name] = array_class

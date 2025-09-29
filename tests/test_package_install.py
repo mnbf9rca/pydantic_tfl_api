@@ -35,13 +35,7 @@ class TestPackageInstallation:
             shutil.rmtree(dist_dir)
 
         # Build the package
-        result = subprocess.run(
-            ["uv", "build"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            timeout=120
-        )
+        result = subprocess.run(["uv", "build"], cwd=project_root, capture_output=True, text=True, timeout=120)
 
         if result.returncode != 0:
             pytest.fail(f"Package build failed:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}")
@@ -61,10 +55,7 @@ class TestPackageInstallation:
 
             # Create virtual environment
             result = subprocess.run(
-                [sys.executable, "-m", "venv", str(env_dir)],
-                capture_output=True,
-                text=True,
-                timeout=60
+                [sys.executable, "-m", "venv", str(env_dir)], capture_output=True, text=True, timeout=60
             )
 
             if result.returncode != 0:
@@ -80,20 +71,13 @@ class TestPackageInstallation:
 
             # Install the built package
             install_result = subprocess.run(
-                [str(pip_path), "install", str(built_package)],
-                capture_output=True,
-                text=True,
-                timeout=120
+                [str(pip_path), "install", str(built_package)], capture_output=True, text=True, timeout=120
             )
 
             if install_result.returncode != 0:
                 pytest.fail(f"Failed to install package:\n{install_result.stderr}")
 
-            yield {
-                "env_dir": env_dir,
-                "python_path": python_path,
-                "pip_path": pip_path
-            }
+            yield {"env_dir": env_dir, "python_path": python_path, "pip_path": pip_path}
 
     def test_package_builds_successfully(self, built_package):
         """Test that the package builds without errors."""
@@ -108,12 +92,7 @@ class TestPackageInstallation:
         python_path = isolated_env["python_path"]
 
         # Verify installation by listing installed packages
-        result = subprocess.run(
-            [str(python_path), "-m", "pip", "list"],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run([str(python_path), "-m", "pip", "list"], capture_output=True, text=True, timeout=30)
 
         assert result.returncode == 0, f"Failed to list packages: {result.stderr}"
         assert "pydantic-tfl-api" in result.stdout, "Package not found in installed packages"
@@ -127,18 +106,31 @@ class TestPackageInstallation:
             [str(python_path), "-c", "import pydantic_tfl_api; print('Import successful')"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         assert result.returncode == 0, f"Failed to import main package: {result.stderr}"
         assert "Import successful" in result.stdout
 
-    @pytest.mark.parametrize("client", [
-        "LineClient", "StopPointClient", "BikePointClient", "AirQualityClient",
-        "JourneyClient", "PlaceClient", "RoadClient", "SearchClient",
-        "VehicleClient", "ModeClient", "AccidentStatsClient", "CrowdingClient",
-        "OccupancyClient", "LiftDisruptionsClient"
-    ])
+    @pytest.mark.parametrize(
+        "client",
+        [
+            "LineClient",
+            "StopPointClient",
+            "BikePointClient",
+            "AirQualityClient",
+            "JourneyClient",
+            "PlaceClient",
+            "RoadClient",
+            "SearchClient",
+            "VehicleClient",
+            "ModeClient",
+            "AccidentStatsClient",
+            "CrowdingClient",
+            "OccupancyClient",
+            "LiftDisruptionsClient",
+        ],
+    )
     def test_client_imports(self, isolated_env, client):
         """Test that individual client classes can be imported."""
         python_path = isolated_env["python_path"]
@@ -147,16 +139,19 @@ class TestPackageInstallation:
             [str(python_path), "-c", f"from pydantic_tfl_api import {client}; print('{client} imported')"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         assert result.returncode == 0, f"Failed to import {client}: {result.stderr}"
         assert f"{client} imported" in result.stdout
 
-    @pytest.mark.parametrize("import_stmt", [
-        "from pydantic_tfl_api.core import Client, ResponseModel, ApiError",
-        "from pydantic_tfl_api.models import Line, LineArray, Mode, ModeArray"
-    ])
+    @pytest.mark.parametrize(
+        "import_stmt",
+        [
+            "from pydantic_tfl_api.core import Client, ResponseModel, ApiError",
+            "from pydantic_tfl_api.models import Line, LineArray, Mode, ModeArray",
+        ],
+    )
     def test_core_modules_import(self, isolated_env, import_stmt):
         """Test that individual core modules can be imported."""
         python_path = isolated_env["python_path"]
@@ -165,7 +160,7 @@ class TestPackageInstallation:
             [str(python_path), "-c", f"{import_stmt}; print('Core import successful')"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         assert result.returncode == 0, f"Failed to import core modules: {result.stderr}"
@@ -180,7 +175,7 @@ class TestPackageInstallation:
             [str(python_path), "-c", "import pydantic_tfl_api; print(pydantic_tfl_api.__version__)"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         assert result.returncode == 0, f"Failed to get package version: {result.stderr}"
@@ -193,6 +188,7 @@ class TestPackageInstallation:
 
         # Extract version from pyproject.toml
         import re
+
         version_match = re.search(r'version = "([^"]+)"', content)
         assert version_match, "Could not find version in pyproject.toml"
 
@@ -255,12 +251,7 @@ if not validate_response_content(result):
     exit(1)
 '''
 
-        result = subprocess.run(
-            [str(python_path), "-c", test_script],
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
+        result = subprocess.run([str(python_path), "-c", test_script], capture_output=True, text=True, timeout=60)
 
         print(f"API test output: {result.stdout}")
         if result.stderr:  # sourcery skip: no-conditionals-in-tests
@@ -278,7 +269,7 @@ if not validate_response_content(result):
             [str(python_path), "-c", f"import {dependency}; print('{dependency} available')"],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         assert result.returncode == 0, f"Required dependency {dependency} not available: {result.stderr}"
