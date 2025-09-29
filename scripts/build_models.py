@@ -563,7 +563,11 @@ def handle_regular_model(
         - get_builtin_types()
     )
 
-    import_set = {f"from typing import {', '.join(typing_imports)}"}
+    import_set = set()
+
+    # Add typing imports only if there are any
+    if typing_imports:
+        import_set.add(f"from typing import {', '.join(typing_imports)}")
 
     # Add pydantic imports using helper function
     import_set.add(get_pydantic_imports(sanitized_model_name, is_root_model))
@@ -619,8 +623,23 @@ def resolve_forward_refs_in_annotation(annotation: Any, models: dict[str, type[B
     Recursively resolve ForwardRef in an annotation to a string representation,
     handling Optional, List, and other generics, and quoting forward references.
     """
+    import types
+
     origin = get_origin(annotation)
     args = get_args(annotation)
+
+    # Handle Python 3.10+ union types (X | Y syntax) first
+    if isinstance(annotation, types.UnionType):
+        union_args = annotation.__args__
+        if len(union_args) == 2 and type(None) in union_args:
+            # It's an Optional type (X | None)
+            non_none_arg = union_args[0] if union_args[0] is not type(None) else union_args[1]
+            resolved_inner = resolve_forward_refs_in_annotation(non_none_arg, models, circular_models)
+            return f"{resolved_inner} | None"
+        else:
+            # General union type (X | Y | Z)
+            resolved_types = [resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in union_args]
+            return " | ".join(resolved_types)
 
     # Handle Optional as Union[T, NoneType] and convert it to Optional[T]
     if origin is Union and len(args) == 2 and type(None) in args:
@@ -632,6 +651,9 @@ def resolve_forward_refs_in_annotation(annotation: Any, models: dict[str, type[B
         # Base case: if it's a ForwardRef, return it quoted
         if isinstance(annotation, ForwardRef):
             return f"'{annotation.__forward_arg__}'" if annotation.__forward_arg__ in circular_models else annotation.__forward_arg__
+        # Handle basic types including None
+        if annotation is type(None):
+            return "None"
         return annotation.__name__ if hasattr(annotation, "__name__") else str(annotation)
 
     # For generics like List, Dict, etc., resolve the inner types
@@ -691,13 +713,29 @@ def sanitize_field_name(field_name: str) -> str:
 
 def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
     """Convert the annotation to a valid Python type string for writing to a file, handling model references."""
+    import types
+
     if isinstance(annotation, ForwardRef):
         # Handle ForwardRef directly by returning the forward-referenced name
         return annotation.__forward_arg__
 
     if isinstance(annotation, type):
         # Handle basic types (e.g., int, str, float)
+        if annotation is type(None):
+            return "None"
         return annotation.__name__
+
+    # Handle Python 3.10+ union types (X | Y syntax)
+    if isinstance(annotation, types.UnionType):
+        args = annotation.__args__
+        if len(args) == 2 and type(None) in args:
+            # It's an Optional type (X | None)
+            non_none_arg = args[0] if args[0] is not type(None) else args[1]
+            return f"{get_type_str(non_none_arg, models)} | None"
+        else:
+            # General union type (X | Y | Z)
+            inner_types = " | ".join(get_type_str(arg, models) for arg in args)
+            return inner_types
 
     elif hasattr(annotation, "__origin__"):
         origin = annotation.__origin__
