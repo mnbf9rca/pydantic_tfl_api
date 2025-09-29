@@ -77,22 +77,22 @@ class TestModelBuilder:
         # Test string type
         string_spec = {"type": "string"}
         result = model_builder.map_type(string_spec, "name", components, models)
-        assert result == str
+        assert result is str
 
         # Test integer type
         int_spec = {"type": "integer"}
         result = model_builder.map_type(int_spec, "age", components, models)
-        assert result == int
+        assert result is int
 
         # Test boolean type
         bool_spec = {"type": "boolean"}
         result = model_builder.map_type(bool_spec, "active", components, models)
-        assert result == bool
+        assert result is bool
 
         # Test number type
         number_spec = {"type": "number"}
         result = model_builder.map_type(number_spec, "price", components, models)
-        assert result == float
+        assert result is float
 
     def test_map_array_types(self, model_builder):
         """Test mapping of array types."""
@@ -171,7 +171,7 @@ class TestModelBuilder:
 
         # Should be a list type
         from typing import get_origin
-        assert get_origin(user_array_type) == list
+        assert get_origin(user_array_type) is list
 
     def test_create_pydantic_models_handles_missing_properties(self, model_builder):
         """Test that models with missing properties are handled gracefully."""

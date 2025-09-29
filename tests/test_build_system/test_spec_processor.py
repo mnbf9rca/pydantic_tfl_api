@@ -409,11 +409,11 @@ class TestSpecProcessor:
             "components": {"schemas": {}},
             "paths": {}
         }
-        assert spec_processor.validate_spec(valid_spec) == True
+        assert spec_processor.validate_spec(valid_spec)
 
         # Invalid spec (missing required fields)
         invalid_spec = {"openapi": "3.0.0"}
-        assert spec_processor.validate_spec(invalid_spec) == False
+        assert not spec_processor.validate_spec(invalid_spec)
 
     def test_error_handling_malformed_json(self, spec_processor, temp_dir):
         """Test handling of malformed JSON files."""

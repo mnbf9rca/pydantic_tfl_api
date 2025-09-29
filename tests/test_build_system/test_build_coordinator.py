@@ -1,5 +1,6 @@
 """Tests for BuildCoordinator class that orchestrates the entire build process."""
 
+import contextlib
 import json
 import shutil
 import tempfile
@@ -129,7 +130,7 @@ class TestBuildCoordinator:
 
         # Should have processed the spec correctly
         assert "User" in components
-        assert any("/test/" in path for path in paths.keys())
+        assert any("/test/" in path for path in paths)
 
     def test_load_and_process_specs_empty_directory(self, build_coordinator):
         """Test processing empty specs directory."""
@@ -202,10 +203,8 @@ class TestBuildCoordinator:
     def test_copy_infrastructure_called(self, mock_copy, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test that infrastructure copying is called during build."""
         # Run the full build
-        try:
+        with contextlib.suppress(Exception):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
-        except Exception:
-            pass  # We expect this to fail due to mocking, but that's ok
 
         # Infrastructure copying should have been called
         mock_copy.assert_called_once_with(str(temp_output_dir))
@@ -239,18 +238,18 @@ class TestBuildCoordinator:
         """Test error handling for directory with no valid specs."""
         empty_dir = tempfile.mkdtemp()
         try:
-            with pytest.raises(ValueError, match="No valid specifications found"):
-                with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
-                    build_coordinator.build(empty_dir, str(temp_output_dir))
+            with pytest.raises(ValueError, match="No valid specifications found"), \
+                 patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+                build_coordinator.build(empty_dir, str(temp_output_dir))
         finally:
             shutil.rmtree(empty_dir)
 
     def test_build_error_handling_permission_error(self, build_coordinator, temp_spec_dir):
         """Test error handling for permission errors."""
         # Try to write to a read-only directory (simulate permission error)
-        with pytest.raises((PermissionError, OSError, RuntimeError)):
-            with patch('scripts.build_system.build_coordinator.copy_infrastructure'):
-                build_coordinator.build(str(temp_spec_dir), "/root/no_permission")
+        with pytest.raises((PermissionError, OSError, RuntimeError)), \
+             patch('scripts.build_system.build_coordinator.copy_infrastructure'):
+            build_coordinator.build(str(temp_spec_dir), "/root/no_permission")
 
     def test_get_build_stats(self, build_coordinator, temp_spec_dir, temp_output_dir):
         """Test getting build statistics."""
@@ -292,12 +291,12 @@ class TestBuildCoordinator:
 
         # Validate output
         is_valid = build_coordinator.validate_build_output(str(temp_output_dir))
-        assert is_valid == True
+        assert is_valid
 
     def test_validate_output_missing_directory(self, build_coordinator):
         """Test validation with missing output directory."""
         is_valid = build_coordinator.validate_build_output("/nonexistent/path")
-        assert is_valid == False
+        assert not is_valid
 
     def test_validate_output_incomplete_build(self, build_coordinator, temp_output_dir):
         """Test validation with incomplete build output."""
@@ -305,7 +304,7 @@ class TestBuildCoordinator:
         temp_output_dir.mkdir(exist_ok=True)
 
         is_valid = build_coordinator.validate_build_output(str(temp_output_dir))
-        assert is_valid == False
+        assert not is_valid
 
     def test_set_base_url(self, build_coordinator):
         """Test setting custom base URL."""

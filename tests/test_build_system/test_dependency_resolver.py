@@ -186,7 +186,7 @@ class TestDependencyResolver:
         assert isinstance(sorted_models, list)
 
         # All original models should be in the sorted list
-        for model_name in sample_models_with_references.keys():
+        for model_name in sample_models_with_references:
             assert model_name in sorted_models
 
     def test_extract_inner_types_simple(self, dependency_resolver):
@@ -202,8 +202,6 @@ class TestDependencyResolver:
 
     def test_extract_inner_types_generic(self, dependency_resolver):
         """Test extracting inner types from generic annotations."""
-        from typing import Optional
-
         # Test List[str]
         list_type = list[str]
         inner_types = dependency_resolver.extract_inner_types(list_type)
@@ -211,7 +209,7 @@ class TestDependencyResolver:
         assert str in inner_types
 
         # Test Optional[str] (Union[str, None])
-        optional_type = Optional[str]
+        optional_type = str | None
         inner_types = dependency_resolver.extract_inner_types(optional_type)
         # Should include the origin and inner types
         assert len(inner_types) > 0
@@ -290,5 +288,5 @@ class TestDependencyResolver:
         assert isinstance(sorted_models, list)
 
         # All model names should be in graph
-        for model_name in models.keys():
+        for model_name in models:
             assert model_name in graph

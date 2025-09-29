@@ -194,17 +194,17 @@ class TestExtractListDictTypes:
         """Test extracting types from list arguments."""
         inner_type, key_type, value_type = extract_list_dict_types("list", (str,))
 
-        assert inner_type == str
+        assert inner_type is str
         assert key_type is None
-        assert value_type == str
+        assert value_type is str
 
     def test_extract_dict_types(self):
         """Test extracting types from dict arguments."""
         inner_type, key_type, value_type = extract_list_dict_types("dict", (str, int))
 
-        assert inner_type == int  # For backward compatibility
-        assert key_type == str
-        assert value_type == int
+        assert inner_type is int  # For backward compatibility
+        assert key_type is str
+        assert value_type is int
 
     def test_unsupported_model_type(self):
         """Test error for unsupported model types."""

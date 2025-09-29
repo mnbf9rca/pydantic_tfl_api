@@ -508,7 +508,7 @@ class TestExtractInnerTypes:
     def test_optional_type(self):
         """Test extraction from Optional types."""
 
-        result = extract_inner_types(Optional[str])
+        result = extract_inner_types(str | None)
         assert Optional in result
         assert str in result
 
