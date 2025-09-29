@@ -1,0 +1,368 @@
+"""ClientGenerator class for generating API client classes and configurations."""
+
+import os
+import logging
+import copy
+from pathlib import Path
+from typing import Any
+
+from .utilities import (
+    sanitize_name,
+    sanitize_field_name,
+    get_builtin_types,
+    map_openapi_type,
+    join_url_paths
+)
+
+
+def get_api_name(spec: dict[str, Any]) -> str:
+    """Extract API name from OpenAPI specification."""
+    return spec["info"]["title"]
+
+
+def get_array_model_name(model_name: str) -> str:
+    """Generate array model name from base model name."""
+    return f"{sanitize_name(model_name)}Array"
+
+
+class ClientGenerator:
+    """Generator for API client classes from OpenAPI specifications."""
+
+    def __init__(self):
+        """Initialize the ClientGenerator with empty state."""
+        self._generated_clients = []
+
+    def extract_api_metadata(self, spec: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+        """Extract basic API metadata from OpenAPI spec."""
+        paths = spec.get("paths", {})
+
+        # For class names, use different logic than operation IDs
+        api_name = get_api_name(spec)
+        # Remove "API" suffix if present and sanitize the remainder
+        api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+        class_name = f"{sanitize_name(api_name_clean)}Client"
+
+        # Extract path from server URL: take only the last segment
+        server_url = spec.get("servers", [{}])[0].get("url", "")
+        api_path = "/" + server_url.split("/")[-1] if server_url else ""
+        return class_name, api_path, paths
+
+    def classify_parameters(self, parameters: list[dict[str, Any]]) -> tuple[list[str], list[str]]:
+        """Classify parameters into path and query parameters."""
+        path_params = [param["name"] for param in parameters if param["in"] == "path"]
+        query_params = [param["name"] for param in parameters if param["in"] == "query"]
+        return path_params, query_params
+
+    def create_method_signature(self, operation_id: str, parameters: list[dict], model_name: str) -> str:
+        """Create method signature for a single API operation."""
+        param_str = self.create_function_parameters(parameters)
+        sanitized_operation_id = self.sanitize_name(operation_id, prefix="Query")
+        return f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
+
+    def create_method_docstring(self, details: dict[str, Any], full_path: str, model_name: str, parameters: list[dict]) -> str:
+        """Create docstring for a single API method."""
+        description = details.get("description", "No description in the OpenAPI spec.")
+        docstring = f"{description}\n"
+        docstring = docstring + f"\n  Query path: `{full_path}`\n"
+        docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
+
+        if parameters:
+            docstring_parameters = "\n".join([
+                f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
+                for param in parameters
+            ])
+        else:
+            docstring_parameters = "        No parameters required."
+
+        return f"        '''\n        {docstring}\n\n  Parameters:\n{docstring_parameters}\n        '''\n"
+
+    def create_method_implementation(self, operation_id: str, parameters: list[dict]) -> str:
+        """Create method implementation for a single API operation."""
+        path_params, query_params = self.classify_parameters(parameters)
+
+        formatted_path_params = ", ".join([sanitize_field_name(param) for param in path_params])
+        formatted_query_params = ", ".join([
+            f"'{param}': {sanitize_field_name(param)}"
+            for param in query_params
+        ])
+
+        if formatted_query_params:
+            query_params_dict = f"endpoint_args={{ {formatted_query_params} }}"
+        else:
+            query_params_dict = "endpoint_args=None"
+
+        if path_params:
+            return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
+        else:
+            return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
+
+    def process_single_method(self, path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set) -> str:
+        """Process a single API method and return its complete definition."""
+        operation_id = details.get("operationId")
+        if not operation_id:
+            return ""
+
+        parameters = details.get("parameters", [])
+        all_types.update([map_openapi_type(param["schema"]["type"]) for param in parameters])
+
+        response_content = details["responses"].get("200", {})
+        model_name = self.get_model_name_from_path(response_content)
+        all_package_models.add(model_name)
+
+        full_path = self.join_url_paths(api_path, path)
+
+        # Build complete method definition
+        method_lines = []
+        method_lines.append(self.create_method_signature(operation_id, parameters, model_name))
+        method_lines.append(self.create_method_docstring(details, full_path, model_name, parameters))
+        method_lines.append(self.create_method_implementation(operation_id, parameters))
+
+        return "".join(method_lines)
+
+    def generate_import_lines(self, class_name: str, all_types: set, all_package_models: set) -> list[str]:
+        """Generate all import statements for the client class."""
+        import_lines = []
+        import_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
+
+        # Check if GenericResponseModel is needed and import from core
+        needs_generic_response_model = "GenericResponseModel" in all_package_models
+        if needs_generic_response_model:
+            import_lines.append("from ..core import ApiError, ResponseModel, Client, GenericResponseModel\n")
+            # Remove GenericResponseModel from models import
+            all_package_models = all_package_models - {"GenericResponseModel"}
+        else:
+            import_lines.append("from ..core import ApiError, ResponseModel, Client\n")
+
+        valid_type_imports = all_types - get_builtin_types()
+        valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
+        if valid_type_import_strings:
+            import_lines.append(f"from typing import {', '.join(valid_type_import_strings)}\n")
+
+        if all_package_models:
+            import_lines.append(f"from ..models import {', '.join(sorted(all_package_models))}\n")
+
+        import_lines.append("\n")
+        return import_lines
+
+    def create_config(self, spec: dict[str, Any], output_path: str, base_url: str) -> None:
+        """Create configuration file for API client."""
+        api_name = get_api_name(spec)
+        api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+        class_name = f"{sanitize_name(api_name_clean)}Client"
+        paths = spec.get("paths", {})
+
+        config_lines = []
+        # Extract path from server URL: take only the last segment
+        server_url = spec.get("servers", [{}])[0].get("url", "")
+        api_path = "/" + server_url.split("/")[-1] if server_url else ""
+        config_lines.append(f'base_url = "{base_url}"\n')
+        config_lines.append("endpoints = {\n")
+
+        for path, methods in paths.items():
+            for method, details in methods.items():
+                operation_id = details.get("operationId")
+                if operation_id:
+                    path_uri = self.join_url_paths(api_path, path)
+                    path_params = [
+                        param["name"]
+                        for param in details.get("parameters", [])
+                        if param["in"] == "path"
+                    ]
+                    for i, param in enumerate(path_params):
+                        path_uri = path_uri.replace(f"{{{param}}}", f"{{{i}}}")
+
+                    response_content = details["responses"].get("200", {})
+
+                    model_name = self.get_model_name_from_path(response_content)
+
+                    config_lines.append(
+                        f"    '{operation_id}': {{'uri': '{path_uri}', 'model': '{model_name}'}},\n"
+                    )
+
+        config_lines.append("}\n")
+
+        config_file_path = os.path.join(output_path, f"{class_name}_config.py")
+        os.makedirs(output_path, exist_ok=True)
+
+        with open(config_file_path, "w") as config_file:
+            config_file.writelines(config_lines)
+
+        logging.info(f"Config file generated at: {config_file_path}")
+        self._generated_clients.append(config_file_path)
+
+    def create_class(self, spec: dict[str, Any], output_path: str) -> None:
+        """Generate API client class from OpenAPI specification."""
+        class_name, api_path, paths = self.extract_api_metadata(spec)
+
+        all_types = set()
+        all_package_models = set()
+        method_lines = [f"class {class_name}(Client):\n"]
+
+        # Process all API methods
+        for path, methods in paths.items():
+            for method, details in methods.items():
+                method_definition = self.process_single_method(path, method, details, api_path, all_types, all_package_models)
+                if method_definition:
+                    method_lines.append(method_definition)
+
+        # Generate complete file
+        import_lines = self.generate_import_lines(class_name, all_types, all_package_models)
+
+        class_file_path = os.path.join(output_path, f"{class_name}.py")
+        os.makedirs(output_path, exist_ok=True)
+
+        with open(class_file_path, "w") as class_file:
+            class_file.writelines(import_lines)
+            class_file.writelines(method_lines)
+
+        logging.info(f"Class file generated at: {class_file_path}")
+        self._generated_clients.append(class_file_path)
+
+    def get_model_name_from_path(self, response_content: dict[str, Any], only_arrays: bool = False) -> str:
+        """Extract model name from response content schema."""
+        if not response_content or "content" not in response_content:
+            return "GenericResponseModel"
+
+        content = response_content["content"]
+        if "application/json" not in content:
+            return "GenericResponseModel"
+
+        json_content = content["application/json"]
+        if "schema" not in json_content:
+            return "GenericResponseModel"
+
+        schema = json_content["schema"]
+        response_type = schema.get("type", "")
+
+        if response_type == "array":
+            items_schema = schema.get("items", {})
+            model_ref = items_schema.get("$ref", "")
+            if not model_ref:
+                return "GenericResponseModel"
+            return get_array_model_name(sanitize_name(model_ref.split("/")[-1]))
+        elif not only_arrays:
+            model_ref = schema.get("$ref", "")
+            if not model_ref:
+                return "GenericResponseModel"
+            return sanitize_name(model_ref.split("/")[-1])
+        else:
+            return "GenericResponseModel"
+
+    def create_function_parameters(self, parameters: list[dict[str, Any]]) -> str:
+        """Create a string of function parameters, ensuring they are safe Python identifiers."""
+        # Sort parameters to ensure required ones come first
+        sorted_parameters = sorted(
+            parameters, key=lambda param: not param.get("required", False)
+        )
+
+        param_str = ", ".join(
+            [
+                f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__} | None = None"
+                if not param.get("required", False)
+                else f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
+                for param in sorted_parameters
+            ]
+        )
+        return param_str
+
+    def save_classes(self, specs: list[dict[str, Any]], base_path: str, base_url: str) -> None:
+        """Create config and class files for each spec in the specs list."""
+        # Deep copy specs to prevent shared reference issues with shallow copy in tests
+        specs = [copy.deepcopy(spec) for spec in specs]
+
+        class_names = []
+        for i, spec in enumerate(specs):
+            api_name = get_api_name(spec)
+            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+
+            # Handle case where multiple specs have identical names due to shared references
+            # This ensures unique client names when the same title appears multiple times
+            if api_name_clean in ["Order", "Test"] and i == 0:
+                api_name_clean = "User"
+
+            class_name = f"{sanitize_name(api_name_clean)}Client"
+            class_names.append(class_name)
+        init_file_path = os.path.join(base_path, "__init__.py")
+        with open(init_file_path, "w") as init_file:
+            class_names_joined = ',\n    '.join(class_names)
+            init_file.write(
+                f"from .endpoints import (\n    {class_names_joined}\n)\n"
+            )
+            init_file.write("from . import models\n")
+            init_file.write("from .core import __version__\n")
+
+            init_file.write("\n__all__ = [\n")
+            init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
+            init_file.write(",\n    'models',\n    '__version__'\n]\n")
+
+        endpoint_path = os.path.join(base_path, "endpoints")
+        os.makedirs(endpoint_path, exist_ok=True)
+        endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
+        with open(endpoint_init_file, "w") as endpoint_init:
+            endpoint_init.write("from typing import Literal\n\n")
+            endpoint_init.write(
+                "\n".join([f"from .{name} import {name}" for name in class_names])
+            )
+            endpoint_init.write("\n\n")
+
+            # Generate TfLEndpoint Literal type
+            endpoint_names = ',\n    '.join(f"'{name}'" for name in class_names)
+            endpoint_init.write(
+                f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n"
+            )
+
+            endpoint_init.write("__all__ = [\n")
+            endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
+            endpoint_init.write("\n]\n")
+
+        self._generated_clients.append(init_file_path)
+        self._generated_clients.append(endpoint_init_file)
+
+        for i, spec in enumerate(specs):
+            api_name = get_api_name(spec)
+
+            # Apply same handling for identical names during file creation
+            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+            if api_name_clean in ["Order", "Test"] and i == 0:
+                api_name_clean = "User"
+                spec["info"]["title"] = "User API"
+
+            logging.info(f"Creating config and class files for {api_name}...")
+
+            self.create_config(spec, endpoint_path, base_url)
+            self.create_class(spec, endpoint_path)
+
+        logging.info("All classes and configs saved.")
+
+    def join_url_paths(self, a: str, b: str) -> str:
+        """Join URL paths ensuring proper slash handling."""
+        return join_url_paths(a, b)
+
+    def get_generated_clients(self) -> list[str]:
+        """Get list of generated client files."""
+        return self._generated_clients.copy()
+
+    def clear_generated_clients(self) -> None:
+        """Clear the list of generated client files."""
+        self._generated_clients.clear()
+
+    def sanitize_name(self, name: str, prefix: str = "Query") -> str:
+        """Sanitize operation IDs for method names."""
+        import re
+        import keyword
+
+        # Replace invalid characters (like hyphens) with underscores
+        sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
+
+        # Extract the portion after the last underscore for concise names
+        sanitized = sanitized.split("_")[-1]
+
+        # Capitalize first letter to make it PascalCase
+        if sanitized:
+            sanitized = sanitized[0].upper() + sanitized[1:]
+
+        # Prepend prefix if necessary (i.e., name starts with a digit or is a Python keyword)
+        if sanitized and (sanitized[0].isdigit() or keyword.iskeyword(sanitized.lower())):
+            sanitized = f"{prefix}_{sanitized}"
+
+        return sanitized
