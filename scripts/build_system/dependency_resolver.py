@@ -116,15 +116,14 @@ class DependencyResolver:
         # Filter out built-in types from the graph
         in_degree = {model: 0 for model in sorted_graph if model not in built_in_types}
 
+        # Calculate in-degrees: for each model, count how many other models depend on it
         for model in sorted_graph:
             if model in built_in_types:
                 continue  # Skip built-in types
 
-            for dep in sorted(graph[model]):
-                if dep not in built_in_types:
-                    if dep not in in_degree:
-                        in_degree[dep] = 0
-                    in_degree[dep] += 1
+            # Count dependencies for this model
+            dependencies = [dep for dep in graph[model] if dep not in built_in_types]
+            in_degree[model] = len(dependencies)
 
         # Initialize the queue with nodes that have an in-degree of 0
         queue = sorted([model for model in in_degree if in_degree[model] == 0])
@@ -135,12 +134,15 @@ class DependencyResolver:
                 0
             )  # Use pop(0) instead of popleft() for deterministic behavior
             sorted_models.append(model)
-            for dep in sorted(graph[model]):
-                if dep in built_in_types:
+
+            # Find all models that depend on the current model and decrement their in-degree
+            for other_model in sorted_graph:
+                if other_model in built_in_types or other_model not in in_degree:
                     continue  # Skip built-in types
-                in_degree[dep] -= 1
-                if in_degree[dep] == 0:
-                    queue.append(dep)
+                if model in graph[other_model]:  # other_model depends on model
+                    in_degree[other_model] -= 1
+                    if in_degree[other_model] == 0:
+                        queue.append(other_model)
             queue.sort()  # Sort the queue after each iteration
 
         if len(sorted_models) != len(in_degree):

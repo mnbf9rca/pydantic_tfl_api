@@ -27,16 +27,13 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     # Extract the portion after the last underscore for concise names
     sanitized = sanitized.split("_")[-1]
 
-    # Special case: if the original name is already a valid CamelCase identifier
-    # without underscores or hyphens, return it as-is
-    if (name.isidentifier() and not keyword.iskeyword(name)
-        and not name[0].isdigit() and not re.search(r"[^a-zA-Z0-9]", name)):
-        return name
-
-    # Convert to CamelCase - capitalize first letter
+    # Convert to CamelCase - capitalize first letter only if the name is all lowercase
     words = sanitized.split()
     if words:
-        sanitized = sanitized.capitalize()
+        # Only capitalize if the name is entirely lowercase (simple case)
+        if sanitized.islower():
+            sanitized = sanitized.capitalize()
+        # If it has mixed case, preserve it (like TestModel)
     else:
         sanitized = ""
 

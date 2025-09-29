@@ -206,7 +206,8 @@ class TestModelBuilder:
 
         # Required field should not be union with None
         required_field = fields["required_field"]
-        assert required_field.default == ...  # Ellipsis indicates required
+        from pydantic_core import PydanticUndefined
+        assert required_field.default == PydanticUndefined  # PydanticUndefined indicates required in Pydantic v2
 
         # Optional field should be union with None
         optional_field = fields["optional_field"]
@@ -246,9 +247,24 @@ class TestModelBuilder:
 
         # Should have created an enum type
         field_type = status_field.annotation
-        # The annotation should reference an enum class
-        assert hasattr(field_type, '__name__')
-        assert 'Enum' in field_type.__name__
+
+        # Handle both direct enum and union types (for optional enum fields)
+        from typing import get_origin, get_args
+        from enum import Enum
+
+        if get_origin(field_type) is not None:
+            # It's a union type (optional enum), check the args
+            args = get_args(field_type)
+            enum_args = [arg for arg in args if isinstance(arg, type) and issubclass(arg, Enum)]
+            assert len(enum_args) > 0, f"Expected at least one enum in union type, got {args}"
+            enum_type = enum_args[0]
+        else:
+            # Direct enum type
+            enum_type = field_type
+
+        # The enum should have a name containing 'Enum'
+        assert hasattr(enum_type, '__name__')
+        assert 'Enum' in enum_type.__name__
 
     def test_get_models_returns_copy(self, model_builder, sample_components):
         """Test that get_models returns a copy of the models dict."""
