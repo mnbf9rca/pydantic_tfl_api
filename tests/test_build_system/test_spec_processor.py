@@ -1,10 +1,12 @@
 """Tests for SpecProcessor class that handles OpenAPI specification loading and preprocessing."""
 
 import json
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
 import pytest
+
 from scripts.build_system.spec_processor import SpecProcessor
 
 

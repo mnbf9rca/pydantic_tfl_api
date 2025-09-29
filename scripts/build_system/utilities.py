@@ -1,9 +1,9 @@
 """Shared utility functions for the build system."""
 
-import re
-import keyword
-from typing import Any, Union, get_origin, get_args
 import builtins
+import keyword
+import re
+from typing import Any, Union, get_args, get_origin
 
 
 def sanitize_name(name: str, prefix: str = "Model") -> str:

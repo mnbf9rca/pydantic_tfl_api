@@ -4,33 +4,33 @@ Tests for the build_models.py script functionality.
 
 import json
 import tempfile
+from enum import Enum
 from pathlib import Path
+from typing import Any, ForwardRef, Optional
 
 import pytest
+from pydantic import BaseModel
 
 # Import from scripts package
 from scripts.build_models import (
-    get_api_name,
-    sanitize_name,
-    update_refs,
-    create_enum_class,
-    map_type,
-    map_openapi_type,
-    get_pydantic_imports,
-    get_model_config,
-    sanitize_field_name,
-    get_builtin_types,
-    is_list_or_dict_model,
-    extract_inner_types,
-    topological_sort,
-    detect_circular_dependencies,
-    join_url_paths,
-    classify_parameters,
     _create_schema_name_mapping,
+    classify_parameters,
+    create_enum_class,
+    detect_circular_dependencies,
+    extract_inner_types,
+    get_api_name,
+    get_builtin_types,
+    get_model_config,
+    get_pydantic_imports,
+    is_list_or_dict_model,
+    join_url_paths,
+    map_openapi_type,
+    map_type,
+    sanitize_field_name,
+    sanitize_name,
+    topological_sort,
+    update_refs,
 )
-from enum import Enum
-from typing import Any, Dict, List, Optional, Union, ForwardRef
-from pydantic import BaseModel, RootModel
 
 
 class TestSanitizeName:
@@ -515,14 +515,14 @@ class TestExtractInnerTypes:
     def test_list_type(self):
         """Test extraction from List types."""
 
-        result = extract_inner_types(List[str])
+        result = extract_inner_types(list[str])
         assert list in result
         assert str in result
 
     def test_nested_generic_type(self):
         """Test extraction from nested generic types."""
 
-        result = extract_inner_types(List[Dict[str, int]])
+        result = extract_inner_types(list[dict[str, int]])
         assert list in result
         assert dict in result
         assert str in result
@@ -672,8 +672,8 @@ class TestBuildModelsRealIntegration:
     def test_build_models_with_real_specs(self):
         """Test build_models with actual TfL specifications."""
         import tempfile
-        import os
         from pathlib import Path
+
         from scripts.build_models import main
 
         # Check if TfL specs directory exists
@@ -714,9 +714,10 @@ class TestBuildModelsRealIntegration:
 
     def test_generated_models_syntax_valid(self):
         """Test that generated models have valid Python syntax."""
-        import tempfile
         import ast
+        import tempfile
         from pathlib import Path
+
         from scripts.build_models import main
 
         # Check if TfL specs directory exists
@@ -735,7 +736,7 @@ class TestBuildModelsRealIntegration:
             models_dir = output_path / "models"
             for py_file in models_dir.glob("*.py"):
                 try:
-                    with open(py_file, "r") as f:
+                    with open(py_file) as f:
                         content = f.read()
                     ast.parse(content)
                 except SyntaxError as e:
@@ -745,7 +746,7 @@ class TestBuildModelsRealIntegration:
             endpoints_dir = output_path / "endpoints"
             for py_file in endpoints_dir.glob("*.py"):
                 try:
-                    with open(py_file, "r") as f:
+                    with open(py_file) as f:
                         content = f.read()
                     ast.parse(content)
                 except SyntaxError as e:
@@ -755,6 +756,7 @@ class TestBuildModelsRealIntegration:
         """Test that output is compatible with baseline implementation."""
         import tempfile
         from pathlib import Path
+
         from scripts.build_models import main
 
         # Check if TfL specs directory exists

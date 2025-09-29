@@ -1,7 +1,8 @@
 """Tests for utilities module focusing on regression prevention."""
 
 import pytest
-from scripts.build_system.utilities import sanitize_name, sanitize_field_name, clean_enum_name
+
+from scripts.build_system.utilities import clean_enum_name, sanitize_field_name, sanitize_name
 
 
 class TestSanitizeName:

@@ -1,11 +1,13 @@
 """Tests for BuildCoordinator class that orchestrates the entire build process."""
 
 import json
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch
+
 from scripts.build_system.build_coordinator import BuildCoordinator
 
 

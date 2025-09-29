@@ -1,8 +1,10 @@
 """Tests for DependencyResolver class that handles model dependencies and circular references."""
 
-import pytest
 from typing import ForwardRef
+
+import pytest
 from pydantic import BaseModel, Field
+
 from scripts.build_system.dependency_resolver import DependencyResolver
 
 
@@ -200,10 +202,10 @@ class TestDependencyResolver:
 
     def test_extract_inner_types_generic(self, dependency_resolver):
         """Test extracting inner types from generic annotations."""
-        from typing import List, Optional
+        from typing import Optional
 
         # Test List[str]
-        list_type = List[str]
+        list_type = list[str]
         inner_types = dependency_resolver.extract_inner_types(list_type)
         assert list in inner_types
         assert str in inner_types

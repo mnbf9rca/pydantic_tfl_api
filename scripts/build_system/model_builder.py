@@ -3,8 +3,10 @@
 import logging
 from enum import Enum
 from typing import Any, ForwardRef
-from pydantic import BaseModel, create_model, Field
-from .utilities import sanitize_name, sanitize_field_name, map_openapi_type
+
+from pydantic import BaseModel, Field, create_model
+
+from .utilities import map_openapi_type, sanitize_field_name, sanitize_name
 
 
 class ModelBuilder:
@@ -34,7 +36,7 @@ class ModelBuilder:
         # Create a dictionary with cleaned enum names as keys and the original values as values
         # Handle uniqueness by adding suffix for duplicates
         enum_dict = {}
-        name_counts = {}
+        name_counts: dict[str, int] = {}
 
         for v in enum_values:
             cleaned_name = clean_enum_name(str(v))
@@ -104,7 +106,7 @@ class ModelBuilder:
                     )
                     continue
                 # Handle object models first
-                fields = {}
+                fields: dict[str, Any] = {}
                 required_fields = model_spec.get("required", [])
                 for field_name, field_spec in model_spec["properties"].items():
                     field_type = self.map_type(
@@ -159,7 +161,7 @@ class ModelBuilder:
         Some models need array versions even if not explicitly defined in OpenAPI specs.
         This generates RootModel classes for these models based on production requirements.
         """
-        from pydantic import RootModel, ConfigDict, create_model
+        from pydantic import ConfigDict, RootModel, create_model
 
         # Models that need array versions based on production system analysis
         # Format: (base_model_name, desired_array_name) or just base_model_name

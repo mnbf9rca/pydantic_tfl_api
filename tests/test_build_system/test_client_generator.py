@@ -1,9 +1,11 @@
 """Tests for ClientGenerator class that generates API client classes and configurations."""
 
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
 import pytest
+
 from scripts.build_system.client_generator import ClientGenerator
 
 

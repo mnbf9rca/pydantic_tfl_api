@@ -3,27 +3,23 @@
 These tests cover the new smaller functions that were extracted during refactoring.
 """
 
-import pytest
 from io import StringIO
-from typing import Any
+
+import pytest
 from pydantic import BaseModel
 
 from scripts.build_models import (
-    # API metadata functions
-    extract_api_metadata,
-    create_method_signature,
+    collect_type_imports,
     create_method_docstring,
     create_method_implementation,
-    process_single_method,
-    generate_import_lines,
-
-    # List/dict model functions
-    validate_list_dict_args,
+    create_method_signature,
+    # API metadata functions
+    extract_api_metadata,
     extract_list_dict_types,
-    collect_type_imports,
+    generate_import_lines,
     generate_list_dict_class_definition,
+    validate_list_dict_args,
     write_imports_and_class,
-    get_model_config,
 )
 
 

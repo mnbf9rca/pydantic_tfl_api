@@ -3,9 +3,11 @@
 import logging
 import types
 from collections import defaultdict
-from typing import Any, ForwardRef, Union, get_origin, get_args
+from typing import Any, ForwardRef, get_args, get_origin
+
 from pydantic import BaseModel
-from .utilities import sanitize_name, get_builtin_types, extract_inner_types
+
+from .utilities import extract_inner_types, get_builtin_types, sanitize_name
 
 
 class DependencyResolver:
@@ -65,7 +67,11 @@ class DependencyResolver:
             elif hasattr(model, "__origin__") and (
                 model.__origin__ is list or model.__origin__ is dict
             ):
-                inner_type = model.__args__[0]
+                args = get_args(model)
+                if args:
+                    inner_type = args[0]
+                else:
+                    continue
                 if hasattr(inner_type, "__name__") and inner_type.__name__ in models:
                     graph[model_name].add(sanitize_name(inner_type.__name__))
             else:
@@ -174,8 +180,14 @@ class DependencyResolver:
 
         # Handle different origin types
         if isinstance(origin, types.UnionType):
-            # For Python 3.10+ union syntax (X | Y), reconstruct using Union
-            return Union[new_args]
+            # For Python 3.10+ union syntax (X | Y), reconstruct using modern syntax
+            if len(new_args) == 2:
+                return new_args[0] | new_args[1]
+            else:
+                # Fall back to Union for complex cases
+                import operator
+                from functools import reduce
+                return reduce(operator.or_, new_args)
         else:
             # For traditional generic types like List[T], Dict[K, V], etc.
             try:
@@ -184,7 +196,13 @@ class DependencyResolver:
                 if "not subscriptable" in str(e):
                     # Fallback for any other UnionType-like cases
                     if hasattr(origin, "__name__") and "Union" in str(origin):
-                        return Union[new_args]
+                        if len(new_args) == 2:
+                            return new_args[0] | new_args[1]
+                        else:
+                            # Fall back to Union for complex multi-type unions
+                            import operator
+                            from functools import reduce
+                            return reduce(operator.or_, new_args)
                     # If we can't handle it, return the original annotation
                     self.logger.warning(f"Could not reconstruct type {origin} with args {new_args}: {e}")
                     return annotation
@@ -196,7 +214,7 @@ class DependencyResolver:
         """Replace circular references in models with ForwardRef."""
         for model_name in circular_models:
             model = models[model_name]
-            for field_name, field in model.model_fields.items():
+            for _field_name, field in model.model_fields.items():
                 # Modify field.annotation directly
                 field.annotation = self.replace_circular_references(field.annotation, circular_models)
 

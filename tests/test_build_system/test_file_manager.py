@@ -1,12 +1,14 @@
 """Tests for FileManager class that handles all file I/O operations for the build system."""
 
 import os
-import tempfile
 import shutil
-from pathlib import Path
+import tempfile
 from enum import Enum
+from pathlib import Path
+
 import pytest
 from pydantic import BaseModel, Field, RootModel
+
 from scripts.build_system.file_manager import FileManager
 
 
@@ -267,9 +269,9 @@ class TestFileManager:
         lines = content.strip().split('\n')
         import_lines = [line for line in lines if line.startswith("from .")]
 
-        assert "from .A import A" == import_lines[0]
-        assert "from .B import B" == import_lines[1]
-        assert "from .C import C" == import_lines[2]
+        assert import_lines[0] == "from .A import A"
+        assert import_lines[1] == "from .B import B"
+        assert import_lines[2] == "from .C import C"
 
     def test_sanitize_field_name(self, file_manager):
         """Test field name sanitization for Python keywords."""

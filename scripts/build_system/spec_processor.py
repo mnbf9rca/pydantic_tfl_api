@@ -7,16 +7,15 @@ for the TfL API client generation process.
 import json
 import logging
 import os
-from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
 try:
-    from .utilities import sanitize_name, join_url_paths
     from ..mapping_loader import load_tfl_mappings
+    from .utilities import sanitize_name
 except ImportError:
-    from utilities import sanitize_name, join_url_paths
     from mapping_loader import load_tfl_mappings
+    from utilities import sanitize_name
 
 
 class SpecProcessor:
@@ -59,7 +58,7 @@ class SpecProcessor:
                 if filename.endswith('.json'):
                     file_path = os.path.join(folder_path, filename)
                     try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
+                        with open(file_path, encoding='utf-8') as f:
                             spec = json.load(f)
                             if self.validate_spec(spec):
                                 specs.append(spec)
@@ -310,10 +309,7 @@ class SpecProcessor:
             return False
 
         paths = spec.get("paths", {})
-        if not isinstance(paths, dict):
-            return False
-
-        return True
+        return isinstance(paths, dict)
 
     # Getters for accessing processed data
     def get_specs(self) -> list[dict[str, Any]]:

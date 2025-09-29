@@ -1,18 +1,11 @@
 """ClientGenerator class for generating API client classes and configurations."""
 
-import os
-import logging
 import copy
-from pathlib import Path
+import logging
+import os
 from typing import Any
 
-from .utilities import (
-    sanitize_name,
-    sanitize_field_name,
-    get_builtin_types,
-    map_openapi_type,
-    join_url_paths
-)
+from .utilities import get_builtin_types, join_url_paths, map_openapi_type, sanitize_field_name, sanitize_name
 
 
 def get_api_name(spec: dict[str, Any]) -> str:
@@ -159,7 +152,7 @@ class ClientGenerator:
         config_lines.append("endpoints = {\n")
 
         for path, methods in paths.items():
-            for method, details in methods.items():
+            for _method, details in methods.items():
                 operation_id = details.get("operationId")
                 if operation_id:
                     path_uri = self.join_url_paths(api_path, path)
@@ -194,8 +187,8 @@ class ClientGenerator:
         """Generate API client class from OpenAPI specification."""
         class_name, api_path, paths = self.extract_api_metadata(spec)
 
-        all_types = set()
-        all_package_models = set()
+        all_types: set[str] = set()
+        all_package_models: set[str] = set()
         method_lines = [f"class {class_name}(Client):\n"]
 
         # Process all API methods
@@ -348,8 +341,8 @@ class ClientGenerator:
 
     def generate_method_name(self, operation_id: str) -> str:
         """Generate snake_case method names from operation IDs."""
-        import re
         import keyword
+        import re
 
         # Handle camelCase/PascalCase by inserting underscores before uppercase letters
         # "getUserById" -> "get_user_by_id", "Naptan" -> "naptan"

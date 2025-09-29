@@ -1,9 +1,11 @@
 """Tests for ModelBuilder class that handles Pydantic model creation from OpenAPI schemas."""
 
-import pytest
 from enum import Enum
 from typing import Any, ForwardRef
-from pydantic import BaseModel, Field, create_model
+
+import pytest
+from pydantic import BaseModel
+
 from scripts.build_system.model_builder import ModelBuilder
 
 
@@ -168,7 +170,7 @@ class TestModelBuilder:
         user_array_type = model_builder.models["UserArray"]
 
         # Should be a list type
-        from typing import get_origin, get_args
+        from typing import get_origin
         assert get_origin(user_array_type) == list
 
     def test_create_pydantic_models_handles_missing_properties(self, model_builder):
@@ -249,8 +251,8 @@ class TestModelBuilder:
         field_type = status_field.annotation
 
         # Handle both direct enum and union types (for optional enum fields)
-        from typing import get_origin, get_args
         from enum import Enum
+        from typing import get_args, get_origin
 
         if get_origin(field_type) is not None:
             # It's a union type (optional enum), check the args

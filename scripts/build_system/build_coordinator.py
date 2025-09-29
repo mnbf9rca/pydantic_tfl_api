@@ -2,34 +2,30 @@
 
 import logging
 import os
-import shutil
-from pathlib import Path
-from typing import Any, Dict, List, Tuple, Optional, Set
-
-# Import existing build system components
-from scripts.build_system.model_builder import ModelBuilder
-from scripts.build_system.dependency_resolver import DependencyResolver
-from scripts.build_system.spec_processor import SpecProcessor
-from scripts.build_system.file_manager import FileManager
-from scripts.build_system.client_generator import ClientGenerator
 
 # Import functions from build_models.py
 import sys
+from pathlib import Path
+from typing import Any
+
+from scripts.build_system.client_generator import ClientGenerator
+from scripts.build_system.dependency_resolver import DependencyResolver
+from scripts.build_system.file_manager import FileManager
+
+# Import existing build system components
+from scripts.build_system.model_builder import ModelBuilder
+from scripts.build_system.spec_processor import SpecProcessor
+
 sys.path.append(str(Path(__file__).parent.parent))
 from build_models import (
-    load_specs,
     combine_components_and_paths,
-    create_pydantic_models,
-    deduplicate_models,
-    update_model_references,
-    handle_dependencies,
-    save_models,
-    update_specs_with_model_changes,
-    save_classes,
+    copy_infrastructure,
     create_mermaid_class_diagram,
-    copy_infrastructure
+    deduplicate_models,
+    handle_dependencies,
+    load_specs,
+    update_model_references,
 )
-
 
 
 class BuildCoordinator:
@@ -50,7 +46,7 @@ class BuildCoordinator:
         self._build_stats = {}
         self._base_url = "https://api.tfl.gov.uk"
 
-    def build(self, spec_path: str, output_path: str, config: Optional[Dict[str, Any]] = None) -> None:
+    def build(self, spec_path: str, output_path: str, config: dict[str, Any] | None = None) -> None:
         """
         Main orchestration method that coordinates the entire build process.
 
@@ -140,7 +136,7 @@ class BuildCoordinator:
         self.logger.info(f"Starting model generation from {spec_path} to {output_path}")
         os.makedirs(output_path, exist_ok=True)
 
-    def _load_and_process_specs(self, spec_path: str) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[str, Any]]:
+    def _load_and_process_specs(self, spec_path: str) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
         """Load OpenAPI specs and process components and paths."""
         self.logger.info("Loading OpenAPI specs...")
         specs = load_specs(spec_path)
@@ -149,12 +145,12 @@ class BuildCoordinator:
             raise ValueError(f"No valid specifications found in {spec_path}")
 
         self.logger.info("Generating components...")
-        pydantic_names = {}
+        pydantic_names: dict[str, str] = {}
         components, paths = combine_components_and_paths(specs, pydantic_names)
 
         return specs, components, paths
 
-    def _generate_and_process_models(self, components: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    def _generate_and_process_models(self, components: dict[str, Any]) -> tuple[dict[str, Any], dict[str, str]]:
         """Generate Pydantic models and process them for deduplication."""
         self.logger.info("Generating Pydantic models...")
 
@@ -171,7 +167,7 @@ class BuildCoordinator:
 
         return models, reference_map
 
-    def _handle_dependencies_and_save_models(self, models: Dict[str, Any], output_path: str) -> Tuple[Dict[str, List[str]], Set[str], List[str]]:
+    def _handle_dependencies_and_save_models(self, models: dict[str, Any], output_path: str) -> tuple[dict[str, list[str]], set[str], list[str]]:
         """Handle model dependencies and save models to files."""
         self.logger.info("Handling dependencies...")
         dependency_graph, circular_models, sorted_models = handle_dependencies(models)
@@ -182,10 +178,10 @@ class BuildCoordinator:
 
         return dependency_graph, circular_models, sorted_models
 
-    def _generate_classes_and_diagrams(self, specs: List[Dict[str, Any]], components: Dict[str, Any],
-                                     reference_map: Dict[str, str], output_path: str,
-                                     dependency_graph: Dict[str, List[str]], sorted_models: List[str],
-                                     config: Optional[Dict[str, Any]] = None) -> None:
+    def _generate_classes_and_diagrams(self, specs: list[dict[str, Any]], components: dict[str, Any],
+                                     reference_map: dict[str, str], output_path: str,
+                                     dependency_graph: dict[str, list[str]], sorted_models: list[str],
+                                     config: dict[str, Any] | None = None) -> None:
         """Generate API classes and create documentation diagrams."""
         self.logger.info("Creating config and class files...")
 
@@ -203,12 +199,12 @@ class BuildCoordinator:
                 dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
             )
 
-    def _apply_config(self, config: Dict[str, Any]) -> None:
+    def _apply_config(self, config: dict[str, Any]) -> None:
         """Apply configuration options."""
         if 'base_url' in config:
             self.set_base_url(config['base_url'])
 
-    def get_build_stats(self) -> Dict[str, Any]:
+    def get_build_stats(self) -> dict[str, Any]:
         """Get build statistics."""
         return self._build_stats.copy()
 
@@ -261,7 +257,7 @@ class BuildCoordinator:
         self._base_url = base_url
         self.logger.info(f"Base URL set to: {base_url}")
 
-    def get_component_counts(self) -> Dict[str, int]:
+    def get_component_counts(self) -> dict[str, int]:
         """
         Get counts of different component types after build.
 

@@ -1,30 +1,30 @@
-import json
-import os
-from io import TextIOWrapper
-import sys
-import logging
-import re
-import keyword
-import builtins
 import argparse
+import builtins
+import json
+import keyword
+import logging
+import os
+import re
 import shutil
+import sys
 from collections import defaultdict
-from urllib.parse import urljoin
-from pathlib import Path
-
-from typing import __all__ as typing_all
-
 from enum import Enum
+from io import TextIOWrapper
+from pathlib import Path
 from typing import (
     Any,
+    ForwardRef,
     Optional,
     Union,
-    get_origin,
     get_args,
-    ForwardRef,
+    get_origin,
 )
-from pydantic import BaseModel, RootModel, create_model, Field, ConfigDict
+from typing import __all__ as typing_all
+from urllib.parse import urljoin
+
+from pydantic import BaseModel, Field, RootModel, create_model
 from pydantic.fields import FieldInfo
+
 try:
     from .mapping_loader import load_tfl_mappings
 except ImportError:
@@ -118,7 +118,7 @@ def create_enum_class(enum_name: str, enum_values: list[Any]):
     # Create a dictionary with cleaned enum names as keys and the original values as values
     # Handle uniqueness by adding suffix for duplicates
     enum_dict = {}
-    name_counts = {}
+    name_counts: dict[str, int] = {}
 
     for v in enum_values:
         cleaned_name = clean_enum_name(str(v))
@@ -188,8 +188,8 @@ def create_array_types_from_model_paths(
     paths: dict[str, dict[str, Any]], components: dict[str, Any]
 ) -> dict[str, Any]:
     array_types = {}
-    for path, methods in paths.items():
-        for method, details in methods.items():
+    for _path, methods in paths.items():
+        for _method, details in methods.items():
             operation_id = details.get("operationId")
             if operation_id:
                 response_content = details["responses"]["200"]
@@ -237,7 +237,7 @@ def create_pydantic_models(
                 )
                 continue
             # Handle object models first
-            fields = {}
+            fields: dict[str, Any] = {}
             required_fields = model_spec.get("required", [])
             for field_name, field_spec in model_spec["properties"].items():
                 field_type = map_type(
@@ -333,10 +333,7 @@ def write_import_statements(
 ):
     """Write import statements in dependency-aware order to minimize forward references."""
     # If we have a topologically sorted order, use it; otherwise fall back to alphabetical
-    if sorted_models:
-        model_order = sorted_models
-    else:
-        model_order = sorted(models.keys())
+    model_order = sorted_models or sorted(models.keys())
 
     # Write imports in dependency order to minimize forward references
     for model_name in model_order:
@@ -533,7 +530,7 @@ def handle_list_or_dict_model(
 
     # Collect imports
     typing_imports = {model_type.title() if model_type else ""}
-    module_imports = set()
+    module_imports: set[str] = set()
 
     # Handle imports and get type names
     type_names = {}
@@ -610,7 +607,7 @@ def handle_regular_model(
 def find_enum_imports(model: BaseModel) -> set[str]:
     """Find all enum imports in the model fields."""
     import_set = set()
-    for field_name, field in model.model_fields.items():
+    for _field_name, field in model.model_fields.items():
         inner_types = extract_inner_types(field.annotation)
         for inner_type in inner_types:
             if isinstance(inner_type, type) and issubclass(inner_type, Enum):
@@ -863,7 +860,11 @@ def build_dependency_graph(
         elif hasattr(model, "__origin__") and (
             model.__origin__ is list or model.__origin__ is dict
         ):
-            inner_type = model.__args__[0]
+            args = get_args(model)
+            if args:
+                inner_type = args[0]
+            else:
+                continue
             if hasattr(inner_type, "__name__") and inner_type.__name__ in models:
                 graph[model_name].add(sanitize_name(inner_type.__name__))
         else:
@@ -958,7 +959,6 @@ def detect_circular_dependencies(graph: dict[str, set[str]]) -> set[str]:
 def replace_circular_references(annotation: Any, circular_models: set[str]) -> Any:
     """Recursively replace circular model references in annotations with ForwardRef."""
     import types
-    from typing import Union
 
     origin = get_origin(annotation)
     args = get_args(annotation)
@@ -977,8 +977,15 @@ def replace_circular_references(annotation: Any, circular_models: set[str]) -> A
 
     # Handle different origin types
     if isinstance(origin, types.UnionType):
-        # For Python 3.10+ union syntax (X | Y), reconstruct using Union
-        return Union[new_args]
+        # For Python 3.10+ union syntax (X | Y), reconstruct using modern syntax
+        if len(new_args) == 2:
+            return new_args[0] | new_args[1]
+        else:
+            # Fall back to Union for complex cases
+            # Fall back to Union for complex multi-type unions
+            import operator
+            from functools import reduce
+            return reduce(operator.or_, new_args)
     else:
         # For traditional generic types like List[T], Dict[K, V], etc.
         try:
@@ -987,7 +994,13 @@ def replace_circular_references(annotation: Any, circular_models: set[str]) -> A
             if "not subscriptable" in str(e):
                 # Fallback for any other UnionType-like cases
                 if hasattr(origin, "__name__") and "Union" in str(origin):
-                    return Union[new_args]
+                    if len(new_args) == 2:
+                        return new_args[0] | new_args[1]
+                    else:
+                        # Fall back to Union for complex multi-type unions
+                        import operator
+                        from functools import reduce
+                        return reduce(operator.or_, new_args)
                 # If we can't handle it, return the original annotation
                 logging.warning(f"Could not reconstruct type {origin} with args {new_args}: {e}")
                 return annotation
@@ -999,7 +1012,7 @@ def break_circular_dependencies(
     """Replace circular references in models with ForwardRef."""
     for model_name in circular_models:
         model = models[model_name]
-        for field_name, field in model.model_fields.items():
+        for _field_name, field in model.model_fields.items():
             # Modify field.annotation directly
             field.annotation = replace_circular_references(field.annotation, circular_models)
 
@@ -1073,7 +1086,7 @@ def are_models_equal(model1: type[BaseModel], model2: type[BaseModel]) -> bool:
         return False
 
     # Compare each field's annotation, alias, default, and constraints
-    for field_name in model1.model_fields.keys():
+    for field_name in model1.model_fields:
         field1 = model1.model_fields[field_name]
         field2 = model2.model_fields[field_name]
 
@@ -1104,7 +1117,7 @@ def deduplicate_models(
     models: dict[str, type[BaseModel] | type[list]],
 ) -> dict[str, type[BaseModel] | type[list]]:
     """Deduplicate models by removing models with the same content."""
-    deduplicated_models = {}
+    deduplicated_models: dict[str, type[BaseModel] | type] = {}
     reference_map = {}
 
     # Compare models to detect duplicates
@@ -1200,7 +1213,7 @@ def create_config(spec: dict[str, Any], output_path: str, base_url: str) -> None
     config_lines.append("endpoints = {\n")
 
     for path, methods in paths.items():
-        for method, details in methods.items():
+        for _method, details in methods.items():
             operation_id = details.get("operationId")
             if operation_id:
                 path_uri = join_url_paths(api_path, path)
@@ -1487,7 +1500,7 @@ def map_deduplicated_name(type_name: str, reference_map: dict[str, str]) -> str:
 def _create_schema_name_mapping(combined_components: dict[str, Any]) -> dict[str, str]:
     """Create reverse mapping from sanitized names back to original schema names."""
     schema_name_mapping = {}
-    for schema_name in combined_components.keys():
+    for schema_name in combined_components:
         sanitized = sanitize_name(schema_name)
         schema_name_mapping[sanitized] = schema_name
     return schema_name_mapping

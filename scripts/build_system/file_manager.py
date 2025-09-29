@@ -1,24 +1,18 @@
 """FileManager class that handles all file I/O operations for the build system."""
 
-import os
 import keyword
 import logging
-from pathlib import Path
-from io import TextIOWrapper
-from typing import Any, Union, get_origin, get_args, ForwardRef
-from typing import __all__ as typing_all
+import os
+import types
 from enum import Enum
+from io import TextIOWrapper
+from typing import Any, ForwardRef, Union, get_args, get_origin
+from typing import __all__ as typing_all
+
 from pydantic import BaseModel, RootModel
 from pydantic.fields import FieldInfo
-import builtins
-import types
 
-from .utilities import (
-    sanitize_name,
-    sanitize_field_name,
-    get_builtin_types,
-    extract_inner_types
-)
+from .utilities import extract_inner_types, get_builtin_types, sanitize_field_name, sanitize_name
 
 
 class FileManager:
@@ -188,10 +182,7 @@ class FileManager:
             sorted_models: Optional list of models in dependency order
         """
         # If we have a topologically sorted order, use it; otherwise fall back to alphabetical
-        if sorted_models:
-            model_order = sorted_models
-        else:
-            model_order = sorted(models.keys())
+        model_order = sorted_models or sorted(models.keys())
 
         # Write imports in dependency order to minimize forward references
         for model_name in model_order:
@@ -323,8 +314,9 @@ class FileManager:
         inner_type, key_type, value_type = self._extract_list_dict_types(model_type, args)
 
         # Collect imports
-        typing_imports = {model_type.title() if model_type else ""}
-        module_imports = set()
+        # For modern Python, we don't need to import List/Dict anymore
+        typing_imports: set[str] = set()
+        module_imports: set[str] = set()
 
         # Handle imports and get type names
         type_names = {}
@@ -394,8 +386,14 @@ class FileManager:
         if hasattr(model, 'model_fields'):
             import_set.update(self._find_enum_imports(model))
 
-        # Write imports
-        model_file.write("\n".join(sorted(import_set)) + "\n\n\n")
+        # Write imports in proper order: relative imports first, then pydantic, then typing
+        relative_imports = [imp for imp in import_set if imp.startswith("from .")]
+        pydantic_imports = [imp for imp in import_set if imp.startswith("from pydantic")]
+        typing_imports = [imp for imp in import_set if imp.startswith("from typing")]
+
+        all_imports = sorted(relative_imports) + sorted(pydantic_imports) + sorted(typing_imports)
+        if all_imports:
+            model_file.write("\n".join(all_imports) + "\n\n\n")
 
         # Write class definition
         if is_root_model:
@@ -422,7 +420,7 @@ class FileManager:
     def _find_enum_imports(self, model: BaseModel) -> set[str]:
         """Find all enum imports in the model fields."""
         import_set = set()
-        for field_name, field in model.model_fields.items():
+        for _field_name, field in model.model_fields.items():
             inner_types = extract_inner_types(field.annotation)
             for inner_type in inner_types:
                 if isinstance(inner_type, type) and issubclass(inner_type, Enum):
@@ -436,7 +434,6 @@ class FileManager:
         Recursively resolve ForwardRef in an annotation to a string representation,
         handling Optional, List, and other generics, and quoting forward references.
         """
-        import types
 
         origin = get_origin(annotation)
         args = get_args(annotation)
@@ -529,7 +526,6 @@ class FileManager:
 
     def _get_type_str(self, annotation: Any, models: dict[str, type[BaseModel]]) -> str:
         """Convert the annotation to a valid Python type string for writing to a file, handling model references."""
-        import types
 
         if isinstance(annotation, ForwardRef):
             # Handle ForwardRef directly by returning the forward-referenced name
