@@ -4,6 +4,7 @@ import copy
 import logging
 import os
 from typing import Any
+from urllib.parse import urlparse
 
 from .utilities import get_builtin_types, join_url_paths, map_openapi_type, sanitize_field_name, sanitize_name
 
@@ -37,14 +38,13 @@ class ClientGenerator:
         class_name = f"{sanitize_name(api_name_clean)}Client"
 
         # Extract path from server URL: extract everything after the domain
-        server_url = spec.get("servers", [{}])[0].get("url", "")
-        if server_url:
+
+        if server_url := spec.get("servers", [{}])[0].get("url", ""):
             # Parse URL to extract path portion
             # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
-            from urllib.parse import urlparse
 
             parsed = urlparse(server_url)
-            api_path = parsed.path if parsed.path else ""
+            api_path = parsed.path or ""
         else:
             api_path = ""
         return class_name, api_path, paths
@@ -65,15 +65,16 @@ class ClientGenerator:
         self, details: dict[str, Any], full_path: str, model_name: str, parameters: list[dict]
     ) -> str:
         """Create docstring for a single API method."""
-        description = details.get("description", "No description in the OpenAPI spec.")
+        description = details.get("description", "No description in the OpenAPI spec.").strip()
         docstring = f"{description}\n"
-        docstring = docstring + f"\n  Query path: `{full_path}`\n"
-        docstring = docstring + f"\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
+        docstring = f"{docstring}\n  Query path: `{full_path}`\n"
+        docstring = f"{docstring}\n  `ResponseModel.content` contains `models.{model_name}` type.\n"
 
         if parameters:
             docstring_parameters = "\n".join(
                 [
-                    f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {param.get('description', '')}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}"
+                    # Clean description: replace \r with space, then strip each line to remove trailing whitespace
+                    f"    `{sanitize_field_name(param['name'])}`: {map_openapi_type(param['schema']['type']).__name__} - {' '.join(param.get('description', '').replace(chr(13), ' ').split())}. {('Example: `' + str(param.get('example', '')) + '`') if param.get('example') else ''}".rstrip()
                     for param in parameters
                 ]
             )
@@ -117,8 +118,7 @@ class ClientGenerator:
         full_path = self.join_url_paths(api_path, path)
 
         # Build complete method definition
-        method_lines = []
-        method_lines.append(self.create_method_signature(operation_id, parameters, model_name))
+        method_lines = [self.create_method_signature(operation_id, parameters, model_name)]
         method_lines.append(self.create_method_docstring(details, full_path, model_name, parameters))
         method_lines.append(self.create_method_implementation(operation_id, parameters))
 
@@ -127,26 +127,55 @@ class ClientGenerator:
     def generate_import_lines(self, class_name: str, all_types: set, all_package_models: set) -> list[str]:
         """Generate all import statements for the client class."""
         import_lines = []
-        import_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
 
-        # Check if GenericResponseModel is needed and import from core
-        needs_generic_response_model = "GenericResponseModel" in all_package_models
-        if needs_generic_response_model:
-            import_lines.append("from ..core import ApiError, ResponseModel, Client, GenericResponseModel\n")
-            # Remove GenericResponseModel from models import
-            all_package_models = all_package_models - {"GenericResponseModel"}
-        else:
-            import_lines.append("from ..core import ApiError, ResponseModel, Client\n")
+        # Group imports by category following standard Python import ordering (isort/ruff):
+        # 1. Standard library imports (typing)
+        # 2. Third-party imports (none for now)
+        # 3. Local/first-party imports (relative imports with . and ..)
 
+        typing_imports = []
+        local_imports = []
+
+        # Standard library imports (typing) - come first
         valid_type_imports = all_types - get_builtin_types()
         valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
         if valid_type_import_strings:
-            import_lines.append(f"from typing import {', '.join(valid_type_import_strings)}\n")
+            typing_imports.append(f"from typing import {', '.join(valid_type_import_strings)}\n")
 
+        # Local imports - relative imports come after standard library
+        # Order: parent imports (..) before current directory (.), all alphabetically sorted
+
+        # Parent imports for core modules (..) - alphabetically sorted items
+        needs_generic_response_model = "GenericResponseModel" in all_package_models
+        if needs_generic_response_model:
+            local_imports.append("from ..core import ApiError, Client, GenericResponseModel, ResponseModel\n")
+            # Remove GenericResponseModel from models import
+            all_package_models = all_package_models - {"GenericResponseModel"}
+        else:
+            local_imports.append("from ..core import ApiError, Client, ResponseModel\n")
+
+        # Parent imports for models (..)
         if all_package_models:
-            import_lines.append(f"from ..models import {', '.join(sorted(all_package_models))}\n")
+            sorted_models = sorted(all_package_models)
+            # Use multi-line imports if the line would be too long (>88 chars is typical ruff limit)
+            models_import_line = f"from ..models import {', '.join(sorted_models)}"
+            if len(models_import_line) > 88:
+                # Multi-line format with each import on its own line
+                models_list = ",\n    ".join(sorted_models)
+                local_imports.append(f"from ..models import (\n    {models_list},\n)\n")
+            else:
+                local_imports.append(f"{models_import_line}\n")
 
-        import_lines.append("\n")
+        # Current directory imports (.) - alphabetically sorted items
+        local_imports.append(f"from .{class_name}_config import base_url, endpoints\n")
+
+        # Combine in proper order: typing first, then local imports
+        import_lines.extend(typing_imports)
+        if typing_imports and local_imports:
+            import_lines.append("\n")  # Blank line between stdlib and local imports
+        import_lines.extend(local_imports)
+        import_lines.append("\n\n")  # Two blank lines before class definition (PEP 8)
+
         return import_lines
 
     def create_config(self, spec: dict[str, Any], output_path: str, base_url: str) -> None:
@@ -158,23 +187,19 @@ class ClientGenerator:
 
         config_lines = []
         # Extract path from server URL: extract everything after the domain
-        server_url = spec.get("servers", [{}])[0].get("url", "")
-        if server_url:
+        if server_url := spec.get("servers", [{}])[0].get("url", ""):
             # Parse URL to extract path portion
             # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
-            from urllib.parse import urlparse
 
             parsed = urlparse(server_url)
-            api_path = parsed.path if parsed.path else ""
+            api_path = parsed.path or ""
         else:
             api_path = ""
-        config_lines.append(f'base_url = "{base_url}"\n')
-        config_lines.append("endpoints = {\n")
+        config_lines.extend((f'base_url = "{base_url}"\n', "endpoints = {\n"))
 
         for path, methods in paths.items():
             for _method, details in methods.items():
-                operation_id = details.get("operationId")
-                if operation_id:
+                if operation_id := details.get("operationId"):
                     path_uri = self.join_url_paths(api_path, path)
                     path_params = [param["name"] for param in details.get("parameters", []) if param["in"] == "path"]
                     for i, param in enumerate(path_params):
@@ -266,7 +291,7 @@ class ClientGenerator:
         # Sort parameters to ensure required ones come first
         sorted_parameters = sorted(parameters, key=lambda param: not param.get("required", False))
 
-        param_str = ", ".join(
+        return ", ".join(
             [
                 f"{sanitize_field_name(param['name'])}: {map_openapi_type(param['schema']['type']).__name__}"
                 if param.get("required", False)
@@ -274,7 +299,6 @@ class ClientGenerator:
                 for param in sorted_parameters
             ]
         )
-        return param_str
 
     def save_classes(
         self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None
@@ -404,8 +428,7 @@ class ClientGenerator:
 
         # Convert to CamelCase - capitalize first word only, keep others as-is
         # This matches the original logic: words[0] + "".join(word.capitalize() for word in words[1:])
-        words = sanitized.split()
-        if words:
+        if words := sanitized.split():
             # For camelCase like "getUserById", we need to capitalize the first letter
             first_word = words[0]
             if first_word and first_word[0].islower():
