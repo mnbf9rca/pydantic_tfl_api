@@ -124,7 +124,6 @@ exclude = [
     "dist",
     "venv",
     ".venv",
-    "build_script",
 ]
 
 [tool.ruff.lint]
@@ -183,6 +182,7 @@ files = [
     "pydantic_tfl_api/models/",
     "pydantic_tfl_api/endpoints/",
     "pydantic_tfl_api/core/",
+    "infrastructure/",
 ]
 
 # Exclude auto-generated models and endpoints

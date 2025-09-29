@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta, timezone
 from email.utils import format_datetime, parsedate_to_datetime
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -12,8 +13,6 @@ from requests.models import Response
 
 from pydantic_tfl_api import models
 from pydantic_tfl_api.core import ApiError, Client, ResponseModel, RestClient
-from typing import Any
-
 
 
 # Mock models module

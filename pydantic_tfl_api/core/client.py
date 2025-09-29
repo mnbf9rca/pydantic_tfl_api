@@ -177,7 +177,7 @@ class Client:
         self,
         base_url: str,
         endpoint_and_model: dict[str, str],
-        params: str | int | float | list[str | int | float] | None = None,
+        params: str | float | list[str | int | float] | None = None,
         endpoint_args: dict[str, Any] | None = None,
     ) -> ResponseModel | ApiError:
         if params is None:

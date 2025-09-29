@@ -48,8 +48,8 @@ class Client:
         self.client = RestClient(api_token)
         self.models = self._load_models()
 
-    def _load_models(self):
-        models_dict = {}
+    def _load_models(self) -> dict[str, type[BaseModel]]:
+        models_dict: dict[str, type[BaseModel]] = {}
 
         # Load models from individual model files
         for _importer, modname, _ispkg in pkgutil.iter_modules(models.__path__):
@@ -177,7 +177,7 @@ class Client:
         self,
         base_url: str,
         endpoint_and_model: dict[str, str],
-        params: str | int | float | list[str | int | float] | None = None,
+        params: str | float | list[str | int | float] | None = None,
         endpoint_args: dict[str, Any] | None = None,
     ) -> ResponseModel | ApiError:
         if params is None:
