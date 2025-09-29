@@ -372,3 +372,58 @@ class TestFileManager:
         content = user_file.read_text()
         assert "# Old content" not in content
         assert "class User(BaseModel):" in content
+
+    def test_no_optional_import_with_union_none(self, file_manager, temp_dir):
+        """REGRESSION: Test that Optional is not imported when using X | None syntax."""
+        from typing import ForwardRef
+
+        class TestModel(BaseModel):
+            optional_field: str | None = Field(None)
+            required_field: str = Field(...)
+
+        circular_models = set()
+        sorted_models = ["TestModel"]
+
+        file_manager.save_models(
+            {"TestModel": TestModel},
+            str(temp_dir),
+            {"TestModel": set()},
+            circular_models,
+            sorted_models
+        )
+
+        test_file = temp_dir / "models" / "TestModel.py"
+        content = test_file.read_text()
+
+        # Should NOT import Optional when using X | None
+        assert "from typing import Optional" not in content
+        assert "Optional[" not in content
+        assert "optional_field: str | None" in content
+
+    def test_no_unused_type_import(self, file_manager, temp_dir):
+        """REGRESSION: Test that Type is not imported when only appearing in model names."""
+
+        class PathAttribute(BaseModel):
+            name: str = Field(...)
+
+        class TestModel(BaseModel):
+            path_attribute: PathAttribute | None = Field(None)
+
+        circular_models = set()
+        sorted_models = ["PathAttribute", "TestModel"]
+
+        file_manager.save_models(
+            {"PathAttribute": PathAttribute, "TestModel": TestModel},
+            str(temp_dir),
+            {"PathAttribute": set(), "TestModel": {"PathAttribute"}},
+            circular_models,
+            sorted_models
+        )
+
+        test_file = temp_dir / "models" / "TestModel.py"
+        content = test_file.read_text()
+
+        # "Type" appears in "PathAttribute" but should not be imported from typing
+        assert "from typing import Type" not in content
+        # PathAttribute should be imported from relative module
+        assert "from .PathAttribute import PathAttribute" in content

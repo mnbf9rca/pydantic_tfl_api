@@ -185,8 +185,8 @@ class BuildCoordinator:
         """Generate API classes and create documentation diagrams."""
         self.logger.info("Creating config and class files...")
 
-        # Generate client classes
-        self.client_generator.save_classes(specs, output_path, self._base_url)
+        # Generate client classes with reference map for deduplication
+        self.client_generator.save_classes(specs, output_path, self._base_url, reference_map)
 
         # Create class diagram if not disabled
         generate_diagrams = True

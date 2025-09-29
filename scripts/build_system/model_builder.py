@@ -176,7 +176,8 @@ class ModelBuilder:
             "ChargeConnectorOccupancy",
             "DisruptedPoint",
             "LineServiceType",
-            ("PlaceCategory", "StopPointCategoryArray"),  # Special case: use PlaceCategory model but name it StopPointCategoryArray
+            # Note: PlaceCategory already has PlaceCategoryArray, and StopPointCategory
+            # is deduplicated to PlaceCategory, so no need for StopPointCategoryArray
             "StopPointRouteSection"
         ]
 

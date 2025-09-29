@@ -24,6 +24,7 @@ class ClientGenerator:
     def __init__(self) -> None:
         """Initialize the ClientGenerator with empty state."""
         self._generated_clients: list[str] = []
+        self._reference_map: dict[str, str] = {}
 
     def extract_api_metadata(self, spec: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
         """Extract basic API metadata from OpenAPI spec."""
@@ -35,9 +36,16 @@ class ClientGenerator:
         api_name_clean = api_name.replace(" API", "").replace(" Api", "")
         class_name = f"{sanitize_name(api_name_clean)}Client"
 
-        # Extract path from server URL: take only the last segment
+        # Extract path from server URL: extract everything after the domain
         server_url = spec.get("servers", [{}])[0].get("url", "")
-        api_path = "/" + server_url.split("/")[-1] if server_url else ""
+        if server_url:
+            # Parse URL to extract path portion
+            # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
+            from urllib.parse import urlparse
+            parsed = urlparse(server_url)
+            api_path = parsed.path if parsed.path else ""
+        else:
+            api_path = ""
         return class_name, api_path, paths
 
     def classify_parameters(self, parameters: list[dict[str, Any]]) -> tuple[list[str], list[str]]:
@@ -145,9 +153,16 @@ class ClientGenerator:
         paths = spec.get("paths", {})
 
         config_lines = []
-        # Extract path from server URL: take only the last segment
+        # Extract path from server URL: extract everything after the domain
         server_url = spec.get("servers", [{}])[0].get("url", "")
-        api_path = "/" + server_url.split("/")[-1] if server_url else ""
+        if server_url:
+            # Parse URL to extract path portion
+            # e.g., "https://api.tfl.gov.uk/Disruptions/Lifts/v2" -> "/Disruptions/Lifts/v2"
+            from urllib.parse import urlparse
+            parsed = urlparse(server_url)
+            api_path = parsed.path if parsed.path else ""
+        else:
+            api_path = ""
         config_lines.append(f'base_url = "{base_url}"\n')
         config_lines.append("endpoints = {\n")
 
@@ -232,7 +247,11 @@ class ClientGenerator:
             model_ref = items_schema.get("$ref", "")
             if not model_ref:
                 return "GenericResponseModel"
-            return get_array_model_name(sanitize_name(model_ref.split("/")[-1]))
+            # Extract base model name and apply deduplication mapping if available
+            base_model_name = sanitize_name(model_ref.split("/")[-1])
+            # Check if this model was deduplicated to another name
+            mapped_base_name = self._reference_map.get(base_model_name, base_model_name)
+            return get_array_model_name(mapped_base_name)
         elif not only_arrays:
             model_ref = schema.get("$ref", "")
             if not model_ref:
@@ -258,10 +277,20 @@ class ClientGenerator:
         )
         return param_str
 
-    def save_classes(self, specs: list[dict[str, Any]], base_path: str, base_url: str) -> None:
-        """Create config and class files for each spec in the specs list."""
+    def save_classes(self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None) -> None:
+        """Create config and class files for each spec in the specs list.
+
+        Args:
+            specs: List of OpenAPI specifications
+            base_path: Base path for generated files
+            base_url: Base URL for API
+            reference_map: Optional mapping of deduplicated model names (old_name -> new_name)
+        """
         # Deep copy specs to prevent shared reference issues with shallow copy in tests
         specs = [copy.deepcopy(spec) for spec in specs]
+
+        # Store reference map for use in model name resolution
+        self._reference_map = reference_map or {}
 
         class_names = []
         for i, spec in enumerate(specs):

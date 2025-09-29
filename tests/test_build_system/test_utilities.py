@@ -99,6 +99,19 @@ class TestCleanEnumName:
         assert clean_enum_name("lowercase") == "LOWERCASE"
         assert clean_enum_name("MixedCase") == "MIXEDCASE"
 
+    def test_trailing_underscore_removed(self):
+        """REGRESSION: Test that trailing underscores are removed from enum names."""
+        # This prevents the "PLANNED___SUBJECT_TO_FEASIBILITY_AND_CONSULTATION_" bug
+        assert clean_enum_name("Planned - Subject to feasibility and consultation.") == "PLANNED___SUBJECT_TO_FEASIBILITY_AND_CONSULTATION"
+        assert clean_enum_name("test value.") == "TEST_VALUE"
+        assert clean_enum_name("trailing dot...") == "TRAILING_DOT"
+
+    def test_leading_underscore_preserved_for_digits(self):
+        """Test that leading underscores are preserved when added for digit prefixes."""
+        result = clean_enum_name("123test")
+        assert result == "_123TEST"
+        assert result[0] == "_"  # Leading underscore preserved
+
 
 class TestRegressionPrevention:
     """Specific regression tests for known issues."""

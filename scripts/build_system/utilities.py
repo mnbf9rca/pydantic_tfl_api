@@ -108,6 +108,9 @@ def clean_enum_name(value: str) -> str:
     if cleaned and cleaned[0].isdigit():
         cleaned = "_" + cleaned
 
+    # Remove trailing underscores (but keep leading underscore if it was added above)
+    cleaned = cleaned.rstrip("_")
+
     return cleaned.upper()
 
 

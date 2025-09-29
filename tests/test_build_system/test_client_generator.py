@@ -131,7 +131,7 @@ class TestClientGenerator:
         class_name, api_path, paths = client_generator.extract_api_metadata(sample_spec)
 
         assert class_name == "TestClient"  # Sanitized from "Test API"
-        assert api_path == "/test"  # Extracted from server URL
+        assert api_path == "/v1/test"  # Full path extracted from server URL
         assert isinstance(paths, dict)
         assert len(paths) > 0
 
@@ -328,7 +328,7 @@ class TestClientGenerator:
         assert "endpoints = {" in content
         assert "'getUsers':" in content
         assert "'getUserById':" in content
-        assert "uri': '/test/users'" in content
+        assert "uri': '/v1/test/users'" in content  # Full path from server URL
         assert "model': 'UserArray'" in content
 
     def test_create_class(self, client_generator, temp_dir, sample_spec):
@@ -525,3 +525,69 @@ class TestClientGenerator:
 
         # Path parameters should be replaced with format placeholders
         assert "/test/users/{0}" in content  # {id} becomes {0}
+
+    def test_extract_full_path_from_server_url(self, client_generator):
+        """REGRESSION: Test that full path is extracted from server URL, not just last segment."""
+        # This prevents the "/v2/" bug where only the last segment was extracted
+
+        # Test nested path like TfL's Lift Disruptions API
+        spec_nested = {
+            "info": {"title": "Lift Disruptions"},
+            "servers": [{"url": "https://api.tfl.gov.uk/Disruptions/Lifts/v2"}],
+            "paths": {"/": {}}
+        }
+        _, api_path, _ = client_generator.extract_api_metadata(spec_nested)
+        assert api_path == "/Disruptions/Lifts/v2", f"Expected '/Disruptions/Lifts/v2', got '{api_path}'"
+
+        # Test simple path
+        spec_simple = {
+            "info": {"title": "Bike Point"},
+            "servers": [{"url": "https://api.tfl.gov.uk/BikePoint"}],
+            "paths": {"/": {}}
+        }
+        _, api_path, _ = client_generator.extract_api_metadata(spec_simple)
+        assert api_path == "/BikePoint", f"Expected '/BikePoint', got '{api_path}'"
+
+        # Test root path
+        spec_root = {
+            "info": {"title": "Root API"},
+            "servers": [{"url": "https://api.example.com"}],
+            "paths": {"/": {}}
+        }
+        _, api_path, _ = client_generator.extract_api_metadata(spec_root)
+        assert api_path == "", f"Expected '', got '{api_path}'"
+
+    def test_config_uses_full_server_path(self, client_generator, temp_dir):
+        """REGRESSION: Test that config files use the full server path in endpoint URIs."""
+        spec = {
+            "info": {"title": "Lift Disruptions"},
+            "servers": [{"url": "https://api.tfl.gov.uk/Disruptions/Lifts/v2"}],
+            "paths": {
+                "/": {
+                    "get": {
+                        "operationId": "get",
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "array",
+                                            "items": {"$ref": "#/components/schemas/LiftDisruption"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        client_generator.create_config(spec, str(temp_dir), "https://api.tfl.gov.uk")
+
+        config_file = temp_dir / "LiftDisruptionsClient_config.py"
+        content = config_file.read_text()
+
+        # Should contain full path, not just "/v2/"
+        assert "'/Disruptions/Lifts/v2/'" in content, f"Expected full path in config, got: {content}"
+        assert "'uri': '/v2/'" not in content, "Should not have partial path /v2/"

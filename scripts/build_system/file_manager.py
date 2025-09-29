@@ -451,11 +451,11 @@ class FileManager:
                 resolved_types = [self._resolve_forward_refs_in_annotation(arg, models, circular_models) for arg in union_args]
                 return " | ".join(resolved_types)
 
-        # Handle Optional as Union[T, NoneType] and convert it to Optional[T]
+        # Handle Optional as Union[T, NoneType] and convert it to T | None
         if origin is Union and len(args) == 2 and type(None) in args:
             non_none_arg = args[0] if args[0] is not type(None) else args[1]
             resolved_inner = self._resolve_forward_refs_in_annotation(non_none_arg, models, circular_models)
-            return f"Optional[{resolved_inner}]"
+            return f"{resolved_inner} | None"
 
         if origin is None:
             # Base case: if it's a ForwardRef, return it quoted
@@ -566,9 +566,10 @@ class FileManager:
 
             # Handle Optional and Union (e.g., Optional[int], Union[str, int])
             elif origin is Union:
-                if len(args) == 2 and args[1] is type(None):
-                    # It's an Optional type
-                    return f"Optional[{self._get_type_str(args[0], models)}]"
+                if len(args) == 2 and type(None) in args:
+                    # It's an Optional type - convert to X | None format
+                    non_none_arg = args[0] if args[0] is not type(None) else args[1]
+                    return f"{self._get_type_str(non_none_arg, models)} | None"
                 else:
                     # General Union type
                     inner_types = ", ".join(self._get_type_str(arg, models) for arg in args)
@@ -587,14 +588,20 @@ class FileManager:
         circular_models: set[str],
     ) -> set[str]:
         """Determine necessary typing imports based on the field annotations."""
+        import re
+
         import_set = set()
 
         for field in model_fields.values():
             field_annotation = self._get_type_str(field.annotation, models)
 
             # Check for any type in typing.__all__
+            # Use word boundaries to avoid false matches (e.g., "Type" in "PathAttribute")
             for type_name in typing_all:
-                if type_name in field_annotation:
+                # Match only as standalone identifiers: preceded/followed by non-identifier chars
+                # This prevents "Type" from matching within "PathAttribute"
+                pattern = rf'\b{re.escape(type_name)}\b'
+                if re.search(pattern, field_annotation):
                     import_set.add(type_name)
 
             # Check for circular references
