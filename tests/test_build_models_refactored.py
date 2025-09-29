@@ -26,7 +26,7 @@ from scripts.build_models import (
 class TestExtractApiMetadata:
     """Test API metadata extraction from OpenAPI specs."""
 
-    def test_basic_metadata_extraction(self):
+    def test_basic_metadata_extraction(self) -> None:
         """Test extracting basic metadata from OpenAPI spec."""
         spec = {
             "info": {"title": "Test API"},
@@ -40,7 +40,7 @@ class TestExtractApiMetadata:
         assert api_path == "/v1/test"  # Extracts everything after the 3rd slash
         assert paths == {"/test": {"get": {"operationId": "getTest"}}}
 
-    def test_missing_servers(self):
+    def test_missing_servers(self) -> None:
         """Test handling when servers section is missing."""
         spec = {
             "info": {"title": "Test API"},
@@ -58,7 +58,7 @@ class TestExtractApiMetadata:
 class TestCreateMethodSignature:
     """Test method signature creation."""
 
-    def test_method_with_parameters(self):
+    def test_method_with_parameters(self) -> None:
         """Test creating method signature with parameters."""
         parameters = [{"name": "id", "schema": {"type": "string"}}, {"name": "limit", "schema": {"type": "integer"}}]
 
@@ -67,7 +67,7 @@ class TestCreateMethodSignature:
         assert "def getItems(self, id: str | None = None, limit: int | None = None)" in signature
         assert "-> ResponseModel[ItemList] | ApiError:" in signature
 
-    def test_method_without_parameters(self):
+    def test_method_without_parameters(self) -> None:
         """Test creating method signature without parameters."""
         signature = create_method_signature("getAll", [], "ItemList")
 
@@ -78,7 +78,7 @@ class TestCreateMethodSignature:
 class TestCreateMethodDocstring:
     """Test method docstring creation."""
 
-    def test_docstring_with_parameters(self):
+    def test_docstring_with_parameters(self) -> None:
         """Test creating docstring with parameters."""
         details = {"description": "Get items by ID"}
         parameters = [{"name": "item_id", "schema": {"type": "string"}, "description": "Unique identifier"}]
@@ -90,7 +90,7 @@ class TestCreateMethodDocstring:
         assert "`ResponseModel.content` contains `models.ItemList` type" in docstring
         assert "`item_id`: str - Unique identifier" in docstring
 
-    def test_docstring_without_parameters(self):
+    def test_docstring_without_parameters(self) -> None:
         """Test creating docstring without parameters."""
         details = {"description": "Get all items"}
 
@@ -103,7 +103,7 @@ class TestCreateMethodDocstring:
 class TestCreateMethodImplementation:
     """Test method implementation creation."""
 
-    def test_implementation_with_path_params(self):
+    def test_implementation_with_path_params(self) -> None:
         """Test creating implementation with path parameters."""
         parameters = [
             {"name": "id", "in": "path", "schema": {"type": "string"}},
@@ -115,7 +115,7 @@ class TestCreateMethodImplementation:
         assert "params=[id]" in implementation
         assert "endpoint_args={ 'limit': limit }" in implementation
 
-    def test_implementation_query_only(self):
+    def test_implementation_query_only(self) -> None:
         """Test creating implementation with only query parameters."""
         parameters = [{"name": "limit", "in": "query", "schema": {"type": "integer"}}]
 
@@ -124,7 +124,7 @@ class TestCreateMethodImplementation:
         assert "params=" not in implementation or "params=[]" in implementation
         assert "endpoint_args={ 'limit': limit }" in implementation
 
-    def test_implementation_no_params(self):
+    def test_implementation_no_params(self) -> None:
         """Test creating implementation without parameters."""
         implementation = create_method_implementation("getAll", [])
 
@@ -134,7 +134,7 @@ class TestCreateMethodImplementation:
 class TestGenerateImportLines:
     """Test import line generation."""
 
-    def test_basic_imports(self):
+    def test_basic_imports(self) -> None:
         """Test generating basic import lines."""
         all_types = {str, int}
         all_package_models = {"Item", "User"}
@@ -146,7 +146,7 @@ class TestGenerateImportLines:
         assert "from ..core import ApiError, ResponseModel, Client" in import_text
         assert "from ..models import Item, User" in import_text
 
-    def test_no_package_models(self):
+    def test_no_package_models(self) -> None:
         """Test generating imports without package models."""
         import_lines = generate_import_lines("TestClient", set(), set())
 
@@ -159,22 +159,22 @@ class TestGenerateImportLines:
 class TestValidateListDictArgs:
     """Test list/dict argument validation."""
 
-    def test_valid_list_args(self):
+    def test_valid_list_args(self) -> None:
         """Test validation passes for valid list arguments."""
         # Should not raise any exception
         validate_list_dict_args("list", (str,))
 
-    def test_valid_dict_args(self):
+    def test_valid_dict_args(self) -> None:
         """Test validation passes for valid dict arguments."""
         # Should not raise any exception
         validate_list_dict_args("dict", (str, int))
 
-    def test_invalid_list_args(self):
+    def test_invalid_list_args(self) -> None:
         """Test validation fails for invalid list arguments."""
         with pytest.raises(ValueError, match="list type should have exactly 1 argument, got 2"):
             validate_list_dict_args("list", (str, int))
 
-    def test_invalid_dict_args(self):
+    def test_invalid_dict_args(self) -> None:
         """Test validation fails for invalid dict arguments."""
         with pytest.raises(ValueError, match="dict type should have exactly 2 arguments"):
             validate_list_dict_args("dict", (str,))
@@ -183,7 +183,7 @@ class TestValidateListDictArgs:
 class TestExtractListDictTypes:
     """Test type extraction from list/dict arguments."""
 
-    def test_extract_list_types(self):
+    def test_extract_list_types(self) -> None:
         """Test extracting types from list arguments."""
         inner_type, key_type, value_type = extract_list_dict_types("list", (str,))
 
@@ -191,7 +191,7 @@ class TestExtractListDictTypes:
         assert key_type is None
         assert value_type is str
 
-    def test_extract_dict_types(self):
+    def test_extract_dict_types(self) -> None:
         """Test extracting types from dict arguments."""
         inner_type, key_type, value_type = extract_list_dict_types("dict", (str, int))
 
@@ -199,7 +199,7 @@ class TestExtractListDictTypes:
         assert key_type is str
         assert value_type is int
 
-    def test_unsupported_model_type(self):
+    def test_unsupported_model_type(self) -> None:
         """Test error for unsupported model types."""
         with pytest.raises(ValueError, match="Unsupported model type: tuple"):
             extract_list_dict_types("tuple", (str, int))
@@ -208,7 +208,7 @@ class TestExtractListDictTypes:
 class TestCollectTypeImports:
     """Test type import collection."""
 
-    def test_builtin_type_import(self):
+    def test_builtin_type_import(self) -> None:
         """Test that builtin types don't generate imports."""
         typing_imports: set[str] = set()
         module_imports: set[str] = set()
@@ -220,7 +220,7 @@ class TestCollectTypeImports:
         assert len(typing_imports) == 0
         assert len(module_imports) == 0
 
-    def test_model_type_import(self):
+    def test_model_type_import(self) -> None:
         """Test that model types generate module imports."""
         typing_imports: set[str] = set()
         module_imports: set[str] = set()
@@ -235,7 +235,7 @@ class TestCollectTypeImports:
         assert type_name == "TestModel"
         assert "from .TestModel import TestModel" in module_imports
 
-    def test_unknown_type_import(self):
+    def test_unknown_type_import(self) -> None:
         """Test handling of unknown types."""
         typing_imports: set[str] = set()
         module_imports: set[str] = set()
@@ -254,7 +254,7 @@ class TestCollectTypeImports:
 class TestGenerateListDictClassDefinition:
     """Test class definition generation for list/dict models."""
 
-    def test_list_class_definition(self):
+    def test_list_class_definition(self) -> None:
         """Test generating class definition for list models."""
         type_names = {"inner": "str"}
 
@@ -262,7 +262,7 @@ class TestGenerateListDictClassDefinition:
 
         assert class_def == "class StringArray(RootModel[list[str]]):\n"
 
-    def test_dict_class_definition(self):
+    def test_dict_class_definition(self) -> None:
         """Test generating class definition for dict models."""
         type_names = {"key": "str", "value": "int"}
 
@@ -270,7 +270,7 @@ class TestGenerateListDictClassDefinition:
 
         assert class_def == "class StringIntDict(RootModel[dict[str, int]]):\n"
 
-    def test_invalid_model_type(self):
+    def test_invalid_model_type(self) -> None:
         """Test error for invalid model types."""
         with pytest.raises(ValueError, match="Model is not a list or dict model"):
             generate_list_dict_class_definition("tuple", "TestClass", {})
@@ -279,7 +279,7 @@ class TestGenerateListDictClassDefinition:
 class TestWriteImportsAndClass:
     """Test writing imports and class to file."""
 
-    def test_write_complete_class(self):
+    def test_write_complete_class(self) -> None:
         """Test writing complete class with imports."""
         model_file = StringIO()
         typing_imports = {"Optional"}
@@ -294,7 +294,7 @@ class TestWriteImportsAndClass:
         assert "class TestArray(RootModel[list[TestModel]]):" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
 
-    def test_write_class_no_imports(self):
+    def test_write_class_no_imports(self) -> None:
         """Test writing class without imports."""
         model_file = StringIO()
         class_definition = "class SimpleArray(RootModel[list[str]]):\n"

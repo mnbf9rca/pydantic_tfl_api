@@ -16,35 +16,35 @@ class TestTflMappingsSchema:
     """Test suite for TfL mappings schema validation."""
 
     @pytest.fixture(scope="class")
-    def schema(self):
+    def schema(self) -> Any:
         """Load the JSON schema for TfL mappings."""
         schema_path = Path(__file__).parent.parent / "schemas" / "tfl_mappings_schema.json"
         with open(schema_path, encoding="utf-8") as f:
             return json.load(f)
 
     @pytest.fixture(scope="class")
-    def mappings_data(self):
+    def mappings_data(self) -> Any:
         """Load the TfL mappings JSON data."""
         mappings_path = Path(__file__).parent.parent / "data" / "tfl_mappings.json"
         with open(mappings_path, encoding="utf-8") as f:
             return json.load(f)
 
-    def test_schema_is_valid(self, schema):
+    def test_schema_is_valid(self, schema: Any) -> None:
         """Test that the schema itself is valid JSON Schema."""
         # Validate the schema is a valid Draft 7 JSON Schema
         Draft7Validator.check_schema(schema)
 
-    def test_mappings_conform_to_schema(self, schema, mappings_data):
+    def test_mappings_conform_to_schema(self, schema: Any, mappings_data: Any) -> None:
         """Test that the mappings data conforms to the schema."""
         validate(instance=mappings_data, schema=schema)
 
-    def test_required_fields_present(self, mappings_data):
+    def test_required_fields_present(self, mappings_data: Any) -> None:
         """Test that all required top-level fields are present."""
         required_fields = ["version", "last_updated", "source", "apis"]
         missing_fields = [field for field in required_fields if field not in mappings_data]
         assert not missing_fields, f"Required fields missing from mappings: {missing_fields}"
 
-    def test_version_format(self, mappings_data):
+    def test_version_format(self, mappings_data: Any) -> None:
         """Test that version follows semantic versioning."""
         version = mappings_data["version"]
         assert isinstance(version, str), "Version must be a string"
@@ -54,7 +54,7 @@ class TestTflMappingsSchema:
         non_numeric_parts = [part for part in parts if not part.isdigit()]
         assert not non_numeric_parts, f"Version parts must be numeric, found: {non_numeric_parts}"
 
-    def test_last_updated_format(self, mappings_data):
+    def test_last_updated_format(self, mappings_data: Any) -> None:
         """Test that last_updated is a valid ISO 8601 timestamp."""
         from datetime import datetime
 
@@ -65,7 +65,7 @@ class TestTflMappingsSchema:
         except ValueError:
             pytest.fail(f"Invalid ISO 8601 timestamp: {timestamp}")
 
-    def test_source_structure(self, mappings_data):
+    def test_source_structure(self, mappings_data: Any) -> None:
         """Test that source has required fields and valid URL."""
         source = mappings_data["source"]
         assert "url" in source, "Source must have URL"
@@ -91,12 +91,12 @@ class TestTflMappingsSchema:
             "Vehicle",
         ],
     )
-    def test_known_apis_exist(self, mappings_data, api_name):
+    def test_known_apis_exist(self, mappings_data: Any, api_name: Any) -> None:
         """Test that expected APIs are present in mappings."""
         apis = mappings_data["apis"]
         assert api_name in apis, f"Expected API '{api_name}' not found in mappings"
 
-    def test_api_structure(self, mappings_data):
+    def test_api_structure(self, mappings_data: Any) -> None:
         """Test that each API has proper structure."""
         apis = mappings_data["apis"]
 
@@ -126,7 +126,7 @@ class TestTflMappingsSchema:
             f"APIs with non-dict response_mappings: {apis_with_invalid_response_mappings}"
         )
 
-    def test_mapping_values_are_non_empty_strings(self, mappings_data):
+    def test_mapping_values_are_non_empty_strings(self, mappings_data: Any) -> None:
         """Test that all mapping values are non-empty strings."""
         apis = mappings_data["apis"]
 
@@ -169,7 +169,7 @@ class TestTflMappingsSchema:
         )
         assert not empty_response_mappings, f"Empty response mapping values found: {empty_response_mappings}"
 
-    def test_response_mapping_keys_follow_pattern(self, mappings_data):
+    def test_response_mapping_keys_follow_pattern(self, mappings_data: Any) -> None:
         """Test that response mapping keys follow expected patterns."""
         apis = mappings_data["apis"]
 
@@ -184,7 +184,7 @@ class TestTflMappingsSchema:
 
         assert not invalid_response_keys, f"Response keys should contain 'Get': {invalid_response_keys}"
 
-    def test_mappings_count(self, mappings_data):
+    def test_mappings_count(self, mappings_data: Any) -> None:
         """Test that we have a reasonable number of mappings."""
         apis = mappings_data["apis"]
 
@@ -198,14 +198,14 @@ class TestTflMappingsSchema:
         # Should have a substantial number of mappings (was 311 in original)
         assert total_mappings >= 300, f"Expected at least 300 mappings, found {total_mappings}"
 
-    def test_no_duplicate_apis(self, mappings_data):
+    def test_no_duplicate_apis(self, mappings_data: Any) -> None:
         """Test that there are no duplicate API names."""
         apis = mappings_data["apis"]
         api_names = list(apis.keys())
         unique_names = set(api_names)
         assert len(api_names) == len(unique_names), "Duplicate API names found"
 
-    def test_schema_validation_catches_errors(self, schema):
+    def test_schema_validation_catches_errors(self, schema: Any) -> None:
         """Test that schema validation catches common errors."""
         # Test missing required field
         invalid_data_1 = {"version": "1.0.0"}

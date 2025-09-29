@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import BaseModel, Field, RootModel
@@ -16,19 +17,19 @@ class TestFileManager:
     """Test the FileManager class for file I/O operations."""
 
     @pytest.fixture
-    def file_manager(self):
+    def file_manager(self) -> Any:
         """Create a FileManager instance for testing."""
         return FileManager()
 
     @pytest.fixture
-    def temp_dir(self):
+    def temp_dir(self) -> Any:
         """Create a temporary directory for testing."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def sample_models(self):
+    def sample_models(self) -> Any:
         """Create sample models for testing file operations."""
 
         class User(BaseModel):
@@ -50,18 +51,16 @@ class TestFileManager:
         return {"User": User, "Profile": Profile, "UserArray": UserArray, "StatusEnum": StatusEnum}
 
     @pytest.fixture
-    def sample_dependency_graph(self):
+    def sample_dependency_graph(self) -> Any:
         """Create sample dependency graph for testing."""
         return {"User": set(), "Profile": {"User"}, "UserArray": {"User"}, "StatusEnum": set()}
 
-    def test_init_creates_empty_state(self, file_manager):
+    def test_init_creates_empty_state(self, file_manager: Any) -> None:
         """Test that FileManager initializes properly."""
         assert hasattr(file_manager, "_generated_files")
         assert isinstance(file_manager._generated_files, list)
 
-    def test_save_models_creates_directory_structure(
-        self, file_manager, temp_dir, sample_models, sample_dependency_graph
-    ):
+    def test_save_models_creates_directory_structure(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that save_models creates the expected directory structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -77,7 +76,7 @@ class TestFileManager:
         init_file = models_dir / "__init__.py"
         assert init_file.exists()
 
-    def test_save_models_creates_model_files(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_models_creates_model_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that individual model files are created."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -92,7 +91,7 @@ class TestFileManager:
         assert (models_dir / "UserArray.py").exists()
         assert (models_dir / "StatusEnum.py").exists()
 
-    def test_save_model_file_content_structure(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_model_file_content_structure(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that model files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["User"]
@@ -112,7 +111,7 @@ class TestFileManager:
         assert "age: int | None = Field(None)" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
 
-    def test_save_root_model_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_root_model_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that RootModel files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "UserArray"]
@@ -134,7 +133,7 @@ class TestFileManager:
         assert "class UserArray(RootModel[list[User]]):" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
 
-    def test_save_enum_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_save_enum_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that enum files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["StatusEnum"]
@@ -156,9 +155,7 @@ class TestFileManager:
         assert "ACTIVE = 'active'" in content
         assert "INACTIVE = 'inactive'" in content
 
-    def test_save_models_with_circular_dependencies(
-        self, file_manager, temp_dir, sample_models, sample_dependency_graph
-    ):
+    def test_save_models_with_circular_dependencies(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that models with circular dependencies have model_rebuild() calls."""
         circular_models = {"User"}  # Simulate User having circular dependency
         sorted_models = ["User", "Profile"]
@@ -177,7 +174,7 @@ class TestFileManager:
         # Should have model_rebuild() call for circular dependency
         assert "User.model_rebuild()" in content
 
-    def test_init_file_content(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_init_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that __init__.py has the correct import structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -197,13 +194,13 @@ class TestFileManager:
         assert "from ..core.package_models import GenericResponseModel" in content
 
         # Check for Literal type
-        assert "from typing import Literal" in content
+        assert "from typing import Any, Literal" in content
         assert "ResponseModelName = Literal[" in content
 
         # Check for __all__
         assert "__all__ = [" in content
 
-    def test_get_pydantic_imports_base_model(self, file_manager):
+    def test_get_pydantic_imports_base_model(self, file_manager: Any) -> None:
         """Test getting imports for BaseModel."""
         imports = file_manager.get_pydantic_imports("User", is_root_model=False)
         assert "BaseModel" in imports
@@ -211,7 +208,7 @@ class TestFileManager:
         assert "ConfigDict" in imports
         assert "RootModel" not in imports
 
-    def test_get_pydantic_imports_root_model(self, file_manager):
+    def test_get_pydantic_imports_root_model(self, file_manager: Any) -> None:
         """Test getting imports for RootModel."""
         imports = file_manager.get_pydantic_imports("UserArray", is_root_model=True)
         assert "RootModel" in imports
@@ -219,12 +216,12 @@ class TestFileManager:
         assert "BaseModel" not in imports
         assert "Field" not in imports
 
-    def test_get_model_config(self, file_manager):
+    def test_get_model_config(self, file_manager: Any) -> None:
         """Test getting model configuration."""
         config = file_manager.get_model_config("User")
         assert "model_config = ConfigDict(from_attributes=True)" in config
 
-    def test_write_import_statements_dependency_order(self, file_manager, temp_dir):
+    def test_write_import_statements_dependency_order(self, file_manager: Any, temp_dir: Any) -> None:
         """Test that import statements are written in dependency-aware order."""
         models = {"A": object, "B": object, "C": object}
         sorted_models = ["A", "B", "C"]  # Predefined order
@@ -246,7 +243,7 @@ class TestFileManager:
         assert import_lines[1] == "from .B import B"
         assert import_lines[2] == "from .C import C"
 
-    def test_sanitize_field_name(self, file_manager):
+    def test_sanitize_field_name(self, file_manager: Any) -> None:
         """Test field name sanitization for Python keywords."""
         # Normal field names should remain unchanged
         assert file_manager.sanitize_field_name("normal_field") == "normal_field"
@@ -257,7 +254,7 @@ class TestFileManager:
         assert file_manager.sanitize_field_name("def") == "def_field"
         assert file_manager.sanitize_field_name("import") == "import_field"
 
-    def test_get_generated_files(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_get_generated_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test tracking of generated files."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile"]
@@ -277,7 +274,7 @@ class TestFileManager:
         assert any("Profile.py" in file_path for file_path in generated_files)
         assert any("__init__.py" in file_path for file_path in generated_files)
 
-    def test_clear_generated_files(self, file_manager):
+    def test_clear_generated_files(self, file_manager: Any) -> None:
         """Test clearing the generated files list."""
         # Simulate some generated files
         file_manager._generated_files = ["file1.py", "file2.py"]
@@ -288,7 +285,7 @@ class TestFileManager:
 
         assert len(file_manager.get_generated_files()) == 0
 
-    def test_create_directory_structure(self, file_manager, temp_dir):
+    def test_create_directory_structure(self, file_manager: Any, temp_dir: Any) -> None:
         """Test creating directory structure."""
         models_dir = temp_dir / "models"
 
@@ -302,7 +299,7 @@ class TestFileManager:
         assert models_dir.exists()
         assert models_dir.is_dir()
 
-    def test_handle_file_permissions(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_handle_file_permissions(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that files are created with proper permissions."""
         circular_models: set[str] = set()
         sorted_models = ["User"]
@@ -317,7 +314,7 @@ class TestFileManager:
         assert os.access(user_file, os.R_OK)
         assert os.access(user_file, os.W_OK)
 
-    def test_overwrite_existing_files(self, file_manager, temp_dir, sample_models, sample_dependency_graph):
+    def test_overwrite_existing_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
         """Test that existing files are properly overwritten."""
         models_dir = temp_dir / "models"
         models_dir.mkdir(exist_ok=True)
@@ -338,7 +335,7 @@ class TestFileManager:
         assert "# Old content" not in content
         assert "class User(BaseModel):" in content
 
-    def test_no_optional_import_with_union_none(self, file_manager, temp_dir):
+    def test_no_optional_import_with_union_none(self, file_manager: Any, temp_dir: Any) -> None:
         """REGRESSION: Test that Optional is not imported when using X | None syntax."""
 
         class TestModel(BaseModel):
@@ -356,11 +353,11 @@ class TestFileManager:
         content = test_file.read_text()
 
         # Should NOT import Optional when using X | None
-        assert "from typing import Optional" not in content
+        assert "from typing import Any, Optional" not in content
         assert "Optional[" not in content
         assert "optional_field: str | None" in content
 
-    def test_no_unused_type_import(self, file_manager, temp_dir):
+    def test_no_unused_type_import(self, file_manager: Any, temp_dir: Any) -> None:
         """REGRESSION: Test that Type is not imported when only appearing in model names."""
 
         class PathAttribute(BaseModel):
@@ -384,6 +381,6 @@ class TestFileManager:
         content = test_file.read_text()
 
         # "Type" appears in "PathAttribute" but should not be imported from typing
-        assert "from typing import Type" not in content
+        assert "from typing import Any, Type" not in content
         # PathAttribute should be imported from relative module
         assert "from .PathAttribute import PathAttribute" in content

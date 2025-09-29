@@ -66,7 +66,7 @@ def sanitize_name(name: str, prefix: str = "Model") -> str:
     return sanitized
 
 
-def update_refs(obj: Any, entity_mapping: dict[str, str]):
+def update_refs(obj: Any, entity_mapping: dict[str, str]) -> None:
     if isinstance(obj, dict):
         for key, value in obj.items():
             if key == "$ref" and isinstance(value, str) and value.split("/")[-1] in entity_mapping:
@@ -99,7 +99,7 @@ def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[st
     update_refs(spec, sanitized_entity_mapping)
 
 
-def create_enum_class(enum_name: str, enum_values: list[Any]):
+def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
     """Dynamically create a Pydantic Enum class for the given enum values."""
 
     def clean_enum_name(value: str) -> str:
@@ -296,7 +296,7 @@ def determine_typing_imports(
 
 def write_import_statements(
     init_f: TextIOWrapper, models: dict[str, type[BaseModel]], models_dir: str, sorted_models: list[str] | None = None
-):
+) -> None:
     """Write import statements in dependency-aware order to minimize forward references."""
     # If we have a topologically sorted order, use it; otherwise fall back to alphabetical
     model_order = sorted_models or sorted(models.keys())
@@ -313,7 +313,7 @@ def save_models(
     dependency_graph: dict[str, set[str]],
     circular_models: set[str],
     sorted_models: list[str] | None = None,
-):
+) -> None:
     models_dir = os.path.join(base_path, "models")
     os.makedirs(models_dir, exist_ok=True)
     # existing_models = find_existing_models(models_dir)
@@ -358,8 +358,8 @@ def save_model_file(
     models_dir: str,
     dependency_graph: dict[str, set[str]],
     circular_models: set[str],
-    init_f,
-):
+    init_f: TextIOWrapper,
+) -> None:
     sanitized_model_name = sanitize_name(model_name)
     model_file = os.path.join(models_dir, f"{sanitized_model_name}.py")
     os.makedirs(models_dir, exist_ok=True)
@@ -488,7 +488,7 @@ def handle_list_or_dict_model(
     dependency_graph: dict[str, set[str]],
     circular_models: set[str],
     sanitized_model_name: str,
-):
+) -> None:
     """Handle models that are either list or dict types."""
     # Check if the model is a List or Dict
     model_type = is_list_or_dict_model(model)
@@ -522,7 +522,7 @@ def handle_regular_model(
     dependency_graph: dict[str, set],
     circular_models: set[str],
     sanitized_model_name: str,
-):
+) -> None:
     # Check if the model is a RootModel
     is_root_model = isinstance(model, type) and issubclass(model, RootModel)
 
@@ -640,7 +640,7 @@ def write_model_fields(
     model: BaseModel,
     models: dict[str, type[BaseModel]],
     circular_models: set[str],
-):
+) -> None:
     """Write the fields for the model."""
     for field_name, field in model.model_fields.items():
         sanitized_field_name = sanitize_field_name(field_name)
@@ -655,7 +655,7 @@ def write_model_fields(
             model_file.write(f"    {sanitized_field_name}: {field_type} = Field(None)\n")
 
 
-def write_enum_files(models: dict[str, type[BaseModel]], models_dir: str):
+def write_enum_files(models: dict[str, type[BaseModel]], models_dir: str) -> None:
     """Write enum files directly from the model's fields."""
     for model in models.values():
         if hasattr(model, "model_fields"):
@@ -738,7 +738,7 @@ def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
     return "Any"
 
 
-def create_mermaid_class_diagram(dependency_graph: dict[str, set[str]], sort_order: list[str], output_file: str):
+def create_mermaid_class_diagram(dependency_graph: dict[str, set[str]], sort_order: list[str], output_file: str) -> None:
     with open(output_file, "w") as f:
         f.write("classDiagram\n")
         for model in sort_order:
@@ -834,7 +834,7 @@ def build_dependency_graph(
     return graph
 
 
-def handle_dependencies(models: dict[str, type[BaseModel]]):
+def handle_dependencies(models: dict[str, type[BaseModel]]) -> tuple[dict[str, set[str]], set[str], list[str]]:
     graph = build_dependency_graph(models)
     sorted_models = topological_sort(graph)
     circular_models = detect_circular_dependencies(graph)
@@ -961,7 +961,7 @@ def replace_circular_references(annotation: Any, circular_models: set[str]) -> A
             raise
 
 
-def break_circular_dependencies(models: dict[str, type[BaseModel]], circular_models: set[str]):
+def break_circular_dependencies(models: dict[str, type[BaseModel]], circular_models: set[str]) -> None:
     """Replace circular references in models with ForwardRef."""
     for model_name in circular_models:
         model = models[model_name]
@@ -1641,7 +1641,7 @@ def copy_infrastructure(output_path: str) -> None:
         logging.info(f"Copied infrastructure: {infrastructure_file.name}")
 
 
-def main(spec_path: str, output_path: str):
+def main(spec_path: str, output_path: str) -> None:
     """
     Main function to build Pydantic models from OpenAPI specifications.
 

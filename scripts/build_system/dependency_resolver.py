@@ -80,7 +80,7 @@ class DependencyResolver:
         stack = set()
 
         # Use a copy of the graph's keys to avoid modifying the dictionary during iteration
-        def visit(model: str):
+        def visit(model: str) -> None:
             if model in visited:
                 return
             if model in stack:
@@ -192,7 +192,7 @@ class DependencyResolver:
                     return annotation
                 raise
 
-    def break_circular_dependencies(self, models: dict[str, type[BaseModel]], circular_models: set[str]):
+    def break_circular_dependencies(self, models: dict[str, type[BaseModel]], circular_models: set[str]) -> None:
         """Replace circular references in models with ForwardRef."""
         for model_name in circular_models:
             model = models[model_name]

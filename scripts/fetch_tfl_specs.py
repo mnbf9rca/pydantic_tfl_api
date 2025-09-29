@@ -16,7 +16,7 @@ class TfLAPIFetcher:
     BASE_URL = "https://api-portal.tfl.gov.uk"
     API_VERSION = "2022-04-01-preview"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.Session()
 
     def get_all_apis(self) -> list[dict[str, Any]]:
@@ -156,7 +156,7 @@ class TfLAPIFetcher:
 
         return openapi_spec
 
-    def save_all_specs(self, output_dir: str = "specs"):
+    def save_all_specs(self, output_dir: str = "specs") -> None:
         """Download and save all API specifications."""
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)
@@ -186,7 +186,7 @@ class TfLAPIFetcher:
                 print(f"  Error processing {api_name}: {e}")
 
 
-def main():
+def main() -> None:
     """Main function to demonstrate the API fetching."""
     fetcher = TfLAPIFetcher()
 

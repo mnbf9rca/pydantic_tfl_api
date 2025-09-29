@@ -64,7 +64,7 @@ def _validate_root_model_if_applicable(response_content, expect_empty_response: 
 
 
 class TestTypeHints(unittest.TestCase):
-    def test_model_literal(self):
+    def test_model_literal(self) -> None:
         # models.ResponseModelName is a Literal which should contain the names of all the models in the package
         # this test checks that the names are correct, none are missing.
         # we do this by comparing the __all__ attribute of the models module with the literal

@@ -42,7 +42,7 @@ class ApiError(BaseModel):
 
     @field_validator("timestamp_utc", mode="before")
     @classmethod
-    def parse_timestamp(cls, v):
+    def parse_timestamp(cls, v: Any) -> datetime:
         return v if isinstance(v, datetime) else parsedate_to_datetime(v)
         # return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
 

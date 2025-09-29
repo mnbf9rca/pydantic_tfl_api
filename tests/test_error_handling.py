@@ -19,12 +19,12 @@ from pydantic_tfl_api.endpoints import LineClient
 class TestErrorHandling:
     """Test suite for error handling behavior."""
 
-    def _create_client_and_call_metamodes(self, api_key=None):
+    def _create_client_and_call_metamodes(self, api_key=None) -> None:
         """Helper to create LineClient and call MetaModes consistently."""
         client = LineClient(api_key) if api_key else LineClient()
         return client.MetaModes()
 
-    def test_invalid_api_key_returns_api_error(self):
+    def test_invalid_api_key_returns_api_error(self) -> None:
         """Test that invalid API key returns ApiError object."""
         result = self._create_client_and_call_metamodes("invalid_key_12345")
 
@@ -33,7 +33,7 @@ class TestErrorHandling:
         assert result.http_status_code == 429, f"Expected 429 status code, got {result.http_status_code}"
         assert "Invalid App Key" in result.http_status, f"Expected 'Invalid App Key' in status: {result.http_status}"
 
-    def test_network_timeout_propagates(self):
+    def test_network_timeout_propagates(self) -> None:
         """Test that network timeouts propagate to caller."""
         client = LineClient()
 
@@ -44,7 +44,7 @@ class TestErrorHandling:
             with pytest.raises(Timeout):
                 client.MetaModes()
 
-    def test_connection_error_propagates(self):
+    def test_connection_error_propagates(self) -> None:
         """Test that connection errors propagate to caller."""
         client = LineClient()
 
@@ -55,7 +55,7 @@ class TestErrorHandling:
             with pytest.raises(ConnectionError):
                 client.MetaModes()
 
-    def test_http_500_returns_api_error(self):
+    def test_http_500_returns_api_error(self) -> None:
         """Test handling of HTTP 500 server errors."""
         client = LineClient()
 
@@ -76,14 +76,14 @@ class TestErrorHandling:
             assert isinstance(result, ApiError), f"Expected ApiError for 500 error, got {type(result)}"
             assert result.http_status_code == 500, f"Expected 500 status code, got {result.http_status_code}"
 
-    def test_api_error_has_useful_information(self):
+    def test_api_error_has_useful_information(self) -> None:
         """Test that ApiError objects contain debugging information."""
         result = self._create_client_and_call_metamodes("test_invalid_key")
 
         # Use helper to validate ApiError properties
         self._validate_api_error_properties(result)
 
-    def _validate_api_error_properties(self, result):
+    def _validate_api_error_properties(self, result) -> None:
         """Helper to validate ApiError properties without conditionals in main test."""
         # Only validates if it's an ApiError (skip if it's a ResponseModel)
         if not isinstance(result, ApiError):

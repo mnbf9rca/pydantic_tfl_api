@@ -14,19 +14,19 @@ class TestClientGenerator:
     """Test the ClientGenerator class for API client generation."""
 
     @pytest.fixture
-    def client_generator(self):
+    def client_generator(self) -> None:
         """Create a ClientGenerator instance for testing."""
         return ClientGenerator()
 
     @pytest.fixture
-    def temp_dir(self):
+    def temp_dir(self) -> None:
         """Create a temporary directory for testing."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def sample_spec(self):
+    def sample_spec(self) -> None:
         """Create a sample OpenAPI specification for testing."""
         return {
             "openapi": "3.0.0",
@@ -91,7 +91,7 @@ class TestClientGenerator:
         }
 
     @pytest.fixture
-    def sample_specs_list(self, sample_spec):
+    def sample_specs_list(self, sample_spec: Any) -> None:
         """Create a list of sample specifications."""
         spec1 = sample_spec.copy()
         spec1["info"]["title"] = "User API"
@@ -102,12 +102,12 @@ class TestClientGenerator:
 
         return [spec1, spec2]
 
-    def test_init_creates_empty_state(self, client_generator):
+    def test_init_creates_empty_state(self, client_generator: Any) -> None:
         """Test that ClientGenerator initializes with empty state."""
         assert hasattr(client_generator, "_generated_clients")
         assert isinstance(client_generator._generated_clients, list)
 
-    def test_extract_api_metadata(self, client_generator, sample_spec):
+    def test_extract_api_metadata(self, client_generator: Any, sample_spec: Any) -> None:
         """Test extracting API metadata from specification."""
         class_name, api_path, paths = client_generator.extract_api_metadata(sample_spec)
 
@@ -116,7 +116,7 @@ class TestClientGenerator:
         assert isinstance(paths, dict)
         assert len(paths) > 0
 
-    def test_classify_parameters(self, client_generator):
+    def test_classify_parameters(self, client_generator: Any) -> None:
         """Test classifying parameters into path and query parameters."""
         parameters = [
             {"name": "id", "in": "path", "required": True},
@@ -134,7 +134,7 @@ class TestClientGenerator:
         assert len(path_params) == 2
         assert len(query_params) == 2
 
-    def test_method_name_casing_regression(self, client_generator):
+    def test_method_name_casing_regression(self, client_generator: Any) -> None:
         """REGRESSION: Ensure method names match OpenAPI spec operation IDs (PascalCase)."""
         # This prevents method name inconsistencies with the OpenAPI specification
         test_cases = [
@@ -157,7 +157,7 @@ class TestClientGenerator:
             assert method_name == expected, f"Expected '{expected}', got '{method_name}' for '{operation_id}'"
             assert method_name.isidentifier(), f"Method name '{method_name}' should be a valid Python identifier"
 
-    def test_method_names_follow_openapi_spec(self, client_generator):
+    def test_method_names_follow_openapi_spec(self, client_generator: Any) -> None:
         """CRITICAL: Method names should match OpenAPI specification operation IDs."""
         test_inputs = ["Naptan", "Live", "Dayofweek", "GetUsers", "CreateItem"]
 
@@ -178,7 +178,7 @@ class TestClientGenerator:
                     f"Method name '{method_name}' should match OpenAPI operation ID format for '{operation_id}'"
                 )
 
-    def test_create_method_signature(self, client_generator):
+    def test_create_method_signature(self, client_generator: Any) -> None:
         """Test creating method signatures for API operations."""
         operation_id = "getUserById"
         parameters = [
@@ -194,7 +194,7 @@ class TestClientGenerator:
         assert "limit: int | None = None" in signature
         assert "-> ResponseModel[User] | ApiError:" in signature
 
-    def test_create_method_docstring(self, client_generator, sample_spec):
+    def test_create_method_docstring(self, client_generator: Any, sample_spec: Any) -> None:
         """Test creating method docstrings."""
         details = sample_spec["paths"]["/users"]["get"]
         full_path = "/test/users"
@@ -209,7 +209,7 @@ class TestClientGenerator:
         assert "limit`: int" in docstring
         assert "Maximum number of users to return" in docstring
 
-    def test_create_method_implementation_path_params(self, client_generator):
+    def test_create_method_implementation_path_params(self, client_generator: Any) -> None:
         """Test creating method implementation with path parameters."""
         operation_id = "getUserById"
         parameters = [
@@ -223,7 +223,7 @@ class TestClientGenerator:
         assert "'include_profile': include_profile" in implementation
         assert "endpoint_args={" in implementation
 
-    def test_create_method_implementation_query_only(self, client_generator):
+    def test_create_method_implementation_query_only(self, client_generator: Any) -> None:
         """Test creating method implementation with only query parameters."""
         operation_id = "getUsers"
         parameters = [{"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}}]
@@ -234,7 +234,7 @@ class TestClientGenerator:
         assert "'limit': limit" in implementation
         assert "endpoint_args={" in implementation
 
-    def test_create_method_implementation_no_params(self, client_generator):
+    def test_create_method_implementation_no_params(self, client_generator: Any) -> None:
         """Test creating method implementation with no parameters."""
         operation_id = "getAllUsers"
         parameters: list[dict] = []
@@ -244,7 +244,7 @@ class TestClientGenerator:
         assert "endpoint_args=None" in implementation
         assert "params=" not in implementation
 
-    def test_process_single_method(self, client_generator, sample_spec):
+    def test_process_single_method(self, client_generator: Any, sample_spec: Any) -> None:
         """Test processing a single API method."""
         path = "/users/{id}"
         method = "get"
@@ -263,7 +263,7 @@ class TestClientGenerator:
         assert len(all_types) > 0  # Should have collected parameter types
         assert len(all_package_models) > 0  # Should have collected model names
 
-    def test_generate_import_lines(self, client_generator):
+    def test_generate_import_lines(self, client_generator: Any) -> None:
         """Test generating import statements for client class."""
         class_name = "TestClient"
         all_types = {str, int, bool}
@@ -280,7 +280,7 @@ class TestClientGenerator:
             "GenericResponseModel" not in import_text.split("from ..models import")[1]
         )  # Should be removed from models import
 
-    def test_generate_import_lines_no_generic_response(self, client_generator):
+    def test_generate_import_lines_no_generic_response(self, client_generator: Any) -> None:
         """Test generating imports when GenericResponseModel is not needed."""
         class_name = "TestClient"
         all_types = {str, int}
@@ -293,7 +293,7 @@ class TestClientGenerator:
         assert "from ..core import ApiError, ResponseModel, Client" in import_text
         assert "GenericResponseModel" not in import_text
 
-    def test_create_config(self, client_generator, temp_dir, sample_spec):
+    def test_create_config(self, client_generator: Any, temp_dir: Any, sample_spec: Any) -> None:
         """Test creating configuration file for API client."""
         base_url = "https://api.example.com"
 
@@ -313,7 +313,7 @@ class TestClientGenerator:
         assert "uri': '/v1/test/users'" in content  # Full path from server URL
         assert "model': 'UserArray'" in content
 
-    def test_create_class(self, client_generator, temp_dir, sample_spec):
+    def test_create_class(self, client_generator: Any, temp_dir: Any, sample_spec: Any) -> None:
         """Test creating API client class file."""
         client_generator.create_class(sample_spec, str(temp_dir))
 
@@ -330,14 +330,14 @@ class TestClientGenerator:
         assert "Get all users" in content
         assert "_send_request_and_deserialize" in content
 
-    def test_get_model_name_from_path_object(self, client_generator):
+    def test_get_model_name_from_path_object(self, client_generator: Any) -> None:
         """Test getting model name from response path for object responses."""
         response_content = {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}}}
 
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "User"
 
-    def test_get_model_name_from_path_array(self, client_generator):
+    def test_get_model_name_from_path_array(self, client_generator: Any) -> None:
         """Test getting model name from response path for array responses."""
         response_content = {
             "content": {
@@ -348,7 +348,7 @@ class TestClientGenerator:
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "UserArray"
 
-    def test_get_model_name_from_path_fallback(self, client_generator):
+    def test_get_model_name_from_path_fallback(self, client_generator: Any) -> None:
         """Test getting model name falls back to GenericResponseModel."""
         # Empty response content
         response_content: dict[str, Any] = {}
@@ -360,7 +360,7 @@ class TestClientGenerator:
         model_name = client_generator.get_model_name_from_path(response_content)
         assert model_name == "GenericResponseModel"
 
-    def test_create_function_parameters(self, client_generator):
+    def test_create_function_parameters(self, client_generator: Any) -> None:
         """Test creating function parameter strings."""
         parameters = [
             {"name": "id", "required": True, "schema": {"type": "string"}},
@@ -376,7 +376,7 @@ class TestClientGenerator:
         assert "limit: int | None = None" in param_str
         assert "optional_param: bool | None = None" in param_str
 
-    def test_save_classes(self, client_generator, temp_dir, sample_specs_list):
+    def test_save_classes(self, client_generator: Any, temp_dir: Any, sample_specs_list: Any) -> None:
         """Test saving all client classes and configurations."""
         base_url = "https://api.example.com"
 
@@ -410,7 +410,7 @@ class TestClientGenerator:
         assert (endpoints_dir / "UserClient_config.py").exists()
         assert (endpoints_dir / "OrderClient_config.py").exists()
 
-    def test_join_url_paths(self, client_generator):
+    def test_join_url_paths(self, client_generator: Any) -> None:
         """Test URL path joining functionality."""
         # Basic joining
         result = client_generator.join_url_paths("/api/v1", "users")
@@ -424,7 +424,7 @@ class TestClientGenerator:
         result = client_generator.join_url_paths("", "users")
         assert result == "/users"
 
-    def test_get_generated_clients(self, client_generator, temp_dir, sample_specs_list):
+    def test_get_generated_clients(self, client_generator: Any, temp_dir: Any, sample_specs_list: Any) -> None:
         """Test tracking of generated client files."""
         base_url = "https://api.example.com"
 
@@ -438,7 +438,7 @@ class TestClientGenerator:
         assert any("OrderClient.py" in path for path in generated_clients)
         assert any("UserClient_config.py" in path for path in generated_clients)
 
-    def test_clear_generated_clients(self, client_generator):
+    def test_clear_generated_clients(self, client_generator: Any) -> None:
         """Test clearing the generated clients list."""
         # Simulate some generated clients
         client_generator._generated_clients = ["client1.py", "client2.py"]
@@ -449,7 +449,7 @@ class TestClientGenerator:
 
         assert len(client_generator.get_generated_clients()) == 0
 
-    def test_sanitize_operation_id(self, client_generator):
+    def test_sanitize_operation_id(self, client_generator: Any) -> None:
         """Test sanitizing operation IDs for method names."""
         # Should convert to PascalCase
         assert client_generator.sanitize_name("getUserById") == "GetUserById"
@@ -459,7 +459,7 @@ class TestClientGenerator:
         # Should handle keywords
         assert client_generator.sanitize_name("class") == "Query_Class"
 
-    def test_error_handling_missing_operation_id(self, client_generator):
+    def test_error_handling_missing_operation_id(self, client_generator: Any) -> None:
         """Test handling methods without operation IDs."""
         all_types: set[type] = set()
         all_package_models: set[str] = set()
@@ -469,7 +469,7 @@ class TestClientGenerator:
 
         assert result == ""
 
-    def test_endpoint_path_parameter_replacement(self, client_generator, temp_dir, sample_spec):
+    def test_endpoint_path_parameter_replacement(self, client_generator: Any, temp_dir: Any, sample_spec: Any) -> None:
         """Test that path parameters are correctly replaced in endpoint URLs."""
         client_generator.create_config(sample_spec, str(temp_dir), "https://api.example.com")
 
@@ -479,7 +479,7 @@ class TestClientGenerator:
         # Path parameters should be replaced with format placeholders
         assert "/test/users/{0}" in content  # {id} becomes {0}
 
-    def test_extract_full_path_from_server_url(self, client_generator):
+    def test_extract_full_path_from_server_url(self, client_generator: Any) -> None:
         """REGRESSION: Test that full path is extracted from server URL, not just last segment."""
         # This prevents the "/v2/" bug where only the last segment was extracted
 
@@ -506,7 +506,7 @@ class TestClientGenerator:
         _, api_path, _ = client_generator.extract_api_metadata(spec_root)
         assert api_path == "", f"Expected '', got '{api_path}'"
 
-    def test_config_uses_full_server_path(self, client_generator, temp_dir):
+    def test_config_uses_full_server_path(self, client_generator: Any, temp_dir: Any) -> None:
         """REGRESSION: Test that config files use the full server path in endpoint URIs."""
         spec = {
             "info": {"title": "Lift Disruptions"},

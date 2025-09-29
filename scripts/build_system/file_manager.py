@@ -29,7 +29,7 @@ class FileManager:
         dependency_graph: dict[str, set[str]],
         circular_models: set[str],
         sorted_models: list[str] | None = None,
-    ):
+    ) -> None:
         """
         Save models to individual files and create the __init__.py file.
 
@@ -87,7 +87,7 @@ class FileManager:
         dependency_graph: dict[str, set[str]],
         circular_models: set[str],
         init_f: TextIOWrapper,
-    ):
+    ) -> None:
         """
         Save an individual model to its own file.
 
@@ -163,7 +163,7 @@ class FileManager:
         models: dict[str, type[BaseModel]],
         models_dir: str,
         sorted_models: list[str] | None = None,
-    ):
+    ) -> None:
         """
         Write import statements in dependency-aware order to minimize forward references.
 
@@ -204,7 +204,7 @@ class FileManager:
         """
         return self._generated_files.copy()
 
-    def clear_generated_files(self):
+    def clear_generated_files(self) -> None:
         """Clear the list of generated files."""
         self._generated_files.clear()
 
@@ -321,7 +321,7 @@ class FileManager:
         dependency_graph: dict[str, set[str]],
         circular_models: set[str],
         sanitized_model_name: str,
-    ):
+    ) -> None:
         """Handle models that are either list or dict types."""
         # Check if the model is a List or Dict
         model_type = self._is_list_or_dict_model(model)
@@ -355,7 +355,7 @@ class FileManager:
         model_file: TextIOWrapper,
         model: type[Enum],
         sanitized_model_name: str,
-    ):
+    ) -> None:
         """Handle enum models."""
         model_file.write("from enum import Enum\n\n\n")
         model_file.write(f"class {sanitized_model_name}(Enum):\n")
@@ -370,7 +370,7 @@ class FileManager:
         dependency_graph: dict[str, set],
         circular_models: set[str],
         sanitized_model_name: str,
-    ):
+    ) -> None:
         """Handle regular BaseModel or RootModel types."""
         # Check if the model is a RootModel
         is_root_model = isinstance(model, type) and issubclass(model, RootModel)
@@ -518,7 +518,7 @@ class FileManager:
         model: BaseModel,
         models: dict[str, type[BaseModel]],
         circular_models: set[str],
-    ):
+    ) -> None:
         """Write the fields for the model."""
         for field_name, field in model.model_fields.items():
             sanitized_field_name = sanitize_field_name(field_name)
@@ -541,7 +541,7 @@ class FileManager:
             else:
                 model_file.write(f"    {sanitized_field_name}: {field_type} = Field({field_default})\n")
 
-    def _write_enum_files(self, models: dict[str, type[BaseModel]], models_dir: str):
+    def _write_enum_files(self, models: dict[str, type[BaseModel]], models_dir: str) -> None:
         """Write enum files directly from the model's fields."""
         for model in models.values():
             if hasattr(model, "model_fields"):

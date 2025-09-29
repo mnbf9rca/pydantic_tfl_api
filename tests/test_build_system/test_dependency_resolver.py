@@ -1,6 +1,6 @@
 """Tests for DependencyResolver class that handles model dependencies and circular references."""
 
-from typing import ForwardRef
+from typing import Any, ForwardRef
 
 import pytest
 from pydantic import BaseModel, Field
@@ -12,12 +12,12 @@ class TestDependencyResolver:
     """Test the DependencyResolver class for model dependency management."""
 
     @pytest.fixture
-    def dependency_resolver(self):
+    def dependency_resolver(self) -> None:
         """Create a DependencyResolver instance for testing."""
         return DependencyResolver()
 
     @pytest.fixture
-    def sample_models_simple(self):
+    def sample_models_simple(self) -> None:
         """Create simple test models without circular dependencies."""
 
         # Create mock models that simulate Pydantic models
@@ -32,7 +32,7 @@ class TestDependencyResolver:
         return {"User": User, "Profile": Profile}
 
     @pytest.fixture
-    def sample_models_with_references(self):
+    def sample_models_with_references(self) -> None:
         """Create test models with forward references."""
 
         # Create models that reference each other
@@ -47,7 +47,7 @@ class TestDependencyResolver:
         return {"User": User, "Profile": Profile}
 
     @pytest.fixture
-    def sample_models_circular(self):
+    def sample_models_circular(self) -> None:
         """Create test models with circular dependencies."""
 
         class Node(BaseModel):
@@ -65,7 +65,7 @@ class TestDependencyResolver:
 
         return {"Node": Node, "TreeA": TreeA, "TreeB": TreeB}
 
-    def test_init_creates_empty_state(self, dependency_resolver):
+    def test_init_creates_empty_state(self, dependency_resolver: Any) -> None:
         """Test that DependencyResolver initializes with empty state."""
         assert hasattr(dependency_resolver, "_dependency_graph")
         assert hasattr(dependency_resolver, "_circular_models")
@@ -75,7 +75,7 @@ class TestDependencyResolver:
         assert dependency_resolver._circular_models == set()
         assert dependency_resolver._sorted_models == []
 
-    def test_build_dependency_graph_simple(self, dependency_resolver, sample_models_simple):
+    def test_build_dependency_graph_simple(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test building dependency graph for models without dependencies."""
         graph = dependency_resolver.build_dependency_graph(sample_models_simple)
 
@@ -85,7 +85,7 @@ class TestDependencyResolver:
         assert len(graph["User"]) == 0
         assert len(graph["Profile"]) == 0
 
-    def test_build_dependency_graph_with_references(self, dependency_resolver, sample_models_with_references):
+    def test_build_dependency_graph_with_references(self, dependency_resolver: Any, sample_models_with_references: Any) -> None:
         """Test building dependency graph for models with forward references."""
         graph = dependency_resolver.build_dependency_graph(sample_models_with_references)
 
@@ -94,14 +94,14 @@ class TestDependencyResolver:
         # Profile depends on User
         assert "User" in graph["Profile"]
 
-    def test_detect_circular_dependencies_none(self, dependency_resolver, sample_models_simple):
+    def test_detect_circular_dependencies_none(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test circular dependency detection with no circular dependencies."""
         graph = dependency_resolver.build_dependency_graph(sample_models_simple)
         circular = dependency_resolver.detect_circular_dependencies(graph)
 
         assert len(circular) == 0
 
-    def test_detect_circular_dependencies_self_reference(self, dependency_resolver):
+    def test_detect_circular_dependencies_self_reference(self, dependency_resolver: Any) -> None:
         """Test detection of self-referencing circular dependencies."""
         # Mock a dependency graph with self-reference
         graph = {"Node": {"Node"}, "User": set()}
@@ -109,7 +109,7 @@ class TestDependencyResolver:
         circular = dependency_resolver.detect_circular_dependencies(graph)
         assert "Node" in circular
 
-    def test_detect_circular_dependencies_mutual(self, dependency_resolver):
+    def test_detect_circular_dependencies_mutual(self, dependency_resolver: Any) -> None:
         """Test detection of mutual circular dependencies."""
         # Mock a dependency graph with mutual references
         graph = {"TreeA": {"TreeB"}, "TreeB": {"TreeA"}, "Independent": set()}
@@ -117,7 +117,7 @@ class TestDependencyResolver:
         circular = dependency_resolver.detect_circular_dependencies(graph)
         assert "TreeA" in circular or "TreeB" in circular
 
-    def test_topological_sort_simple(self, dependency_resolver):
+    def test_topological_sort_simple(self, dependency_resolver: Any) -> None:
         """Test topological sorting with simple dependencies."""
         graph = {"A": set(), "B": {"A"}, "C": {"A", "B"}}
 
@@ -133,7 +133,7 @@ class TestDependencyResolver:
         assert a_idx < c_idx
         assert b_idx < c_idx
 
-    def test_topological_sort_with_circular_dependencies(self, dependency_resolver):
+    def test_topological_sort_with_circular_dependencies(self, dependency_resolver: Any) -> None:
         """Test topological sorting handles circular dependencies."""
         graph = {
             "A": {"B"},
@@ -149,7 +149,7 @@ class TestDependencyResolver:
         assert "C" in sorted_models
         assert len(sorted_models) == 3
 
-    def test_break_circular_dependencies(self, dependency_resolver, sample_models_circular):
+    def test_break_circular_dependencies(self, dependency_resolver: Any, sample_models_circular: Any) -> None:
         """Test breaking circular dependencies by replacing with ForwardRef."""
         circular_models = {"Node", "TreeA", "TreeB"}
 
@@ -160,7 +160,7 @@ class TestDependencyResolver:
         # For now, just verify the method doesn't crash
         assert True  # Method completed without error
 
-    def test_resolve_dependencies_complete_workflow(self, dependency_resolver, sample_models_with_references):
+    def test_resolve_dependencies_complete_workflow(self, dependency_resolver: Any, sample_models_with_references: Any) -> None:
         """Test the complete dependency resolution workflow."""
         result = dependency_resolver.resolve_dependencies(sample_models_with_references)
 
@@ -181,7 +181,7 @@ class TestDependencyResolver:
         for model_name in sample_models_with_references:
             assert model_name in sorted_models
 
-    def test_extract_inner_types_simple(self, dependency_resolver):
+    def test_extract_inner_types_simple(self, dependency_resolver: Any) -> None:
         """Test extracting inner types from simple annotations."""
         # Test basic type
         inner_types = dependency_resolver.extract_inner_types(str)
@@ -192,7 +192,7 @@ class TestDependencyResolver:
         inner_types = dependency_resolver.extract_inner_types(forward_ref)
         assert forward_ref in inner_types
 
-    def test_extract_inner_types_generic(self, dependency_resolver):
+    def test_extract_inner_types_generic(self, dependency_resolver: Any) -> None:
         """Test extracting inner types from generic annotations."""
         # Test List[str]
         list_type = list[str]
@@ -206,7 +206,7 @@ class TestDependencyResolver:
         # Should include the origin and inner types
         assert len(inner_types) > 0
 
-    def test_get_dependency_graph(self, dependency_resolver, sample_models_simple):
+    def test_get_dependency_graph(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test getting the dependency graph."""
         # Initially should be empty
         assert dependency_resolver.get_dependency_graph() == {}
@@ -218,7 +218,7 @@ class TestDependencyResolver:
         assert isinstance(graph, dict)
         assert len(graph) > 0
 
-    def test_get_circular_models(self, dependency_resolver, sample_models_simple):
+    def test_get_circular_models(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test getting the circular models set."""
         # Initially should be empty
         assert dependency_resolver.get_circular_models() == set()
@@ -229,7 +229,7 @@ class TestDependencyResolver:
 
         assert isinstance(circular, set)
 
-    def test_get_sorted_models(self, dependency_resolver, sample_models_simple):
+    def test_get_sorted_models(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test getting the sorted models list."""
         # Initially should be empty
         assert dependency_resolver.get_sorted_models() == []
@@ -241,7 +241,7 @@ class TestDependencyResolver:
         assert isinstance(sorted_models, list)
         assert len(sorted_models) > 0
 
-    def test_clear_state(self, dependency_resolver, sample_models_simple):
+    def test_clear_state(self, dependency_resolver: Any, sample_models_simple: Any) -> None:
         """Test clearing the resolver state."""
         # First resolve some dependencies
         dependency_resolver.resolve_dependencies(sample_models_simple)
@@ -260,7 +260,7 @@ class TestDependencyResolver:
     @pytest.mark.parametrize(
         "models_fixture_name", ["sample_models_simple", "sample_models_with_references", "sample_models_circular"]
     )
-    def test_resolve_dependencies_different_scenarios(self, dependency_resolver, request, models_fixture_name):
+    def test_resolve_dependencies_different_scenarios(self, dependency_resolver: Any, request: Any, models_fixture_name: Any) -> None:
         """Test dependency resolution with different model scenarios."""
         models = request.getfixturevalue(models_fixture_name)
 

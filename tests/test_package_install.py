@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -22,12 +23,12 @@ class TestPackageInstallation:
     """Test suite for package building and installation."""
 
     @pytest.fixture(scope="class")
-    def project_root(self):
+    def project_root(self) -> Any:
         """Get the project root directory."""
         return Path(__file__).parent.parent
 
     @pytest.fixture(scope="class")
-    def built_package(self, project_root):
+    def built_package(self, project_root: Any) -> Any:
         """Build the package and return the wheel path."""
         # Clean any existing dist directory
         dist_dir = project_root / "dist"
@@ -48,7 +49,7 @@ class TestPackageInstallation:
         return wheels[0]
 
     @pytest.fixture(scope="class")
-    def isolated_env(self, built_package):
+    def isolated_env(self, built_package: Any) -> Any:
         """Create an isolated environment with the package installed."""
         with tempfile.TemporaryDirectory(prefix="pydantic_tfl_test_") as temp_dir:
             env_dir = Path(temp_dir) / "test_env"
@@ -79,7 +80,7 @@ class TestPackageInstallation:
 
             yield {"env_dir": env_dir, "python_path": python_path, "pip_path": pip_path}
 
-    def test_package_builds_successfully(self, built_package):
+    def test_package_builds_successfully(self, built_package: Any) -> None:
         """Test that the package builds without errors."""
         assert built_package.exists(), f"Built package not found: {built_package}"
         assert built_package.suffix == ".whl", f"Expected wheel file, got: {built_package}"
@@ -87,7 +88,7 @@ class TestPackageInstallation:
         # Check that the wheel file is not empty
         assert built_package.stat().st_size > 0, "Built wheel file is empty"
 
-    def test_package_installs_successfully(self, isolated_env):
+    def test_package_installs_successfully(self, isolated_env: Any) -> None:
         """Test that the package installs in an isolated environment."""
         python_path = isolated_env["python_path"]
 
@@ -97,7 +98,7 @@ class TestPackageInstallation:
         assert result.returncode == 0, f"Failed to list packages: {result.stderr}"
         assert "pydantic-tfl-api" in result.stdout, "Package not found in installed packages"
 
-    def test_main_package_imports(self, isolated_env):
+    def test_main_package_imports(self, isolated_env: Any) -> None:
         """Test that the main package can be imported."""
         python_path = isolated_env["python_path"]
 
@@ -131,7 +132,7 @@ class TestPackageInstallation:
             "LiftDisruptionsClient",
         ],
     )
-    def test_client_imports(self, isolated_env, client):
+    def test_client_imports(self, isolated_env: Any, client: Any) -> None:
         """Test that individual client classes can be imported."""
         python_path = isolated_env["python_path"]
 
@@ -152,7 +153,7 @@ class TestPackageInstallation:
             "from pydantic_tfl_api.models import Line, LineArray, Mode, ModeArray",
         ],
     )
-    def test_core_modules_import(self, isolated_env, import_stmt):
+    def test_core_modules_import(self, isolated_env: Any, import_stmt: Any) -> None:
         """Test that individual core modules can be imported."""
         python_path = isolated_env["python_path"]
 
@@ -166,7 +167,7 @@ class TestPackageInstallation:
         assert result.returncode == 0, f"Failed to import core modules: {result.stderr}"
         assert "Core import successful" in result.stdout
 
-    def test_package_version_consistency(self, isolated_env):
+    def test_package_version_consistency(self, isolated_env: Any) -> None:
         """Test that package version matches pyproject.toml."""
         python_path = isolated_env["python_path"]
 
@@ -198,7 +199,7 @@ class TestPackageInstallation:
             f"Version mismatch: installed={installed_version}, expected={expected_version}"
         )
 
-    def test_package_can_query_tfl_api(self, isolated_env):
+    def test_package_can_query_tfl_api(self, isolated_env: Any) -> None:
         """Test that the installed package can successfully query the TfL API."""
         python_path = isolated_env["python_path"]
 
@@ -207,8 +208,10 @@ class TestPackageInstallation:
 import time
 from pydantic_tfl_api import LineClient
 from pydantic_tfl_api.core import ResponseModel, ApiError
+from typing import Any
 
-def validate_api_result(result):
+
+def validate_api_result(result: Any) -> bool:
     """Helper to validate API result without conditionals."""
     # Check for ApiError first
     if isinstance(result, ApiError):
@@ -222,7 +225,7 @@ def validate_api_result(result):
 
     return True
 
-def validate_response_content(result):
+def validate_response_content(result: Any) -> bool:
     """Helper to validate response content structure."""
     if not hasattr(result.content, 'root'):
         print("Warning: No root attribute found")
@@ -261,7 +264,7 @@ if not validate_response_content(result):
         assert "TfL API query successful" in result.stdout, "API query did not complete successfully"
 
     @pytest.mark.parametrize("dependency", ["pydantic", "requests"])
-    def test_package_dependencies_correct(self, isolated_env, dependency):
+    def test_package_dependencies_correct(self, isolated_env: Any, dependency: Any) -> None:
         """Test that individual package dependencies are installed correctly."""
         python_path = isolated_env["python_path"]
 

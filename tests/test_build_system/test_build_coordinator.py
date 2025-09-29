@@ -10,18 +10,20 @@ from unittest.mock import patch
 import pytest
 
 from scripts.build_system.build_coordinator import BuildCoordinator
+from typing import Any
+
 
 
 class TestBuildCoordinator:
     """Test the BuildCoordinator class for orchestrating the build process."""
 
     @pytest.fixture
-    def build_coordinator(self):
+    def build_coordinator(self) -> None:
         """Create a BuildCoordinator instance for testing."""
         return BuildCoordinator()
 
     @pytest.fixture
-    def temp_spec_dir(self):
+    def temp_spec_dir(self) -> None:
         """Create a temporary directory with sample spec files."""
         temp_dir = tempfile.mkdtemp()
         spec_dir = Path(temp_dir) / "specs"
@@ -67,13 +69,13 @@ class TestBuildCoordinator:
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def temp_output_dir(self):
+    def temp_output_dir(self) -> None:
         """Create a temporary output directory."""
         temp_dir = tempfile.mkdtemp()
         yield Path(temp_dir)
         shutil.rmtree(temp_dir)
 
-    def test_init_creates_components(self, build_coordinator):
+    def test_init_creates_components(self, build_coordinator: Any) -> None:
         """Test that BuildCoordinator initializes with all required components."""
         assert hasattr(build_coordinator, "spec_processor")
         assert hasattr(build_coordinator, "model_builder")
@@ -88,7 +90,7 @@ class TestBuildCoordinator:
         assert build_coordinator.file_manager is not None
         assert build_coordinator.client_generator is not None
 
-    def test_validate_and_setup_paths_valid_input(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_validate_and_setup_paths_valid_input(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test path validation with valid input paths."""
         # Should not raise any exceptions
         build_coordinator._validate_and_setup_paths(str(temp_spec_dir), str(temp_output_dir))
@@ -96,12 +98,12 @@ class TestBuildCoordinator:
         # Output directory should exist after setup
         assert temp_output_dir.exists()
 
-    def test_validate_and_setup_paths_invalid_spec_path(self, build_coordinator, temp_output_dir):
+    def test_validate_and_setup_paths_invalid_spec_path(self, build_coordinator: Any, temp_output_dir: Any) -> None:
         """Test path validation with invalid spec path."""
         with pytest.raises(FileNotFoundError):
             build_coordinator._validate_and_setup_paths("/nonexistent/path", str(temp_output_dir))
 
-    def test_validate_and_setup_paths_creates_output_dir(self, build_coordinator, temp_spec_dir):
+    def test_validate_and_setup_paths_creates_output_dir(self, build_coordinator: Any, temp_spec_dir: Any) -> None:
         """Test that output directory is created if it doesn't exist."""
         output_dir = Path(tempfile.mkdtemp()) / "nonexistent" / "output"
 
@@ -111,7 +113,7 @@ class TestBuildCoordinator:
         finally:
             shutil.rmtree(output_dir.parent)
 
-    def test_load_and_process_specs(self, build_coordinator, temp_spec_dir):
+    def test_load_and_process_specs(self, build_coordinator: Any, temp_spec_dir: Any) -> None:
         """Test loading and processing specifications."""
         specs, components, paths = build_coordinator._load_and_process_specs(str(temp_spec_dir))
 
@@ -126,7 +128,7 @@ class TestBuildCoordinator:
         assert "User" in components
         assert any("/test/" in path for path in paths)
 
-    def test_load_and_process_specs_empty_directory(self, build_coordinator):
+    def test_load_and_process_specs_empty_directory(self, build_coordinator: Any) -> None:
         """Test processing empty specs directory."""
         empty_dir = tempfile.mkdtemp()
         try:
@@ -135,7 +137,7 @@ class TestBuildCoordinator:
         finally:
             shutil.rmtree(empty_dir)
 
-    def test_generate_and_process_models(self, build_coordinator, temp_spec_dir):
+    def test_generate_and_process_models(self, build_coordinator: Any, temp_spec_dir: Any) -> None:
         """Test model generation and processing."""
         # First get components
         _, components, _ = build_coordinator._load_and_process_specs(str(temp_spec_dir))
@@ -151,7 +153,7 @@ class TestBuildCoordinator:
         assert "User" in models
         # Arrays are generated as needed - may or may not be present for simple schemas
 
-    def test_handle_dependencies_and_save_models(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_handle_dependencies_and_save_models(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test dependency handling and model saving."""
         # First get components and generate models
         _, components, _ = build_coordinator._load_and_process_specs(str(temp_spec_dir))
@@ -171,7 +173,7 @@ class TestBuildCoordinator:
         assert models_dir.exists()
         assert (models_dir / "__init__.py").exists()
 
-    def test_generate_classes_and_diagrams(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_generate_classes_and_diagrams(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test client class generation and diagram creation."""
         # Prepare data
         specs, components, _ = build_coordinator._load_and_process_specs(str(temp_spec_dir))
@@ -194,7 +196,7 @@ class TestBuildCoordinator:
         assert diagram_file.exists()
 
     @patch("scripts.build_system.build_coordinator.copy_infrastructure")
-    def test_copy_infrastructure_called(self, mock_copy, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_copy_infrastructure_called(self, mock_copy: Any, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test that infrastructure copying is called during build."""
         # Run the full build
         with contextlib.suppress(Exception):
@@ -203,7 +205,7 @@ class TestBuildCoordinator:
         # Infrastructure copying should have been called
         mock_copy.assert_called_once_with(str(temp_output_dir))
 
-    def test_build_complete_workflow(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_build_complete_workflow(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test the complete build workflow."""
         # Mock the infrastructure copying to avoid file system dependencies
         with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
@@ -223,12 +225,12 @@ class TestBuildCoordinator:
         assert (endpoints_dir / "__init__.py").exists()
         assert (endpoints_dir / "UserClient.py").exists()
 
-    def test_build_error_handling_file_not_found(self, build_coordinator, temp_output_dir):
+    def test_build_error_handling_file_not_found(self, build_coordinator: Any, temp_output_dir: Any) -> None:
         """Test error handling for non-existent spec path."""
         with pytest.raises(FileNotFoundError):
             build_coordinator.build("/nonexistent/path", str(temp_output_dir))
 
-    def test_build_error_handling_empty_specs(self, build_coordinator, temp_output_dir):
+    def test_build_error_handling_empty_specs(self, build_coordinator: Any, temp_output_dir: Any) -> None:
         """Test error handling for directory with no valid specs."""
         empty_dir = tempfile.mkdtemp()
         try:
@@ -240,7 +242,7 @@ class TestBuildCoordinator:
         finally:
             shutil.rmtree(empty_dir)
 
-    def test_build_error_handling_permission_error(self, build_coordinator, temp_spec_dir):
+    def test_build_error_handling_permission_error(self, build_coordinator: Any, temp_spec_dir: Any) -> None:
         """Test error handling for permission errors."""
         # Try to write to a read-only directory (simulate permission error)
         with (
@@ -249,7 +251,7 @@ class TestBuildCoordinator:
         ):
             build_coordinator.build(str(temp_spec_dir), "/root/no_permission")
 
-    def test_get_build_stats(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_get_build_stats(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test getting build statistics."""
         # Initially should be empty
         stats = build_coordinator.get_build_stats()
@@ -265,7 +267,7 @@ class TestBuildCoordinator:
         assert "clients_generated" in stats
         assert "specs_processed" in stats
 
-    def test_clear_state(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_clear_state(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test clearing coordinator state."""
         # Run a build first
         with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
@@ -282,7 +284,7 @@ class TestBuildCoordinator:
         stats = build_coordinator.get_build_stats()
         assert stats == {}
 
-    def test_validate_output_after_build(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_validate_output_after_build(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test validating the build output."""
         with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
@@ -291,12 +293,12 @@ class TestBuildCoordinator:
         is_valid = build_coordinator.validate_build_output(str(temp_output_dir))
         assert is_valid
 
-    def test_validate_output_missing_directory(self, build_coordinator):
+    def test_validate_output_missing_directory(self, build_coordinator: Any) -> None:
         """Test validation with missing output directory."""
         is_valid = build_coordinator.validate_build_output("/nonexistent/path")
         assert not is_valid
 
-    def test_validate_output_incomplete_build(self, build_coordinator, temp_output_dir):
+    def test_validate_output_incomplete_build(self, build_coordinator: Any, temp_output_dir: Any) -> None:
         """Test validation with incomplete build output."""
         # Create output directory but not the required subdirectories
         temp_output_dir.mkdir(exist_ok=True)
@@ -304,7 +306,7 @@ class TestBuildCoordinator:
         is_valid = build_coordinator.validate_build_output(str(temp_output_dir))
         assert not is_valid
 
-    def test_set_base_url(self, build_coordinator):
+    def test_set_base_url(self, build_coordinator: Any) -> None:
         """Test setting custom base URL."""
         custom_url = "https://custom.api.com"
         build_coordinator.set_base_url(custom_url)
@@ -312,7 +314,7 @@ class TestBuildCoordinator:
         # Should be used in subsequent builds
         assert build_coordinator._base_url == custom_url
 
-    def test_get_component_counts(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_get_component_counts(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test getting component counts after build."""
         with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
@@ -329,7 +331,7 @@ class TestBuildCoordinator:
         assert counts["models"] > 0
         assert counts["clients"] > 0
 
-    def test_build_with_custom_configuration(self, build_coordinator, temp_spec_dir, temp_output_dir):
+    def test_build_with_custom_configuration(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test build with custom configuration options."""
         config = {"generate_diagrams": False, "validate_output": True, "base_url": "https://custom.example.com"}
 
@@ -340,7 +342,7 @@ class TestBuildCoordinator:
         diagram_file = temp_output_dir / "class_diagram.mmd"
         assert not diagram_file.exists()
 
-    def test_concurrent_build_safety(self, build_coordinator, temp_spec_dir):
+    def test_concurrent_build_safety(self, build_coordinator: Any, temp_spec_dir: Any) -> None:
         """Test that concurrent builds are handled safely."""
         output_dir1 = Path(tempfile.mkdtemp())
         output_dir2 = Path(tempfile.mkdtemp())
@@ -360,12 +362,12 @@ class TestBuildCoordinator:
             shutil.rmtree(output_dir2)
 
     @pytest.mark.parametrize("invalid_input", [None, "", 123, ["not", "a", "string"]])
-    def test_build_input_validation(self, build_coordinator, invalid_input):
+    def test_build_input_validation(self, build_coordinator: Any, invalid_input: Any) -> None:
         """Test build input validation with various invalid inputs."""
         with pytest.raises((TypeError, ValueError, FileNotFoundError, RuntimeError)):
             build_coordinator.build(invalid_input, "/some/output")
 
-    def test_logging_configuration(self, build_coordinator):
+    def test_logging_configuration(self, build_coordinator: Any) -> None:
         """Test that logging is properly configured."""
         # Should have a logger
         assert hasattr(build_coordinator, "logger")

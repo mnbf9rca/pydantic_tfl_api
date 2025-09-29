@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from requests import Response
 
@@ -14,7 +15,7 @@ token = None  # only need a token if > 1 request per second
 client = Client(token)
 
 
-def persist_json(response: Response, filename):
+def persist_json(response: Response, filename: str) -> None:
     if response.status_code != 200:
         print(f"Error: {response.status_code} for {filename}")
         return
@@ -34,7 +35,7 @@ def persist_json(response: Response, filename):
 #     persist_json(response, f"tests/tfl_responses/{file_name}")
 
 
-def create_request_name_from_args(request_args):
+def create_request_name_from_args(request_args: dict[str, Any]) -> str:
     # format is {endpoint}_{endpoint_args}_{endpoint_params}_{model}
     # ensuring that we remove any commas from the endpoint_args
     # and mapping {} in endpoint_params to None

@@ -13,12 +13,12 @@ class TestModelBuilder:
     """Test the ModelBuilder class for OpenAPI schema to Pydantic model conversion."""
 
     @pytest.fixture
-    def model_builder(self):
+    def model_builder(self) -> Any:
         """Create a ModelBuilder instance for testing."""
         return ModelBuilder()
 
     @pytest.fixture
-    def sample_components(self):
+    def sample_components(self) -> Any:
         """Sample OpenAPI components for testing."""
         return {
             "User": {
@@ -43,13 +43,13 @@ class TestModelBuilder:
             },
         }
 
-    def test_init_creates_empty_models_dict(self, model_builder):
+    def test_init_creates_empty_models_dict(self, model_builder: Any) -> None:
         """Test that ModelBuilder initializes with empty models dictionary."""
         assert hasattr(model_builder, "models")
         assert isinstance(model_builder.models, dict)
         assert len(model_builder.models) == 0
 
-    def test_sanitize_name_basic_functionality(self, model_builder):
+    def test_sanitize_name_basic_functionality(self, model_builder: Any) -> None:
         """Test name sanitization handles various input formats."""
         # Test basic sanitization
         assert model_builder.sanitize_name("user-profile") == "Profile"
@@ -63,7 +63,7 @@ class TestModelBuilder:
         # Test digit handling
         assert model_builder.sanitize_name("123test") == "Model_123test"
 
-    def test_map_basic_openapi_types(self, model_builder):
+    def test_map_basic_openapi_types(self, model_builder: Any) -> None:
         """Test mapping of basic OpenAPI types to Python types."""
         components: dict[str, Any] = {}
         models: dict[str, Any] = {}
@@ -88,7 +88,7 @@ class TestModelBuilder:
         result = model_builder.map_type(number_spec, "price", components, models)
         assert result is float
 
-    def test_map_array_types(self, model_builder):
+    def test_map_array_types(self, model_builder: Any) -> None:
         """Test mapping of array types."""
         components: dict[str, Any] = {}
         models: dict[str, Any] = {}
@@ -103,7 +103,7 @@ class TestModelBuilder:
         result = model_builder.map_type(array_spec_no_items, "data", components, models)
         assert result == list[Any]
 
-    def test_map_reference_types(self, model_builder):
+    def test_map_reference_types(self, model_builder: Any) -> None:
         """Test mapping of $ref references to ForwardRef."""
         components: dict[str, Any] = {"User": {}}
         models: dict[str, Any] = {}
@@ -113,7 +113,7 @@ class TestModelBuilder:
         assert isinstance(result, ForwardRef)
         assert result.__forward_arg__ == "User"
 
-    def test_create_enum_class(self, model_builder):
+    def test_create_enum_class(self, model_builder: Any) -> None:
         """Test enum class creation from OpenAPI enum values."""
         enum_values = ["active", "inactive", "pending"]
         enum_class = model_builder.create_enum_class("StatusEnum", enum_values)
@@ -125,7 +125,7 @@ class TestModelBuilder:
         assert hasattr(enum_class, "PENDING")
         assert enum_class.ACTIVE.value == "active"
 
-    def test_create_enum_with_duplicate_names(self, model_builder):
+    def test_create_enum_with_duplicate_names(self, model_builder: Any) -> None:
         """Test enum creation handles duplicate names properly."""
         enum_values = ["test", "Test", "TEST"]
         enum_class = model_builder.create_enum_class("TestEnum", enum_values)
@@ -137,7 +137,7 @@ class TestModelBuilder:
         member_names = [member.name for member in members]
         assert len(set(member_names)) == 3
 
-    def test_create_pydantic_models_object_types(self, model_builder, sample_components):
+    def test_create_pydantic_models_object_types(self, model_builder: Any, sample_components: Any) -> None:
         """Test creating Pydantic models from object type schemas."""
         model_builder.create_pydantic_models(sample_components)
 
@@ -152,7 +152,7 @@ class TestModelBuilder:
         assert "age" in user_model.model_fields
         assert "isActive" in user_model.model_fields
 
-    def test_create_pydantic_models_array_types(self, model_builder, sample_components):
+    def test_create_pydantic_models_array_types(self, model_builder: Any, sample_components: Any) -> None:
         """Test creating array type models."""
         model_builder.create_pydantic_models(sample_components)
 
@@ -165,7 +165,7 @@ class TestModelBuilder:
 
         assert get_origin(user_array_type) is list
 
-    def test_create_pydantic_models_handles_missing_properties(self, model_builder):
+    def test_create_pydantic_models_handles_missing_properties(self, model_builder: Any) -> None:
         """Test that models with missing properties are handled gracefully."""
         components = {
             "EmptyModel": {
@@ -180,7 +180,7 @@ class TestModelBuilder:
         assert "EmptyModel" in model_builder.models
         assert model_builder.models["EmptyModel"] == dict[str, Any]
 
-    def test_field_requirements_handling(self, model_builder):
+    def test_field_requirements_handling(self, model_builder: Any) -> None:
         """Test that required and optional fields are handled correctly."""
         components = {
             "TestModel": {
@@ -205,7 +205,7 @@ class TestModelBuilder:
         optional_field = fields["optional_field"]
         assert optional_field.default is None
 
-    def test_nested_model_references(self, model_builder, sample_components):
+    def test_nested_model_references(self, model_builder: Any, sample_components: Any) -> None:
         """Test that nested model references are handled correctly."""
         model_builder.create_pydantic_models(sample_components)
 
@@ -218,7 +218,7 @@ class TestModelBuilder:
         assert "status" in fields
         assert "metadata" in fields
 
-    def test_enum_field_handling(self, model_builder):
+    def test_enum_field_handling(self, model_builder: Any) -> None:
         """Test that enum fields in models are handled correctly."""
         components = {
             "ModelWithEnum": {
@@ -253,7 +253,7 @@ class TestModelBuilder:
         assert hasattr(enum_type, "__name__")
         assert "Enum" in enum_type.__name__
 
-    def test_generate_missing_array_models_regression(self, model_builder):
+    def test_generate_missing_array_models_regression(self, model_builder: Any) -> None:
         """REGRESSION: Ensure all needed array models are generated."""
         # Components that should generate array models based on production system
         components_needing_arrays = {
@@ -287,7 +287,7 @@ class TestModelBuilder:
         for array_name in expected_arrays:
             assert array_name in models, f"Array model {array_name} should be auto-generated"
 
-    def test_array_models_are_rootmodel_based(self, model_builder):
+    def test_array_models_are_rootmodel_based(self, model_builder: Any) -> None:
         """REGRESSION: Ensure array models use RootModel pattern."""
         from pydantic import RootModel
 
@@ -316,7 +316,7 @@ class TestModelBuilder:
             # This should be a RootModel class
             assert issubclass(array_model, RootModel), "Array model class should inherit from RootModel"
 
-    def test_get_models_returns_copy(self, model_builder, sample_components):
+    def test_get_models_returns_copy(self, model_builder: Any, sample_components: Any) -> None:
         """Test that get_models returns a copy of the models dict."""
         model_builder.create_pydantic_models(sample_components)
 
@@ -334,7 +334,7 @@ class TestModelBuilder:
             assert key in models_copy
             assert models_copy[key] is model_builder.models[key]
 
-    def test_clear_models(self, model_builder, sample_components):
+    def test_clear_models(self, model_builder: Any, sample_components: Any) -> None:
         """Test that clear_models empties the models dictionary."""
         model_builder.create_pydantic_models(sample_components)
 
@@ -359,7 +359,7 @@ class TestModelBuilder:
             ("unknown_type", Any),
         ],
     )
-    def test_map_openapi_type_mapping(self, model_builder, openapi_type, expected_python_type):
+    def test_map_openapi_type_mapping(self, model_builder: Any, openapi_type: Any, expected_python_type: Any) -> None:
         """Test OpenAPI type to Python type mapping."""
         result = model_builder.map_openapi_type(openapi_type)
         assert result == expected_python_type

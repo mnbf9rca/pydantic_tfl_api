@@ -12,6 +12,8 @@ from requests.models import Response
 
 from pydantic_tfl_api import models
 from pydantic_tfl_api.core import ApiError, Client, ResponseModel, RestClient
+from typing import Any
+
 
 
 # Mock models module
@@ -28,7 +30,7 @@ class PydanticTestModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-def test_create_client_with_api_token():
+def test_create_client_with_api_token() -> None:
     # checks that the API key is being passed to the RestClient
     api_token = "your_app_key"
     test_client = Client(api_token)
@@ -97,7 +99,7 @@ def test_create_model_instance(
     expected_age,
     expected_expiry,
     expected_shared_expiry,
-):
+) -> None:
     # Act
     client = Client()
     response_json_parsed = json.loads(json.dumps(response_json))
@@ -153,7 +155,7 @@ def test_create_model_instance_validation_errors(
     response_json,
     result_expiry,
     shared_expiry,
-):
+) -> None:
     # Act & Assert
     client = Client()
     response_json_parsed = json.loads(json.dumps(response_json))
@@ -171,7 +173,7 @@ def test_create_model_instance_validation_errors(
     ],
     ids=["no_api_token", "valid_api_token"],
 )
-def test_client_initialization(api_token, expected_client_type, expected_models):
+def test_client_initialization(api_token, expected_client_type, expected_models) -> None:
     # Arrange
     with (
         patch("pydantic_tfl_api.core.client.RestClient") as MockRestClient,
@@ -205,7 +207,7 @@ def test_client_initialization(api_token, expected_client_type, expected_models)
     ],
     ids=["line_model", "stop_point_model", "place_model", "mode_model", "prediction_model", "generic_response_model"],
 )
-def test_load_models_contains_expected_models(model_name, expected_type):
+def test_load_models_contains_expected_models(model_name, expected_type) -> None:
     """Test that Client loads expected real models and they are proper BaseModel subclasses."""
     # Act
     test_client = Client()
@@ -217,7 +219,7 @@ def test_load_models_contains_expected_models(model_name, expected_type):
     assert issubclass(model_class, expected_type), f"Model {model_name} should be a BaseModel subclass"
 
 
-def test_load_models_returns_non_empty_dict():
+def test_load_models_returns_non_empty_dict() -> None:
     """Test that _load_models returns a non-empty dictionary of models."""
     # Act
     test_client = Client()
@@ -318,7 +320,7 @@ def test_load_models_returns_non_empty_dict():
         "complex_header",
     ],
 )
-def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result):
+def test_get_maxage_headers_from_cache_control_header(cache_control_header, expected_result) -> None:
     # Mock Response
     response = Response()
     response.headers.clear()  # Start with empty headers
@@ -353,7 +355,7 @@ def test_get_maxage_headers_from_cache_control_header(cache_control_header, expe
         "list_of_models",
     ],
 )
-def test_deserialize(model_name, response_content, expected_result):
+def test_deserialize(model_name, response_content, expected_result) -> None:
     # Mock Response
     Response_Object = MagicMock(Response)
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
@@ -436,7 +438,7 @@ def test_deserialize(model_name, response_content, expected_result):
         "negative_timedelta",
     ],
 )
-def test_parse_timedelta(value, base_time, expected_result):
+def test_parse_timedelta(value, base_time, expected_result) -> None:
     # Act
     result = Client._parse_timedelta(value, base_time)
 
@@ -516,7 +518,7 @@ def test_parse_timedelta(value, base_time, expected_result):
         "neither_present_no_date",
     ],
 )
-def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
+def test_get_result_expiry(s_maxage, maxage, date_header, expected_result) -> None:
     # Mock Response
     response = Response()
     response.headers.update(date_header)
@@ -551,7 +553,7 @@ def test_get_result_expiry(s_maxage, maxage, date_header, expected_result):
         "model_exists",
     ],
 )
-def test_get_model(model_name, models_dict, expected_result):
+def test_get_model(model_name, models_dict, expected_result) -> None:
     # Create a simple Client object
     test_client = Client()
     test_client.models = models_dict
@@ -575,7 +577,7 @@ def test_get_model(model_name, models_dict, expected_result):
         "model_does_not_exist",
     ],
 )
-def test_get_model_raises_error(model_name, models_dict):
+def test_get_model_raises_error(model_name, models_dict) -> None:
     # Create a simple Client object
     test_client = Client()
     test_client.models = models_dict
@@ -668,7 +670,7 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=ti
         "non_json_content",
     ],
 )
-def test_deserialize_error(content_type, response_content, expected_result):
+def test_deserialize_error(content_type, response_content, expected_result) -> None:
     # Mock Response
     response = Response()
     response._content = bytes(json.dumps(response_content), "utf-8")
@@ -692,7 +694,7 @@ def test_deserialize_error(content_type, response_content, expected_result):
 
 
 class SampleClient(Client):
-    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None):
+    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> None:
         """
         A test query. Gets the line status of for all lines for the given modes
 
@@ -717,7 +719,7 @@ class SampleClient(Client):
 
 
 class Test_TfL_connectivity:
-    def test_get_line_status_by_mode_rejected_with_invalid_api_key(self):
+    def test_get_line_status_by_mode_rejected_with_invalid_api_key(self) -> None:
         api_token = "your_app_key"
         test_client = SampleClient(api_token)
         assert test_client.client.app_key is not None and test_client.client.app_key["app_key"] == api_token
@@ -727,7 +729,7 @@ class Test_TfL_connectivity:
         assert result.http_status_code == 429
         assert result.http_status == "Invalid App Key"
 
-    def test_get_line_status_by_mode(self):
+    def test_get_line_status_by_mode(self) -> None:
         # this API doesnt need authentication so we can use it to test that the API is working
         test_client = SampleClient()
         # should get a list of Line objects
@@ -746,7 +748,7 @@ class Test_TfL_connectivity:
     ],
     ids=["valid_date", "no_date", "invalid_date"],
 )
-def test_get_datetime_from_response_headers(headers, expected_result):
+def test_get_datetime_from_response_headers(headers, expected_result) -> None:
     # Mock Response
     response = Response()
     response.headers.update(headers)

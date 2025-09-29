@@ -22,6 +22,7 @@
 # SOFTWARE.
 
 # try:
+from typing import Any
 from urllib.parse import urlencode, urljoin
 
 import requests
@@ -38,16 +39,16 @@ class RestClient:
     :param str app_key: App key to access TfL unified API
     """
 
-    def __init__(self, app_key: str = None):
+    def __init__(self, app_key: str | None = None) -> None:
         self.app_key = {"app_key": app_key} if app_key else None
 
-    def send_request(self, base_url: str, location: str, params=None) -> Response:
+    def send_request(self, base_url: str, location: str, params: dict[str, Any] | None = None) -> Response:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 
         return requests.get(request_path + "?" + self._get_query_strings(params), headers=request_headers, timeout=30)
 
-    def _get_request_headers(self):
+    def _get_request_headers(self) -> dict[str, str]:
         request_headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -56,7 +57,7 @@ class RestClient:
             request_headers.update(self.app_key)
         return request_headers
 
-    def _get_query_strings(self, params):
+    def _get_query_strings(self, params: dict[str, Any] | None) -> str:
         if params is None:
             params = {}
         # drop params that are None

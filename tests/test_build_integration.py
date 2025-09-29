@@ -14,13 +14,15 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from typing import Any
+
 
 
 class TestBuildIntegration:
     """Test the complete build process from OpenAPI specs to generated models."""
 
     @pytest.fixture(scope="class")
-    def build_output(self, project_root, specs_dir):
+    def build_output(self, project_root: Any, specs_dir: Any) -> Any:
         """Run the build once and share output across all tests in this class."""
         temp_dir = tempfile.mkdtemp()
         build_script = project_root / "scripts" / "build_models.py"
@@ -35,7 +37,7 @@ class TestBuildIntegration:
 
         # Create a simple object to hold both result and path
         class BuildOutput:
-            def __init__(self, result, path):
+            def __init__(self, result: Any, path: Any) -> None:
                 self.result = result
                 self.path = path
 
@@ -45,19 +47,19 @@ class TestBuildIntegration:
         shutil.rmtree(temp_dir)
 
     @pytest.fixture(scope="class")
-    def project_root(self):
+    def project_root(self) -> Any:
         """Get the project root directory."""
         return Path(__file__).parent.parent
 
     @pytest.fixture(scope="class")
-    def specs_dir(self, project_root):
+    def specs_dir(self, project_root: Any) -> Any:
         """Get the TfL OpenAPI specs directory."""
         specs_path = project_root / "TfL_OpenAPI_specs"
         if not specs_path.exists():
             pytest.skip("TfL_OpenAPI_specs directory not found")
         return specs_path
 
-    def test_build_completes_successfully(self, build_output):
+    def test_build_completes_successfully(self, build_output: Any) -> None:
         """Test that the build process completes without errors."""
         assert build_output.result.returncode == 0, f"Build failed: {build_output.result.stderr}"
 
@@ -66,7 +68,7 @@ class TestBuildIntegration:
         assert "ERROR" not in stderr or "Unexpected error" not in stderr
         assert "Model generation completed successfully" in stderr
 
-    def test_creates_expected_directories(self, build_output):
+    def test_creates_expected_directories(self, build_output: Any) -> None:
         """Test that required directories are created and populated."""
         required_dirs = {
             "models": "Model definitions",
@@ -133,7 +135,7 @@ class TestBuildIntegration:
             ),
         ],
     )
-    def test_sample_models_have_meaningful_content(self, build_output, model_type, sample_file, content_markers):
+    def test_sample_models_have_meaningful_content(self, build_output: Any, model_type: Any, sample_file: Any, content_markers: Any) -> None:
         """Test that different model types contain actual content, not empty shells."""
         file_path = build_output.path / sample_file
 
@@ -150,7 +152,7 @@ class TestBuildIntegration:
         min_size = 100 if model_type == "RootModel" else 200  # Arrays are smaller
         assert len(content) > min_size, f"{model_type} file seems too small to be meaningful"
 
-    def test_all_generated_python_is_syntactically_valid(self, build_output):
+    def test_all_generated_python_is_syntactically_valid(self, build_output: Any) -> None:
         """Test that ALL generated Python files compile without syntax errors."""
         import compileall
         import sys
@@ -185,7 +187,7 @@ class TestBuildIntegration:
         # Check for syntax errors in the output
         assert "SyntaxError" not in output, f"Syntax errors found in generated code:\n{output}"
 
-    def test_model_imports_resolve_correctly(self, build_output):
+    def test_model_imports_resolve_correctly(self, build_output: Any) -> None:
         """Test that models can import their dependencies."""
         # Check a few files that we expect to have imports
         files_with_imports = [
@@ -210,7 +212,7 @@ class TestBuildIntegration:
                 imported_file = models_dir / f"{module_name}.py"
                 assert imported_file.exists(), f"{file_path.name} imports non-existent {module_name}"
 
-    def test_build_fails_gracefully_with_invalid_input(self, project_root):
+    def test_build_fails_gracefully_with_invalid_input(self, project_root: Any) -> None:
         """Test that build handles missing specs directory gracefully."""
         build_script = project_root / "scripts" / "build_models.py"
         temp_dir = tempfile.mkdtemp()
@@ -232,7 +234,7 @@ class TestBuildIntegration:
         finally:
             shutil.rmtree(temp_dir)
 
-    def test_build_logs_show_progress(self, build_output):
+    def test_build_logs_show_progress(self, build_output: Any) -> None:
         """Test that build provides informative progress messages."""
         logs = build_output.result.stderr
 

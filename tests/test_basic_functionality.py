@@ -23,16 +23,16 @@ class TestBasicFunctionality:
     """Basic smoke tests for core TfL API functionality."""
 
     @pytest.fixture(autouse=True)
-    def rate_limit_delay(self):
+    def rate_limit_delay(self) -> None:
         """Respect TfL rate limiting between tests."""
         time.sleep(1.1)
 
-    def _validate_response_model(self, result, expected_type=ResponseModel):
+    def _validate_response_model(self, result, expected_type=ResponseModel) -> None:
         """Helper to validate ResponseModel content consistently."""
         assert isinstance(result, expected_type), f"Expected {expected_type.__name__}, got {type(result)}"
         assert result.content is not None, "Response should have content"
 
-    def _validate_journey_result(self, result):
+    def _validate_journey_result(self, result) -> None:
         """Helper to validate journey results which can be ResponseModel or ApiError."""
         if isinstance(result, ResponseModel):
             assert result.content is not None, "ResponseModel should have content"
@@ -43,7 +43,7 @@ class TestBasicFunctionality:
             pytest.fail(f"Unexpected result type: {type(result)}")
 
     @pytest.fixture(scope="class")
-    def api_health_check(self):
+    def api_health_check(self) -> None:
         """Skip tests if TfL API is unavailable."""
         import requests
 
@@ -53,7 +53,7 @@ class TestBasicFunctionality:
                 return True
         pytest.skip("TfL API unavailable - skipping basic functionality tests")
 
-    def test_line_client_basic_query(self, api_health_check):
+    def test_line_client_basic_query(self, api_health_check) -> None:
         """Test LineClient can query TfL and parse response."""
         client = LineClient()
         result = client.MetaModes()
@@ -61,7 +61,7 @@ class TestBasicFunctionality:
         # Should get ResponseModel, not ApiError
         self._validate_response_model(result)
 
-    def test_line_client_tube_status(self, api_health_check):
+    def test_line_client_tube_status(self, api_health_check) -> None:
         """Test LineClient can get tube line status."""
         client = LineClient()
         result = client.StatusByModeByPathModesQueryDetailQuerySeverityLevel("tube")
@@ -69,7 +69,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_stoppoint_client_basic_query(self, api_health_check):
+    def test_stoppoint_client_basic_query(self, api_health_check) -> None:
         """Test StopPointClient can query TfL and parse response."""
         client = StopPointClient()
         result = client.MetaModes()
@@ -77,7 +77,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_stoppoint_client_by_type(self, api_health_check):
+    def test_stoppoint_client_by_type(self, api_health_check) -> None:
         """Test StopPointClient can get stops by type."""
         client = StopPointClient()
         result = client.GetByTypeByPathTypes("NaptanMetroStation")
@@ -85,7 +85,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_bikepoint_client_basic_query(self, api_health_check):
+    def test_bikepoint_client_basic_query(self, api_health_check) -> None:
         """Test BikePointClient can query TfL and parse response."""
         client = BikePointClient()
         result = client.GetAll()
@@ -93,7 +93,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_mode_client_basic_query(self, api_health_check):
+    def test_mode_client_basic_query(self, api_health_check) -> None:
         """Test ModeClient can query TfL and parse response."""
         client = ModeClient()
         result = client.GetActiveServiceTypes()
@@ -101,7 +101,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_journey_client_basic_query(self, api_health_check):
+    def test_journey_client_basic_query(self, api_health_check) -> None:
         """Test JourneyClient can query TfL and parse response."""
         client = JourneyClient()
         # Use specific station codes to avoid ambiguity
@@ -117,7 +117,7 @@ class TestBasicFunctionality:
         # Both outcomes indicate successful parsing, which is what we're testing here
         self._validate_journey_result(result)
 
-    def test_journey_client_invalid_station_codes(self, api_health_check):
+    def test_journey_client_invalid_station_codes(self, api_health_check) -> None:
         """Test JourneyClient returns ApiError for ambiguous or invalid station codes."""
         client = JourneyClient()
         result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
@@ -128,7 +128,7 @@ class TestBasicFunctionality:
         assert isinstance(result, ApiError), f"Expected ApiError for invalid station codes, got {type(result)}"
         assert result.http_status_code is not None, "ApiError should have HTTP status code"
 
-    def test_error_handling_returns_api_error(self):
+    def test_error_handling_returns_api_error(self) -> None:
         """Test that invalid API calls return ApiError objects."""
         client = LineClient("invalid_api_key")
         result = client.MetaModes()
