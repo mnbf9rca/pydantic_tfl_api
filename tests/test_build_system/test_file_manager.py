@@ -375,7 +375,6 @@ class TestFileManager:
 
     def test_no_optional_import_with_union_none(self, file_manager, temp_dir):
         """REGRESSION: Test that Optional is not imported when using X | None syntax."""
-        from typing import ForwardRef
 
         class TestModel(BaseModel):
             optional_field: str | None = Field(None)
