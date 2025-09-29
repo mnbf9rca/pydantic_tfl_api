@@ -206,3 +206,6 @@ Temporary Items
 # External repositories (Phase 2 cleanup)
 external/
 baseline_output/
+
+# Generated output directories
+test_output/
