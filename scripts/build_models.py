@@ -282,13 +282,6 @@ def create_pydantic_models(
                 )
 
 
-def create_generic_response_model() -> type[RootModel]:
-    class GenericResponseModel(RootModel):
-        root: Any
-
-        model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    return GenericResponseModel
 
 
 def get_pydantic_imports(sanitized_model_name: str, is_root_model: bool) -> str:
@@ -303,10 +296,7 @@ def get_pydantic_imports(sanitized_model_name: str, is_root_model: bool) -> str:
 
 def get_model_config(sanitized_model_name: str) -> str:
     """Get the appropriate model_config for the model."""
-    if sanitized_model_name == "GenericResponseModel":
-        return "model_config = ConfigDict(arbitrary_types_allowed=True)"
-    else:
-        return "model_config = ConfigDict(from_attributes=True)"
+    return "model_config = ConfigDict(from_attributes=True)"
 
 
 # Save models and config to files
@@ -1320,7 +1310,15 @@ def generate_import_lines(class_name: str, all_types: set, all_package_models: s
     """Generate all import statements for the client class."""
     import_lines = []
     import_lines.append(f"from .{class_name}_config import endpoints, base_url\n")
-    import_lines.append("from ..core import ApiError, ResponseModel, Client\n")
+
+    # Check if GenericResponseModel is needed and import from core
+    needs_generic_response_model = "GenericResponseModel" in all_package_models
+    if needs_generic_response_model:
+        import_lines.append("from ..core import ApiError, ResponseModel, Client, GenericResponseModel\n")
+        # Remove GenericResponseModel from models import
+        all_package_models = all_package_models - {"GenericResponseModel"}
+    else:
+        import_lines.append("from ..core import ApiError, ResponseModel, Client\n")
 
     valid_type_imports = all_types - get_builtin_types()
     valid_type_import_strings = sorted([t.__name__ for t in valid_type_imports])
@@ -1597,9 +1595,6 @@ def _generate_and_process_models(combined_components: dict[str, Any]) -> tuple[d
     models = {}
     create_pydantic_models(combined_components, models)
 
-    logging.info("Creating generic response model...")
-    generic_model = create_generic_response_model()
-    models["GenericResponseModel"] = generic_model
 
     # Deduplicate models before saving them
     logging.info("Deduplicating models...")

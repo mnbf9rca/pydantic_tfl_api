@@ -18,6 +18,16 @@ class ResponseModel(BaseModel, Generic[T]):
 
 
 class GenericResponseModel(RootModel[Any]):
+    """
+    Universal model for unstructured API responses.
+
+    This model serves as a fallback for endpoints that return unstructured
+    or dynamic content that cannot be modeled with specific Pydantic classes.
+    Examples include proxy endpoints, meta endpoints, and undocumented responses.
+
+    Uses default configuration which is sufficient for handling any JSON
+    data structure returned by the TfL API.
+    """
     model_config = ConfigDict(from_attributes=True)
 
 
