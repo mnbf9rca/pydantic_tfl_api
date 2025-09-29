@@ -209,3 +209,5 @@ baseline_output/
 
 # Generated output directories
 test_output/
+
+.ruff-cache/

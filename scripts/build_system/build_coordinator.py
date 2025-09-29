@@ -157,8 +157,10 @@ class BuildCoordinator:
     def _generate_and_process_models(self, components: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, str]]:
         """Generate Pydantic models and process them for deduplication."""
         self.logger.info("Generating Pydantic models...")
-        models = {}
-        create_pydantic_models(components, models)
+
+        # Use the new ModelBuilder class instead of the old function
+        self.model_builder.create_pydantic_models(components)
+        models = self.model_builder.get_models()
 
         # Deduplicate models before saving them
         self.logger.info("Deduplicating models...")
@@ -174,9 +176,9 @@ class BuildCoordinator:
         self.logger.info("Handling dependencies...")
         dependency_graph, circular_models, sorted_models = handle_dependencies(models)
 
-        # Save the models
+        # Save the models using FileManager
         self.logger.info("Saving models to files...")
-        save_models(models, output_path, dependency_graph, circular_models, sorted_models)
+        self.file_manager.save_models(models, output_path, dependency_graph, circular_models, sorted_models)
 
         return dependency_graph, circular_models, sorted_models
 
