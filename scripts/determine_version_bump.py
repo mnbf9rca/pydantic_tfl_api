@@ -5,12 +5,12 @@ Compares dependency versions between two git refs and determines the appropriate
 semantic version bump (major, minor, or patch) based on the most significant change.
 """
 
-import re
 import subprocess
 import sys
 import tomllib
 from typing import Literal
 
+from packaging.requirements import Requirement
 from packaging.version import Version
 
 BumpType = Literal["major", "minor", "patch"]
@@ -43,6 +43,8 @@ def get_pyproject_content(git_ref: str) -> str:
 def extract_dependency_version(content: str, dep_name: str) -> str | None:
     """Extract version for a specific dependency from pyproject.toml content.
 
+    Uses packaging.requirements.Requirement for proper PEP 508 parsing.
+
     Args:
         content: pyproject.toml content as string
         dep_name: Name of the dependency to find
@@ -56,19 +58,30 @@ def extract_dependency_version(content: str, dep_name: str) -> str | None:
     data = tomllib.loads(content)
     dependencies = data.get("project", {}).get("dependencies", [])
 
-    # Pattern matches: package-name [constraint] version
-    # Examples: "pydantic>=2.8.2", "requests==2.32.3,<3.0"
-    dep_pattern = re.compile(
-        rf"^{re.escape(dep_name)}\s*([><=!~]+)?\s*([0-9]+(?:\.[0-9]+)*)"
-    )
-
     for dep in dependencies:
         if not isinstance(dep, str):
             continue
-        match = dep_pattern.match(dep.strip())
-        if match:
-            # Return the version number (group 2)
-            return match.group(2)
+
+        try:
+            req = Requirement(dep.strip())
+        except Exception:
+            # Skip invalid requirement strings
+            continue
+
+        # Check if this is the dependency we're looking for
+        if req.name.lower() != dep_name.lower():
+            continue
+
+        # Extract version from specifier
+        # Look for >= or == operators to get the base version
+        for spec in req.specifier:
+            if spec.operator in (">=", "==", "~="):
+                return spec.version
+
+        # If no >= or ==, try to get any version from the specifier
+        if req.specifier:
+            # Get first specifier's version as fallback
+            return next(iter(req.specifier)).version
 
     return None
 

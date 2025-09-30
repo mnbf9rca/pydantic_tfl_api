@@ -141,6 +141,40 @@ dependencies = [
         assert extract_dependency_version(content, "pydantic") == "2.8.2"
         assert extract_dependency_version(content, "pydantic-core") == "2.0.0"
 
+    def test_extract_with_extras(self) -> None:
+        """Test that dependencies with extras are handled correctly."""
+        content = """
+[project]
+dependencies = [
+    "pydantic[email]>=2.8.2",
+]
+"""
+        # Should extract version even with extras
+        assert extract_dependency_version(content, "pydantic") == "2.8.2"
+
+    def test_extract_with_markers(self) -> None:
+        """Test that dependencies with markers are handled correctly."""
+        content = """
+[project]
+dependencies = [
+    "pydantic>=2.8.2; python_version>'3.8'",
+]
+"""
+        # Should extract version even with markers
+        assert extract_dependency_version(content, "pydantic") == "2.8.2"
+
+    def test_extract_case_insensitive(self) -> None:
+        """Test that package name matching is case-insensitive."""
+        content = """
+[project]
+dependencies = [
+    "Pydantic>=2.8.2",
+]
+"""
+        # Should match case-insensitively
+        assert extract_dependency_version(content, "pydantic") == "2.8.2"
+        assert extract_dependency_version(content, "PYDANTIC") == "2.8.2"
+
 
 class TestDetermineBumpType:
     """Tests for determine_bump_type function - our business logic."""
