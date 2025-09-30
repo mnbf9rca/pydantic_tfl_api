@@ -1,5 +1,55 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Auto-fix linting issues in non-generated code
+      - id: ruff
+        name: ruff (auto-fix)
+        args: [--fix]
+        exclude: ^(pydantic_tfl_api/(models|endpoints)/|tests/tfl_responses/|TfL_OpenAPI_specs/)
+      # Check (but don't fix) generated code - no --fix flag
+      - id: ruff
+        name: ruff (check generated)
+        files: ^pydantic_tfl_api/(models|endpoints)/
+      # Format non-generated code only
+      - id: ruff-format
+        exclude: ^(pydantic_tfl_api/(models|endpoints)/|tests/tfl_responses/|TfL_OpenAPI_specs/)
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.8.2
+          - types-requests>=2.32.0.20240914
+          - types-jsonschema>=4.25.1.20250822
+          - pytest>=8.4.0
+        args: [--config-file=pyproject.toml]
+        exclude: ^(tests/tfl_responses/|TfL_OpenAPI_specs/)
+        # Checks generated code (models/endpoints) for errors but doesn't modify
+
   - repo: https://github.com/renovatebot/pre-commit-hooks
     rev: 41.131.9
     hooks:
       - id: renovate-config-validator
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.1.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+      - id: check-json
+        exclude: ^(tests/tfl_responses/|TfL_OpenAPI_specs/|\.vscode/|\.devcontainer/)
+      - id: check-toml
+      - id: end-of-file-fixer
+        exclude: ^(pydantic_tfl_api/(models|endpoints)/|tests/tfl_responses/|TfL_OpenAPI_specs/)
+      - id: trailing-whitespace
+        exclude: ^(pydantic_tfl_api/(models|endpoints)/|tests/tfl_responses/|TfL_OpenAPI_specs/)
+      - id: mixed-line-ending
+        exclude: ^(pydantic_tfl_api/(models|endpoints)/|tests/tfl_responses/|TfL_OpenAPI_specs/)
