@@ -19,7 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "pydantic>=2.8.2,<3.0",
+    "pydantic>=2.11.9,<3.0",
     "requests>=2.32.3,<3.0",
 ]
 
