@@ -163,11 +163,11 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
             echo "synced=true" >> $GITHUB_OUTPUT
-          fi
 
-          echo "Version bump will proceed automatically"
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
+            echo "Version bump will proceed automatically"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
+          fi
 
   validate_and_bump:
     needs: sync_branches
