@@ -79,7 +79,7 @@ For historical details, see git history (PRs #116, #119, #121, #122).
 - [x] Workflow creates `release` branch from `main` on first run
 - [x] Automated main → release sync on every push to main
 - [x] Update `deploy_workflow_wrapper.yml` to deploy from release branch only
-- [x] Update `deploy_bump_version.yml` for release branch workflow
+- [x] Created reusable `bump_version.yml` workflow for version management
 - [x] Documentation in CONTRIBUTING.md includes release process and hotfix procedure
 
 **Note**: Branch protection rules must be configured manually via GitHub UI:
@@ -89,20 +89,16 @@ For historical details, see git history (PRs #116, #119, #121, #122).
 - See `.github/workflows/sync_release.yml` for detailed setup instructions
 
 #### 5c. Semantic Versioning & Release Notes
-- [x] Install and configure commitizen for conventional commits
 - [x] Define commit message convention (conventional commits standard)
-- [x] Configure automatic version detection in `pyproject.toml`:
-  - `feat:` → minor bump
-  - `fix:`, `perf:` → patch bump
-  - `BREAKING CHANGE:` or `!` → major bump
-- [x] Generate CHANGELOG.md automatically from commits
-- [x] Initial CHANGELOG.md created with project history
+- [x] Configure automatic version detection based on dependency changes:
+  - Production dependency major bump → major version bump
+  - Production dependency minor bump → minor version bump
+  - Production dependency patch bump → patch version bump
 - [x] GitHub releases will include:
-  - Automated release notes from conventional commits
+  - Automated release notes
   - Breaking changes highlighted
   - Link to full CHANGELOG.md
-- [x] Add pre-commit hook for commit message validation
-- [x] Versions synced across pyproject.toml via commitizen and bump-my-version
+- [x] Versions managed via automated dependency-based detection in workflows
 
 **Workflow**:
 ```
@@ -201,11 +197,11 @@ Release:      Weekly/on-demand sync → release branch
 ### Phase 5 ✅
 - ✅ `.github/workflows/fetch_tfl_specs.yml` - Weekly spec fetching with auto-PR creation
 - ✅ `.github/workflows/sync_release.yml` - Main to release branch sync workflow
+- ✅ `.github/workflows/bump_version.yml` - Reusable version bump workflow
 - ✅ `.github/workflows/deploy_workflow_wrapper.yml` - Updated to deploy from release branch
-- ✅ `.github/workflows/deploy_bump_version.yml` - Updated for release branch workflow
 - ✅ `scripts/compare_specs.py` - Spec comparison via rebuild-and-diff strategy
-- ✅ `.pre-commit-config.yaml` - Enhanced with commit message validation and file checks
-- ✅ `pyproject.toml` - Added commitizen configuration and dev dependencies
+- ✅ `.pre-commit-config.yaml` - Enhanced with file checks and validation
+- ✅ `pyproject.toml` - Configured dev dependencies and tooling
 - ✅ `CHANGELOG.md` - Initial changelog with project history
 - ✅ `CONTRIBUTING.md` - Comprehensive development and release process documentation
 
@@ -218,8 +214,8 @@ Release:      Weekly/on-demand sync → release branch
 
 **Immediate Actions Required**:
 1. **Merge feature branch** `feature/automated-build-release-pipeline` to `main`
-2. **Install pre-commit hooks**: Run `uv run pre-commit install --hook-type commit-msg`
-3. **Sync dependencies**: Run `uv sync --all-extras --dev` to install commitizen
+2. **Install pre-commit hooks**: Run `uv run pre-commit install`
+3. **Sync dependencies**: Run `uv sync --all-extras --dev`
 4. **Configure branch protection** for `release` branch (see CONTRIBUTING.md)
 5. **Trigger release branch creation**: Workflow will auto-create on first sync
 

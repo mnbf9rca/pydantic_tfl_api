@@ -184,8 +184,7 @@ fatal: refusing to fetch into branch 'refs/heads/release' checked out
 
 3. **Update `pyproject.toml`:**
    - **Set** version field to new version (not increment)
-   - Use `sed` or Python script to update version line
-   - Consider using `commitizen bump` for integrated version management
+   - Use Python TOML parser to update version field
 
 4. **Allow manual override:**
    - Keep `workflow_dispatch` with optional bump_type input
@@ -296,10 +295,9 @@ From the workflow comments, the following protections should be applied to `rele
    - Commit and push version change + tag atomically
    - Fix verification step bug (use remote refs)
 
-3. Update or deprecate `deploy_bump_version.yml`:
-   - Version bumping now happens in sync_release.yml
-   - Consider removing this workflow entirely
-   - Or keep as a manual-only fallback for hotfixes
+3. Removed obsolete `deploy_bump_version.yml`:
+   - Version bumping now happens in `bump_version.yml` (reusable workflow)
+   - Called by `sync_release.yml` after successful sync
 
 ### Phase 2: Add Security, Signing & Test Deployment (Medium Priority)
 

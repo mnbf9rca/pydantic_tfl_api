@@ -168,14 +168,6 @@
       "matchPackageNames": [
         "/devcontainers/"
       ]
-    },
-    {
-      "description": "Group minor/patch updates for bump-my-version",
-      "matchPackageNames": [
-        "bump-my-version"
-      ],
-      "groupName": "version management tools",
-      "automerge": true
     }
   ],
   "vulnerabilityAlerts": {

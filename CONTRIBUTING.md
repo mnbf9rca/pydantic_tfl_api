@@ -127,14 +127,11 @@ BREAKING CHANGE: All models now use Pydantic v2. Users must update their code."
 
 ### Validation
 
-The pre-commit hook will automatically validate your commit message. If it fails:
+The pre-commit hooks will automatically validate and format your code. If there are issues:
 
 ```bash
 # Check the error message and fix your commit
 git commit --amend
-
-# Or use commitizen for guided commits
-uv run cz commit
 ```
 
 ## Development Workflow
@@ -178,9 +175,6 @@ git add .
 
 # Commit with conventional commit message
 git commit -m "feat(models): add new feature"
-
-# Or use commitizen for guided commit
-uv run cz commit
 ```
 
 ### 5. Push and Create PR
