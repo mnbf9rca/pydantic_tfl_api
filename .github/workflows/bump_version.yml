@@ -50,15 +50,14 @@ jobs:
           ref: release
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
 
       - name: Install dependencies
         run: |
-          # Install tomli as fallback for Python < 3.11
-          pip install tomli toml
+          uv sync --group release
 
       - name: Configure Git
         run: |
@@ -76,7 +75,7 @@ jobs:
           # Check if auto-detect is requested
           if [ "$INPUT_TYPE" = "auto" ] || [ -z "$INPUT_TYPE" ]; then
             echo "**Auto-detecting from dependency changes...**" >> $GITHUB_STEP_SUMMARY
-            BUMP_TYPE=$(bash scripts/determine-version-bump.sh)
+            BUMP_TYPE=$(uv run --group release bash scripts/determine-version-bump.sh)
             echo "**Detected bump type:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
           else
             # Use manual override
@@ -111,8 +110,16 @@ jobs:
 
           echo "**Setting version in pyproject.toml to \`$NEW_VERSION\`**" >> $GITHUB_STEP_SUMMARY
 
-          # Update version in pyproject.toml using TOML parser
-          python3 -c 'import sys; exec("try:\n    import tomllib\nexcept ImportError:\n    import tomli as tomllib\nimport toml\n\npyproject_path = \"pyproject.toml\"\nnew_version = \"'"$NEW_VERSION"'\"\n\nwith open(pyproject_path, \"rb\") as f:\n    data = tomllib.load(f)\n\nif \"project\" in data and \"version\" in data[\"project\"]:\n    data[\"project\"][\"version\"] = new_version\nelse:\n    print(\"Error: Could not find project.version in pyproject.toml\", file=sys.stderr)\n    sys.exit(1)\n\nwith open(pyproject_path, \"w\") as f:\n    toml.dump(data, f)\n\nprint(f\"Updated version to {new_version}\")")'
+          # Update version in pyproject.toml using sed
+          sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
+
+          # Verify the change
+          if ! grep -q "version = \"$NEW_VERSION\"" pyproject.toml; then
+            echo "Error: Failed to update version in pyproject.toml" >&2
+            exit 1
+          fi
+
+          echo "Updated version to $NEW_VERSION"
 
           # Commit the version change
           git add pyproject.toml
