@@ -1,65 +1,126 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-        "config:recommended",
-        "schedule:automergeDaily"
-    ],
-    "rangeStrategy": "widen",
-    "packageRules": [
-        {
-            "matchDepTypes": [
-                "dependencies"
-            ],
-            "matchUpdateTypes": [
-                "patch",
-                "minor",
-                "major"
-            ],
-            "automerge": false
-        },
-        {
-            "matchDepTypes": [
-                "devDependencies"
-            ],
-            "automerge": false
-        },
-        {
-            "vulnerabilityAlerts": {
-                "enabled": true
-            },
-            "matchUpdateTypes": [
-                "patch",
-                "minor",
-                "major"
-            ],
-            "automerge": true
-        },
-        {
-            "matchManagers": [
-                "dockerfile",
-                "github-actions"
-            ],
-            "pinDigests": false
-        },
-        {
-            "matchPackageNames": [
-                "pydantic",
-                "requests"
-            ],
-            "rangeStrategy": "bump",
-            "automerge": false,
-            "separateMinorPatch": true,
-            "labels": [
-                "renovate-pydantic-requests"
-            ],
-            "commitMessageAction": "Test update",
-            "commitMessageTopic": "{{depName}}",
-            "commitMessageExtra": "to {{newVersion}}"
-        }
-    ],
-    "lockFileMaintenance": {
-        "enabled": false
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Intelligent dependency management for pydantic-tfl-api",
+  "extends": [
+    "config:recommended"
+  ],
+  "rangeStrategy": "widen",
+  "schedule": ["before 4am on Monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "packageRules": [
+    {
+      "description": "Auto-merge dev dependencies after tests pass",
+      "matchDatasources": ["pypi"],
+      "matchDepTypes": ["dev-dependencies"],
+      "matchPackagePatterns": [
+        "^pytest",
+        "^black",
+        "^ruff",
+        "^mypy",
+        "^coverage",
+        "^pre-commit",
+        "^types-",
+        "^jsonschema"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "ignoreTests": false,
+      "groupName": "dev dependencies",
+      "labels": ["dependencies", "dev", "automerge"]
     },
-    "rebaseWhen": "behind-base-branch",
-    "updateNotScheduled": true
+    {
+      "description": "Auto-merge GitHub Actions with digest pinning",
+      "matchManagers": ["github-actions"],
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "pinDigests": true,
+      "groupName": "GitHub Actions",
+      "labels": ["github-actions", "automerge"],
+      "commitMessageTopic": "action {{depName}}"
+    },
+    {
+      "description": "Production dependencies - widen ranges, manual review",
+      "matchDatasources": ["pypi"],
+      "matchDepTypes": ["dependencies"],
+      "matchPackageNames": ["pydantic", "requests"],
+      "automerge": false,
+      "rangeStrategy": "widen",
+      "separateMinorPatch": true,
+      "labels": ["dependencies", "production", "needs-review"],
+      "reviewers": ["mnbf9rca"],
+      "commitMessagePrefix": "deps(prod):",
+      "commitMessageTopic": "{{depName}}",
+      "commitMessageExtra": "to {{#if isPatch}}~{{newVersion}}{{else}}{{newValue}}{{/if}}",
+      "prBodyNotes": [
+        "⚠️ **Production Dependency Update**",
+        "",
+        "This update affects a production dependency. Please:",
+        "1. Review the changelog for breaking changes",
+        "2. Verify all tests pass (especially Pydantic version matrix)",
+        "3. Consider impact on existing users",
+        "4. Merge only if widening the range maintains compatibility"
+      ]
+    },
+    {
+      "description": "Auto-merge security patches for all dependencies",
+      "matchUpdateTypes": ["patch"],
+      "vulnerabilityAlerts": {
+        "enabled": true
+      },
+      "automerge": true,
+      "automergeType": "pr",
+      "automergeStrategy": "squash",
+      "labels": ["security", "automerge"],
+      "prPriority": 10,
+      "commitMessagePrefix": "security:"
+    },
+    {
+      "description": "Python version updates - manual review only",
+      "matchPackageNames": ["python"],
+      "automerge": false,
+      "labels": ["python-version", "needs-review"],
+      "prBodyNotes": [
+        "⚠️ **Python Version Update**",
+        "",
+        "This updates the Python version. Consider:",
+        "1. New language features available",
+        "2. Deprecations in newer versions",
+        "3. Whether to widen support (e.g., add 3.14) vs. drop old versions",
+        "4. Impact on users with older Python versions"
+      ]
+    },
+    {
+      "description": "Docker base image updates - auto-merge",
+      "matchManagers": ["dockerfile"],
+      "matchPackagePatterns": ["devcontainers"],
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["docker", "automerge"]
+    },
+    {
+      "description": "Group minor/patch updates for bump-my-version",
+      "matchPackageNames": ["bump-my-version"],
+      "groupName": "version management tools",
+      "automerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 4am on the first day of the month"]
+  },
+  "rebaseWhen": "behind-base-branch",
+  "updateNotScheduled": true,
+  "prCreation": "immediate",
+  "semanticCommits": "enabled",
+  "postUpdateOptions": ["gomodTidy"],
+  "labels": ["renovate"],
+  "assignees": ["mnbf9rca"]
 }
