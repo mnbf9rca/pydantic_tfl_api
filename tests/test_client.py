@@ -320,7 +320,9 @@ def test_load_models_returns_non_empty_dict() -> None:
         "complex_header",
     ],
 )
-def test_get_maxage_headers_from_cache_control_header(cache_control_header: str | None, expected_result: tuple[int | None, int | None]) -> None:
+def test_get_maxage_headers_from_cache_control_header(
+    cache_control_header: str | None, expected_result: tuple[int | None, int | None]
+) -> None:
     # Mock Response
     response = Response()
     response.headers.clear()  # Start with empty headers
@@ -518,7 +520,12 @@ def test_parse_timedelta(value: int, base_time: datetime, expected_result: datet
         "neither_present_no_date",
     ],
 )
-def test_get_result_expiry(s_maxage: int | None, maxage: int | None, date_header: dict[str, str], expected_result: tuple[datetime | None, datetime | None]) -> None:
+def test_get_result_expiry(
+    s_maxage: int | None,
+    maxage: int | None,
+    date_header: dict[str, str],
+    expected_result: tuple[datetime | None, datetime | None],
+) -> None:
     # Mock Response
     response = Response()
     response.headers.update(date_header)
@@ -694,7 +701,9 @@ def test_deserialize_error(content_type: str, response_content: Any, expected_re
 
 
 class SampleClient(Client):
-    def Line_test_endpoint(self, modes: str, detail: bool | None = None, severityLevel: str | None = None) -> ResponseModel[Any] | ApiError:
+    def Line_test_endpoint(
+        self, modes: str, detail: bool | None = None, severityLevel: str | None = None
+    ) -> ResponseModel[Any] | ApiError:
         """
         A test query. Gets the line status of for all lines for the given modes
 

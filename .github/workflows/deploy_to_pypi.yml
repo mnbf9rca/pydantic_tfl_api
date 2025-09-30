@@ -23,7 +23,7 @@ jobs:
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
-    environment: 
+    environment:
       name: ${{ inputs.target-environment }}
     steps:
       # - name: Checkout actions-oidc-debugger
@@ -65,6 +65,3 @@ jobs:
           verbose: true
           print-hash: true
           attestations: false  # https://github.com/pypi/warehouse/issues/11096
-
-
-    

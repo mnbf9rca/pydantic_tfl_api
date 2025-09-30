@@ -1,7 +1,7 @@
 name: bump version
-on: 
-  # workflow_call:
-  # whenever a PR is closed against main
+on:
+  # Workflow for bumping version on the release branch
+  # Run from release branch when ready to create a new release
   workflow_dispatch:
     inputs:
       bump_type:
@@ -16,17 +16,18 @@ on:
         type: string
         description: 'Bump version - minor, major or patch'
         required: true
-  # pull_request:
-  #   branches:
-  #     - main
-  #   types:
-  #     - closed  
+  # Only allow running from release branch
+  push:
+    branches:
+      - release
+    paths:
+      - 'pyproject.toml'  # Trigger on version changes
 
 jobs:
   bump_package_version:
-    environment: 
+    environment:
       name: 'bump-version'
-      
+
     runs-on: ubuntu-latest
     permissions:                # Job-level permissions configuration starts here
       contents: write           # 'write' access to repository contents
@@ -80,13 +81,12 @@ jobs:
           git add pyproject.toml
           git commit -m "Bump version to ${{ env.VERSION }}"
 
-      - name: Push changes to main
+      - name: Push changes to release branch
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ steps.app-token.outputs.token }}
-          branch: ${{ github.ref }}
-          
-          
+          branch: release  # Always push to release branch
+
+
     outputs:
       package-version: ${{ env.VERSION }}
-

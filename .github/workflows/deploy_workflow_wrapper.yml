@@ -1,6 +1,6 @@
 name: build artifact and publish to PyPi
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       deploy_to_test:
@@ -9,10 +9,12 @@ on:
         required: false
         default: false
 
-  workflow_run: 
+  workflow_run:
     workflows: ["bump version"]
     types:
       - completed
+    branches:
+      - release  # Only trigger from release branch
 
 jobs:
   build_artifacts:

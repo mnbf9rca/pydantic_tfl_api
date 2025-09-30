@@ -221,11 +221,15 @@ def deduplicate_models(
             # Handle RootModel[list[X]] - Check if both are RootModel wrapping lists
             try:
                 # Check if both are RootModel subclasses with list types
-                if (isinstance(model, type) and issubclass(model, RootModel) and
-                    isinstance(dedup_model, type) and issubclass(dedup_model, RootModel)):
+                if (
+                    isinstance(model, type)
+                    and issubclass(model, RootModel)
+                    and isinstance(dedup_model, type)
+                    and issubclass(dedup_model, RootModel)
+                ):
                     # Get the root type (what RootModel wraps)
-                    model_root = model.model_fields.get('root')
-                    dedup_root = dedup_model.model_fields.get('root')
+                    model_root = model.model_fields.get("root")
+                    dedup_root = dedup_model.model_fields.get("root")
 
                     if model_root and dedup_root:
                         # Extract the inner type from list[X]
@@ -233,13 +237,19 @@ def deduplicate_models(
                         dedup_origin = get_origin(dedup_root.annotation)
 
                         if model_origin is list and dedup_origin is list:
-                            model_inner = get_args(model_root.annotation)[0] if get_args(model_root.annotation) else None
-                            dedup_inner = get_args(dedup_root.annotation)[0] if get_args(dedup_root.annotation) else None
+                            model_inner = (
+                                get_args(model_root.annotation)[0] if get_args(model_root.annotation) else None
+                            )
+                            dedup_inner = (
+                                get_args(dedup_root.annotation)[0] if get_args(dedup_root.annotation) else None
+                            )
 
                             if model_inner and dedup_inner and model_inner == dedup_inner:
                                 reference_map[model_name] = dedup_model_name
                                 found_duplicate = True
-                                logging.info(f"Model '{model_name}' is a duplicate RootModel[list[...]] of '{dedup_model_name}'")
+                                logging.info(
+                                    f"Model '{model_name}' is a duplicate RootModel[list[...]] of '{dedup_model_name}'"
+                                )
                                 break
             except (AttributeError, TypeError):
                 pass  # Not a RootModel or doesn't have expected structure
@@ -267,9 +277,7 @@ def deduplicate_models(
     return deduplicated_models, reference_map
 
 
-def update_model_references(
-    models: dict[str, Any], reference_map: dict[str, str]
-) -> dict[str, Any]:
+def update_model_references(models: dict[str, Any], reference_map: dict[str, str]) -> dict[str, Any]:
     """Update references in models based on the deduplication reference map, including nested generics.
 
     Args:
@@ -279,6 +287,7 @@ def update_model_references(
     Returns:
         Updated models dictionary with references resolved
     """
+
     def resolve_model_reference(annotation: Any) -> Any:
         """Resolve references in the model recursively, including nested types."""
         origin = get_origin(annotation)
@@ -309,7 +318,7 @@ def update_model_references(
         else:
             # Handle RootModel classes - need to recreate with updated inner references
             if isinstance(model, type) and issubclass(model, RootModel):
-                root_field = model.model_fields.get('root')
+                root_field = model.model_fields.get("root")
                 if root_field:
                     # Resolve references in the root annotation
                     updated_annotation = resolve_model_reference(root_field.annotation)
@@ -320,7 +329,7 @@ def update_model_references(
                         updated_model = type(
                             model_name,
                             (RootModel[updated_annotation],),  # type: ignore[valid-type]
-                            {"__module__": getattr(model, "__module__", __name__)}
+                            {"__module__": getattr(model, "__module__", __name__)},
                         )
                         updated_models[model_name] = updated_model
                     else:

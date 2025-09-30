@@ -134,7 +134,9 @@ class TestBuildIntegration:
             ),
         ],
     )
-    def test_sample_models_have_meaningful_content(self, build_output: Any, model_type: Any, sample_file: Any, content_markers: Any) -> None:
+    def test_sample_models_have_meaningful_content(
+        self, build_output: Any, model_type: Any, sample_file: Any, content_markers: Any
+    ) -> None:
         """Test that different model types contain actual content, not empty shells."""
         file_path = build_output.path / sample_file
 

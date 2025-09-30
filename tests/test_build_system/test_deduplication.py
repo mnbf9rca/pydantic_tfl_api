@@ -252,6 +252,7 @@ class TestTwoPassDeduplication:
         4. Reference update should update array references
         5. Second deduplication pass should remove duplicate array
         """
+
         # Step 1: Create two identical base models
         class PlaceCategory(BaseModel):
             id: str = Field(alias="id")

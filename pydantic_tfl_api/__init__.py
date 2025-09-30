@@ -12,26 +12,26 @@ from .endpoints import (
     PlaceClient,
     ModeClient,
     StopPointClient,
-    LiftDisruptionsClient
+    LiftDisruptionsClient,
 )
 from . import models
 from .core import __version__
 
 __all__ = [
-    'LineClient',
-    'AirQualityClient',
-    'OccupancyClient',
-    'VehicleClient',
-    'CrowdingClient',
-    'BikePointClient',
-    'SearchClient',
-    'AccidentStatsClient',
-    'JourneyClient',
-    'RoadClient',
-    'PlaceClient',
-    'ModeClient',
-    'StopPointClient',
-    'LiftDisruptionsClient',
-    'models',
-    '__version__'
+    "LineClient",
+    "AirQualityClient",
+    "OccupancyClient",
+    "VehicleClient",
+    "CrowdingClient",
+    "BikePointClient",
+    "SearchClient",
+    "AccidentStatsClient",
+    "JourneyClient",
+    "RoadClient",
+    "PlaceClient",
+    "ModeClient",
+    "StopPointClient",
+    "LiftDisruptionsClient",
+    "models",
+    "__version__",
 ]

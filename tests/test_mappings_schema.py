@@ -112,9 +112,9 @@ class TestTflMappingsSchema:
         apis_with_invalid_descriptions = [
             name for name, data in apis.items() if "description" in data and not isinstance(data["description"], str)
         ]
-        assert not apis_with_invalid_descriptions, (
-            f"APIs with non-string descriptions: {apis_with_invalid_descriptions}"
-        )
+        assert (
+            not apis_with_invalid_descriptions
+        ), f"APIs with non-string descriptions: {apis_with_invalid_descriptions}"
 
         # Check response mappings type when present
         apis_with_invalid_response_mappings = [
@@ -122,9 +122,9 @@ class TestTflMappingsSchema:
             for name, data in apis.items()
             if "response_mappings" in data and not isinstance(data["response_mappings"], dict)
         ]
-        assert not apis_with_invalid_response_mappings, (
-            f"APIs with non-dict response_mappings: {apis_with_invalid_response_mappings}"
-        )
+        assert (
+            not apis_with_invalid_response_mappings
+        ), f"APIs with non-dict response_mappings: {apis_with_invalid_response_mappings}"
 
     def test_mapping_values_are_non_empty_strings(self, mappings_data: Any) -> None:
         """Test that all mapping values are non-empty strings."""
@@ -164,9 +164,9 @@ class TestTflMappingsSchema:
         # Assert all validations
         assert not non_string_mappings, f"Non-string mapping values found: {non_string_mappings}"
         assert not empty_mappings, f"Empty mapping values found: {empty_mappings}"
-        assert not non_string_response_mappings, (
-            f"Non-string response mapping values found: {non_string_response_mappings}"
-        )
+        assert (
+            not non_string_response_mappings
+        ), f"Non-string response mapping values found: {non_string_response_mappings}"
         assert not empty_response_mappings, f"Empty response mapping values found: {empty_response_mappings}"
 
     def test_response_mapping_keys_follow_pattern(self, mappings_data: Any) -> None:

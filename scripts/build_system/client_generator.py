@@ -302,6 +302,26 @@ class ClientGenerator:
             ]
         )
 
+    def _normalize_api_name(self, api_name: str, index: int) -> str:
+        """Normalize and clean API name for use in client generation.
+
+        Args:
+            api_name: Raw API name from spec
+            index: Index of the spec in the list (for handling duplicates)
+
+        Returns:
+            Cleaned API name
+        """
+        # Remove API/Api suffix
+        api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+
+        # Handle case where multiple specs have identical names due to shared references
+        # This ensures unique client names when the same title appears multiple times
+        if api_name_clean in ["Order", "Test"] and index == 0:
+            api_name_clean = "User"
+
+        return api_name_clean
+
     def save_classes(
         self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None
     ) -> None:
@@ -322,25 +342,20 @@ class ClientGenerator:
         class_names = []
         for i, spec in enumerate(specs):
             api_name = get_api_name(spec)
-            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
-
-            # Handle case where multiple specs have identical names due to shared references
-            # This ensures unique client names when the same title appears multiple times
-            if api_name_clean in ["Order", "Test"] and i == 0:
-                api_name_clean = "User"
+            api_name_clean = self._normalize_api_name(api_name, i)
 
             class_name = f"{sanitize_name(api_name_clean)}Client"
             class_names.append(class_name)
         init_file_path = os.path.join(base_path, "__init__.py")
         with open(init_file_path, "w") as init_file:
             class_names_joined = ",\n    ".join(class_names)
-            init_file.write(f"from .endpoints import (\n    {class_names_joined}\n)\n")
+            init_file.write(f"from .endpoints import (\n    {class_names_joined},\n)\n")
             init_file.write("from . import models\n")
             init_file.write("from .core import __version__\n")
 
             init_file.write("\n__all__ = [\n")
-            init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
-            init_file.write(",\n    'models',\n    '__version__'\n]\n")
+            init_file.write(",\n".join([f'    "{name}"' for name in class_names]))
+            init_file.write(',\n    "models",\n    "__version__",\n]\n')
 
         endpoint_path = os.path.join(base_path, "endpoints")
         os.makedirs(endpoint_path, exist_ok=True)
@@ -351,23 +366,22 @@ class ClientGenerator:
             endpoint_init.write("\n\n")
 
             # Generate TfLEndpoint Literal type
-            endpoint_names = ",\n    ".join(f"'{name}'" for name in class_names)
-            endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n")
+            endpoint_names = ",\n    ".join(f'"{name}"' for name in class_names)
+            endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names},\n]\n\n")
 
             endpoint_init.write("__all__ = [\n")
-            endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
-            endpoint_init.write("\n]\n")
+            endpoint_init.write(",\n".join([f'    "{name}"' for name in class_names]))
+            endpoint_init.write(",\n]\n")
 
         self._generated_clients.append(init_file_path)
         self._generated_clients.append(endpoint_init_file)
 
         for i, spec in enumerate(specs):
             api_name = get_api_name(spec)
+            api_name_clean = self._normalize_api_name(api_name, i)
 
-            # Apply same handling for identical names during file creation
-            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
-            if api_name_clean in ["Order", "Test"] and i == 0:
-                api_name_clean = "User"
+            # Update spec title if normalization changed the name
+            if api_name_clean == "User" and api_name != "User":
                 spec["info"]["title"] = "User API"
 
             logging.info(f"Creating config and class files for {api_name}...")

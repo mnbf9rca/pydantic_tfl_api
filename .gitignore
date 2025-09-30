@@ -211,3 +211,6 @@ baseline_output/
 test_output/
 
 .ruff-cache/
+
+# Spec change metadata (uploaded as GitHub artifacts, not committed)
+.github/spec_changes/

@@ -51,6 +51,7 @@ class RestClient:
             headers=request_headers,
             timeout=30,
         )
+
     def _get_request_headers(self) -> dict[str, str]:
         request_headers = {
             "Content-Type": "application/json",

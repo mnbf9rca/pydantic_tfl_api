@@ -175,9 +175,9 @@ class TestClientGenerator:
                 assert method_name.isidentifier(), f"Method name '{method_name}' should be valid Python identifier"
                 # Method names should preserve the operation ID casing (PascalCase for OpenAPI spec)
                 # This ensures consistency with the API specification
-                assert method_name == operation_id or method_name.startswith(operation_id[0].upper()), (
-                    f"Method name '{method_name}' should match OpenAPI operation ID format for '{operation_id}'"
-                )
+                assert method_name == operation_id or method_name.startswith(
+                    operation_id[0].upper()
+                ), f"Method name '{method_name}' should match OpenAPI operation ID format for '{operation_id}'"
 
     def test_create_method_signature(self, client_generator: Any) -> None:
         """Test creating method signatures for API operations."""

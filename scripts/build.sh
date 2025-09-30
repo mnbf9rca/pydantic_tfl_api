@@ -46,7 +46,7 @@ if [ -z "$RUN_BUILDSCRIPT" ]; then
 else
     # Convert RUN_BUILDSCRIPT to lowercase
     RUN_BUILDSCRIPT_LOWER=$(echo "$RUN_BUILDSCRIPT" | tr '[:upper:]' '[:lower:]')
-    
+
     # Ensure RUN_BUILDSCRIPT is a valid boolean
     if [ "$RUN_BUILDSCRIPT_LOWER" != "true" ] && [ "$RUN_BUILDSCRIPT_LOWER" != "false" ]; then
         echo "Error: The third argument must be a boolean value ('true' or 'false')."
@@ -68,7 +68,7 @@ else
         if [ ! -d "$SPEC_FOLDER" ]; then
             echo "Error: The spec folder '$SPEC_FOLDER' does not exist."
             exit 1
-        fi        
+        fi
         echo "Info: Running build script $BUILD_SCRIPT."
     fi
 fi
