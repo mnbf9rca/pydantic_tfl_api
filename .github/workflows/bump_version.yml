@@ -4,22 +4,22 @@ on:
   workflow_dispatch:
     inputs:
       bump_type:
-        description: 'Version bump type (leave empty for automatic detection)'
-        required: false
+        description: 'Version bump type'
+        required: true
         type: choice
         options:
-          - ''
+          - auto
           - major
           - minor
           - patch
-        default: ''
+        default: auto
   workflow_call:
     inputs:
       bump_type:
-        description: 'Version bump type (leave empty for automatic detection)'
+        description: 'Version bump type (auto, major, minor, or patch)'
         required: false
         type: string
-        default: ''
+        default: 'auto'
     outputs:
       new_version:
         description: 'The new version number'
@@ -60,14 +60,25 @@ jobs:
           echo "## 🔢 Determining Version Bump" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Use manual override if provided, otherwise auto-detect
-          if [ -n "${{ inputs.bump_type }}" ]; then
-            BUMP_TYPE="${{ inputs.bump_type }}"
-            echo "**Manual override provided:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
-          else
+          INPUT_TYPE="${{ inputs.bump_type }}"
+
+          # Check if auto-detect is requested
+          if [ "$INPUT_TYPE" = "auto" ] || [ -z "$INPUT_TYPE" ]; then
             echo "**Auto-detecting from dependency changes...**" >> $GITHUB_STEP_SUMMARY
             BUMP_TYPE=$(bash scripts/determine-version-bump.sh)
             echo "**Detected bump type:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
+          else
+            # Use manual override
+            BUMP_TYPE="$INPUT_TYPE"
+
+            # Validate bump type
+            if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
+              echo "❌ Invalid bump type: $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
+              echo "Valid options: auto, major, minor, patch" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+
+            echo "**Manual override provided:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT

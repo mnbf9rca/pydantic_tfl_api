@@ -4,15 +4,15 @@ on:
   workflow_dispatch:  # Manual trigger only
     inputs:
       bump_type:
-        description: 'Manual version bump override (leave empty for automatic detection)'
-        required: false
+        description: 'Version bump type'
+        required: true
         type: choice
         options:
-          - ''
+          - auto
           - major
           - minor
           - patch
-        default: ''
+        default: auto
 
 permissions:
   contents: write
