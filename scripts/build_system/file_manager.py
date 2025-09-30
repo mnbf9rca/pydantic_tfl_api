@@ -1,5 +1,7 @@
 """FileManager class that handles all file I/O operations for the build system."""
 
+import ast
+import glob
 import keyword
 import logging
 import os
@@ -651,29 +653,175 @@ class FileManager:
         return import_set
 
     def create_mermaid_class_diagram(
-        self, dependency_graph: dict[str, set[str]], sort_order: list[str], output_file: str
+        self,
+        dependency_graph: dict[str, set[str]],
+        sort_order: list[str],
+        output_file: str,
+        endpoints_path: str | None = None,
     ) -> None:
-        """Create a Mermaid class diagram from the dependency graph.
+        """Create a Mermaid class diagram from the dependency graph with optional API client relationships.
 
         Args:
             dependency_graph: Dictionary mapping model names to their dependencies
             sort_order: List of model names in topologically sorted order
             output_file: Path to output .mmd file
+            endpoints_path: Optional path to endpoints directory for client->model relationships
         """
+        # Extract client->model relationships if endpoints path is provided
+        client_to_models: dict[str, set[str]] = {}
+        if endpoints_path and os.path.exists(endpoints_path):
+            client_to_models = self._extract_client_to_model_relationships(endpoints_path)
+
         with open(output_file, "w") as f:
+            # Add config to hide empty member boxes for cleaner display
+            f.write("---\n")
+            f.write("config:\n")
+            f.write("  class:\n")
+            f.write("    hideEmptyMembersBox: true\n")
+            f.write("---\n")
             f.write("classDiagram\n")
+
+            # Write client declarations with annotation if we have client data
+            if client_to_models:
+                f.write("    %% API Clients\n")
+                for client_name in sorted(client_to_models.keys()):
+                    f.write(f"    class {client_name}{{\n")
+                    f.write("        <<Client>>\n")
+                    f.write("    }\n")
+                f.write("\n")
+
+                # Write client->model relationships (dotted arrows for "returns")
+                f.write("    %% API Endpoint -> Response mappings (dotted)\n")
+                for client_name in sorted(client_to_models.keys()):
+                    for model_name in sorted(client_to_models[client_name]):
+                        f.write(f"    {client_name} ..> {model_name} : returns\n")
+                f.write("\n")
+
+                # Write model->model dependencies (solid arrows for "contains")
+                f.write("    %% Model -> Model dependencies (solid)\n")
+
+            # Write model dependencies
             for model in sort_order:
                 if model in dependency_graph:
                     dependencies = sorted(dependency_graph[model])
                     if dependencies:
                         for dep in dependencies:
-                            f.write(f"    {model} --> {dep}\n")
+                            f.write(f"    {model} --> {dep} : contains\n")
                     else:
                         f.write(f"    class {model}\n")
                 else:
                     f.write(f"    class {model}\n")
 
         self.logger.info(f"Created Mermaid class diagram at: {output_file}")
+
+    def create_mermaid_api_mindmap(self, endpoints_path: str, output_file: str) -> None:
+        """Create a Mermaid mindmap showing API clients and their response types.
+
+        This creates an explorable hierarchical view of the entire API surface,
+        showing both client-to-models and model-to-clients relationships to reveal reuse.
+
+        Args:
+            endpoints_path: Path to endpoints directory containing client config files
+            output_file: Path to output .mmd file
+        """
+        if not os.path.exists(endpoints_path):
+            self.logger.warning(f"Endpoints path does not exist: {endpoints_path}")
+            return
+
+        client_to_models = self._extract_client_to_model_relationships(endpoints_path)
+
+        # Build reverse mapping: model -> clients that use it
+        model_to_clients: dict[str, set[str]] = {}
+        for client_name, models in client_to_models.items():
+            for model_name in models:
+                if model_name not in model_to_clients:
+                    model_to_clients[model_name] = set()
+                model_to_clients[model_name].add(client_name)
+
+        with open(output_file, "w") as f:
+            f.write("mindmap\n")
+            f.write("  root((TfL API))\n")
+
+            # Show each client with its response models
+            # Use shapes: hexagons for clients (services), rounded squares for models (data)
+            for client_name in sorted(client_to_models.keys()):
+                # Hexagon shape for API client services
+                f.write(f"    {{{{{client_name}}}}}\n")
+                for model_name in sorted(client_to_models[client_name]):
+                    client_count = len(model_to_clients[model_name])
+                    # Rounded square shape for response models
+                    if client_count > 1:
+                        # Format: "ModelName - used by N clients"
+                        f.write(f"      ({model_name} - {client_count} clients)\n")
+                    else:
+                        f.write(f"      ({model_name})\n")
+
+        self.logger.info(f"Created Mermaid API mindmap at: {output_file}")
+
+    def _extract_client_to_model_relationships(self, endpoints_path: str) -> dict[str, set[str]]:
+        """Extract client->model relationships from endpoint config files.
+
+        Args:
+            endpoints_path: Path to the endpoints directory containing *_config.py files
+
+        Returns:
+            Dictionary mapping client names to sets of model names they return
+        """
+        client_to_models: dict[str, set[str]] = {}
+
+        # Find all *_config.py files in the endpoints directory
+        config_files = glob.glob(os.path.join(endpoints_path, "*_config.py"))
+
+        for config_file in config_files:
+            try:
+                # Extract client name from filename (e.g., "LineClient_config.py" -> "LineClient")
+                client_name = os.path.basename(config_file).replace("_config.py", "")
+
+                with open(config_file) as f:
+                    content = f.read()
+                    # Parse the Python file as AST to safely extract the endpoints dict
+                    tree = ast.parse(content)
+
+                    for node in ast.walk(tree):
+                        # Find the 'endpoints' variable assignment
+                        if isinstance(node, ast.Assign):
+                            for target in node.targets:
+                                if isinstance(target, ast.Name) and target.id == "endpoints" and isinstance(
+                                    node.value, ast.Dict
+                                ):
+                                    # Extract model names from the endpoints dict
+                                    models = self._extract_models_from_dict_ast(node.value)
+                                    if models:
+                                        client_to_models[client_name] = models
+
+            except Exception as e:
+                self.logger.warning(f"Failed to parse config file {config_file}: {e}")
+                continue
+
+        return client_to_models
+
+    def _extract_models_from_dict_ast(self, dict_node: ast.Dict) -> set[str]:
+        """Extract model names from an AST Dict node representing the endpoints dictionary.
+
+        Args:
+            dict_node: AST Dict node from the endpoints assignment
+
+        Returns:
+            Set of model names found in the 'model' values
+        """
+        models: set[str] = set()
+
+        for value in dict_node.values:
+            # Each value should be a dict like {'uri': '...', 'model': 'ModelName'}
+            if isinstance(value, ast.Dict):
+                for i, key in enumerate(value.keys):
+                    if isinstance(key, ast.Constant) and key.value == "model" and i < len(value.values):
+                        # Extract the model name
+                        model_value = value.values[i]
+                        if isinstance(model_value, ast.Constant) and isinstance(model_value.value, str):
+                            models.add(model_value.value)
+
+        return models
 
     def copy_infrastructure(self, output_path: str) -> None:
         """Copy hand-crafted infrastructure components to the output directory.

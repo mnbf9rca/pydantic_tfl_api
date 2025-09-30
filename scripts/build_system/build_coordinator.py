@@ -194,10 +194,17 @@ class BuildCoordinator:
             generate_diagrams = config["generate_diagrams"]
 
         if generate_diagrams:
+            endpoints_path = os.path.join(output_path, "endpoints")
+
+            # Generate combined class diagram (comprehensive view with all relationships)
             self.logger.info("Creating class diagram...")
             self.file_manager.create_mermaid_class_diagram(
-                dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
+                dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd"), endpoints_path
             )
+
+            # Generate API mindmap (explorable API surface view with reuse indicators)
+            self.logger.info("Creating API mindmap...")
+            self.file_manager.create_mermaid_api_mindmap(endpoints_path, os.path.join(output_path, "api_mindmap.mmd"))
 
     def _apply_config(self, config: dict[str, Any]) -> None:
         """Apply configuration options."""

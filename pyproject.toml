@@ -180,9 +180,7 @@ disable_error_code = ["operator", "arg-type"]
 files = [
     "scripts/",
     "tests/",
-    "pydantic_tfl_api/models/",
-    "pydantic_tfl_api/endpoints/",
-    "pydantic_tfl_api/core/",
+    "pydantic_tfl_api/",
     "infrastructure/",
 ]
 
