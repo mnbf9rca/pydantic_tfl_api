@@ -19,8 +19,8 @@ except ImportError:
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from build_system.utilities import sanitize_name  # type: ignore[no-redef, import-not-found]
-    from mapping_loader import load_tfl_mappings  # type: ignore[no-redef, import-not-found]
+    from build_system.utilities import sanitize_name  # type: ignore[import-not-found, no-redef]
+    from mapping_loader import load_tfl_mappings  # type: ignore[import-not-found, no-redef]
 
 
 class SpecProcessor:

@@ -1,8 +1,10 @@
 """ClientGenerator class for generating API client classes and configurations."""
 
 import copy
+import keyword
 import logging
 import os
+import re
 from typing import Any
 from urllib.parse import urlparse
 
@@ -389,9 +391,6 @@ class ClientGenerator:
 
     def generate_method_name(self, operation_id: str) -> str:
         """Generate snake_case method names from operation IDs."""
-        import keyword
-        import re
-
         # Handle camelCase/PascalCase by inserting underscores before uppercase letters
         # "getUserById" -> "get_user_by_id", "Naptan" -> "naptan"
         sanitized = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
@@ -417,9 +416,6 @@ class ClientGenerator:
         Sanitize operation IDs to create method names matching OpenAPI spec.
         This matches the original behavior from build_models.py.
         """
-        import keyword
-        import re
-
         # Replace invalid characters (like hyphens) with underscores
         sanitized = re.sub(r"[^a-zA-Z0-9_ ]", "_", name)
 

@@ -5,9 +5,12 @@ import glob
 import keyword
 import logging
 import os
+import re
+import shutil
 import types
 from enum import Enum
 from io import TextIOWrapper
+from pathlib import Path
 from typing import Any, ForwardRef, Union, get_args, get_origin
 from typing import __all__ as typing_all
 
@@ -53,11 +56,14 @@ class FileManager:
         self._generated_files.append(init_file)
 
         with open(init_file, "w") as init_f:
+            # Standard library imports first
+            init_f.write("from typing import Literal\n\n")
+
             # Write import statements in dependency-aware order to minimize forward references
             self.write_import_statements(init_f, models, models_dir, sorted_models)
 
             # Import GenericResponseModel from core for backward compatibility
-            init_f.write("from ..core.package_models import GenericResponseModel\n")
+            init_f.write("\nfrom ..core.package_models import GenericResponseModel\n")
 
             for model_name, model in models.items():
                 self.save_model_file(
@@ -73,8 +79,7 @@ class FileManager:
             # Add ResponseModelName Literal type
             # Include GenericResponseModel in the Literal since it's a valid response model
             model_names_for_literal = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
-            init_f.write("from typing import Literal\n\n")
-            init_f.write(f"ResponseModelName = Literal[\n    {model_names_for_literal},\n    \"GenericResponseModel\"\n]\n\n")
+            init_f.write(f"\nResponseModelName = Literal[\n    {model_names_for_literal},\n    \"GenericResponseModel\"\n]\n\n")
 
             model_names = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
             init_f.write(f"__all__ = [\n    {model_names},\n    'GenericResponseModel'\n]\n")
@@ -630,8 +635,6 @@ class FileManager:
         circular_models: set[str],
     ) -> set[str]:
         """Determine necessary typing imports based on the field annotations."""
-        import re
-
         import_set = set()
 
         for field in model_fields.values():
@@ -837,9 +840,6 @@ class FileManager:
             FileNotFoundError: If infrastructure directory doesn't exist
             PermissionError: If unable to copy files
         """
-        import shutil
-        from pathlib import Path
-
         # Get the directory containing this script (should be project root/scripts/build_system)
         script_dir = Path(__file__).parent
         project_root = script_dir.parent.parent

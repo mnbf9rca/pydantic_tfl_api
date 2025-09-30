@@ -100,7 +100,7 @@ class TestDeduplicateModels:
         class Model2(BaseModel):
             name: str
 
-        models = {"Model1": Model1, "Model2": Model2}
+        models: dict[str, type[BaseModel]] = {"Model1": Model1, "Model2": Model2}
         deduplicated, reference_map = deduplicate_models(models)
 
         assert len(deduplicated) == 2

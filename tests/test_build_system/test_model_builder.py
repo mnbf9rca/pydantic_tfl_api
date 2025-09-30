@@ -1,10 +1,11 @@
 """Tests for ModelBuilder class that handles Pydantic model creation from OpenAPI schemas."""
 
 from enum import Enum
-from typing import Any, ForwardRef
+from typing import Any, ForwardRef, get_args, get_origin
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
+from pydantic_core import PydanticUndefined
 
 from scripts.build_system.model_builder import ModelBuilder
 
@@ -154,9 +155,6 @@ class TestModelBuilder:
 
     def test_create_pydantic_models_array_types(self, model_builder: Any, sample_components: Any) -> None:
         """Test creating array type models."""
-        from pydantic import RootModel
-        from typing import get_origin
-
         model_builder.create_pydantic_models(sample_components)
 
         # Check UserArray was created
@@ -204,8 +202,6 @@ class TestModelBuilder:
 
         # Required field should not be union with None
         required_field = fields["required_field"]
-        from pydantic_core import PydanticUndefined
-
         assert required_field.default == PydanticUndefined  # PydanticUndefined indicates required in Pydantic v2
 
         # Optional field should be union with None
@@ -243,9 +239,6 @@ class TestModelBuilder:
         field_type = status_field.annotation
 
         # Handle both direct enum and union types (for optional enum fields)
-        from enum import Enum
-        from typing import get_args, get_origin
-
         if get_origin(field_type) is not None:
             # It's a union type (optional enum), check the args
             args = get_args(field_type)
@@ -263,8 +256,6 @@ class TestModelBuilder:
 
     def test_array_models_are_rootmodel_based(self, model_builder: Any) -> None:
         """REGRESSION: Ensure array models use RootModel pattern."""
-        from pydantic import RootModel
-
         components = {
             "TestModel": {"type": "object", "properties": {"id": {"type": "string"}}},
             "TestModelArray": {"type": "array", "items": {"$ref": "#/components/schemas/TestModel"}},

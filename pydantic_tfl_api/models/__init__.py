@@ -1,3 +1,5 @@
+from typing import Literal
+
 from .ActiveServiceType import ActiveServiceType
 from .ActiveServiceTypesArray import ActiveServiceTypesArray
 from .AdditionalProperties import AdditionalProperties
@@ -113,8 +115,8 @@ from .RouteSectionNaptanEntrySequence import RouteSectionNaptanEntrySequence
 from .StopPoint import StopPoint
 from .StopPointArray import StopPointArray
 from .StopPointsResponse import StopPointsResponse
+
 from ..core.package_models import GenericResponseModel
-from typing import Literal
 
 ResponseModelName = Literal[
     "AccidentDetail",

@@ -43,6 +43,7 @@ from typing import (
     ForwardRef,
     Optional,
     Union,
+    cast,
     get_args,
     get_origin,
 )
@@ -128,7 +129,6 @@ def update_entities(spec: dict[str, Any], api_name: str, pydantic_names: dict[st
 
 def create_enum_class(enum_name: str, enum_values: list[Any]) -> type[Enum]:
     """Dynamically create a Pydantic Enum class for the given enum values."""
-    from typing import cast
 
     def clean_enum_name(value: str) -> str:
         # Replace spaces and special characters with underscores and capitalize all letters
@@ -713,8 +713,6 @@ def sanitize_field_name(field_name: str) -> str:
 
 def get_type_str(annotation: Any, models: dict[str, type[BaseModel]]) -> str:
     """Convert the annotation to a valid Python type string for writing to a file, handling model references."""
-    import types
-
     if isinstance(annotation, ForwardRef):
         # Handle ForwardRef directly by returning the forward-referenced name
         return annotation.__forward_arg__

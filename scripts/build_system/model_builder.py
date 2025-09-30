@@ -2,11 +2,11 @@
 
 import logging
 from enum import Enum
-from typing import Any, ForwardRef
+from typing import Any, ForwardRef, cast
 
 from pydantic import BaseModel, Field, RootModel, create_model
 
-from .utilities import map_openapi_type, sanitize_field_name, sanitize_name
+from .utilities import clean_enum_name, map_openapi_type, sanitize_field_name, sanitize_name
 
 
 class ModelBuilder:
@@ -31,10 +31,6 @@ class ModelBuilder:
 
     def create_enum_class(self, enum_name: str, enum_values: list[Any]) -> type[Enum]:
         """Dynamically create a Pydantic Enum class for the given enum values."""
-        from typing import cast
-
-        from .utilities import clean_enum_name
-
         # Create a dictionary with cleaned enum names as keys and the original values as values
         # Handle uniqueness by adding suffix for duplicates
         enum_dict = {}
