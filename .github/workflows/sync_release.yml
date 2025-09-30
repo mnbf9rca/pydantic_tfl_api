@@ -19,8 +19,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  sync_release_branch:
+  sync_branches:
     runs-on: ubuntu-latest
+    outputs:
+      synced: ${{ steps.sync_result.outputs.synced }}
 
     steps:
       - name: Create GitHub App Token
@@ -66,11 +68,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Release branch created successfully" >> $GITHUB_STEP_SUMMARY
 
-      - name: Sync and bump version (atomic operation)
+      - name: Sync release branch with main
         if: steps.check_branch.outputs.branch_exists == 'true'
-        id: sync_and_bump
+        id: sync_result
         run: |
-          echo "## 🔄 Syncing Release Branch and Bumping Version" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔄 Syncing Release Branch" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Fetch both branches
@@ -90,90 +92,47 @@ jobs:
 
           # Check if release is already up to date
           if git merge-base --is-ancestor origin/main release; then
-            echo "⚠️ Release branch is already up to date with main" >> $GITHUB_STEP_SUMMARY
-            echo "No sync or version bump needed." >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
-
-          # Try to merge main into release
-          echo "**Attempting to merge main into release...**" >> $GITHUB_STEP_SUMMARY
-
-          if ! git merge origin/main --no-edit; then
-            echo "❌ Merge conflicts detected!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Conflicting files:**" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            git diff --name-only --diff-filter=U >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "⚠️ Manual intervention required. Please resolve conflicts manually." >> $GITHUB_STEP_SUMMARY
-            git merge --abort
-            exit 1
-          fi
-
-          echo "✅ Merge successful" >> $GITHUB_STEP_SUMMARY
-
-          # Show what was merged
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "<details>" >> $GITHUB_STEP_SUMMARY
-          echo "<summary>📝 Commits merged</summary>" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          git log --oneline ${RELEASE_COMMIT}..origin/main >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "</details>" >> $GITHUB_STEP_SUMMARY
-
-          # Determine version bump type
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Determining version bump...**" >> $GITHUB_STEP_SUMMARY
-
-          # Use manual override if provided, otherwise auto-detect
-          if [ -n "${{ github.event.inputs.bump_type }}" ]; then
-            BUMP_TYPE="${{ github.event.inputs.bump_type }}"
-            echo "Using manual bump type: $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Release branch is already up to date with main" >> $GITHUB_STEP_SUMMARY
+            echo "synced=false" >> $GITHUB_OUTPUT
           else
-            echo "Auto-detecting bump type from dependency changes..." >> $GITHUB_STEP_SUMMARY
-            BUMP_TYPE=$(bash scripts/determine-version-bump.sh)
-            echo "Detected bump type: $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
+            # Try to merge main into release
+            echo "**Attempting to merge main into release...**" >> $GITHUB_STEP_SUMMARY
+
+            if ! git merge origin/main --no-edit; then
+              echo "❌ Merge conflicts detected!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Conflicting files:**" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              git diff --name-only --diff-filter=U >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ Manual intervention required." >> $GITHUB_STEP_SUMMARY
+              git merge --abort
+              exit 1
+            fi
+
+            echo "✅ Merge successful" >> $GITHUB_STEP_SUMMARY
+            git push origin release
+
+            # Show what was merged
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>📝 Commits merged</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            git log --oneline ${RELEASE_COMMIT}..origin/main >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+            echo "synced=true" >> $GITHUB_OUTPUT
           fi
 
-          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
-
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Bump type:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
 
-      - name: Bump version and tag
-        if: steps.check_branch.outputs.branch_exists == 'true'
-        id: bump_version
-        uses: anothrNick/github-tag-action@1.70.0
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          WITH_V: false
-          DEFAULT_BUMP: ${{ steps.sync_and_bump.outputs.bump_type || 'patch' }}
-          RELEASE_BRANCHES: release
-          DRY_RUN: false
-
-      - name: Update pyproject.toml with new version
-        if: steps.check_branch.outputs.branch_exists == 'true'
-        run: |
-          NEW_VERSION="${{ steps.bump_version.outputs.new_tag }}"
-
-          echo "**Setting version in pyproject.toml to $NEW_VERSION**" >> $GITHUB_STEP_SUMMARY
-
-          # Update version in pyproject.toml
-          sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
-
-          # Commit the version change
-          git add pyproject.toml
-          git commit -m "chore: bump version to $NEW_VERSION"
-
-          # Push the changes
-          git push origin release
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## ✅ Release Ready" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**New version:** \`$NEW_VERSION\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Git tag:** \`$NEW_VERSION\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The deployment workflow will now trigger automatically." >> $GITHUB_STEP_SUMMARY
+  bump_version:
+    needs: sync_branches
+    if: needs.sync_branches.result == 'success'
+    uses: ./.github/workflows/bump_version.yml
+    with:
+      bump_type: ${{ github.event.inputs.bump_type }}
+    secrets: inherit

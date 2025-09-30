@@ -1,0 +1,108 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type (leave empty for automatic detection)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - major
+          - minor
+          - patch
+        default: ''
+  workflow_call:
+    inputs:
+      bump_type:
+        description: 'Version bump type (leave empty for automatic detection)'
+        required: false
+        type: string
+        default: ''
+    outputs:
+      new_version:
+        description: 'The new version number'
+        value: ${{ jobs.bump_version.outputs.new_version }}
+
+permissions:
+  contents: write
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.bump_version.outputs.new_tag }}
+
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.PUSH_APP_ID }}
+          private-key: ${{ secrets.PUSH_APP_SECRET }}
+
+      - name: Check out repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0
+          ref: release
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version bump type
+        id: determine_bump
+        run: |
+          echo "## 🔢 Determining Version Bump" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Use manual override if provided, otherwise auto-detect
+          if [ -n "${{ inputs.bump_type }}" ]; then
+            BUMP_TYPE="${{ inputs.bump_type }}"
+            echo "**Manual override provided:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Auto-detecting from dependency changes...**" >> $GITHUB_STEP_SUMMARY
+            BUMP_TYPE=$(bash scripts/determine-version-bump.sh)
+            echo "**Detected bump type:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Bump version and create tag
+        id: bump_version
+        uses: anothrNick/github-tag-action@1.70.0
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          WITH_V: false
+          DEFAULT_BUMP: ${{ steps.determine_bump.outputs.bump_type }}
+          RELEASE_BRANCHES: release
+          DRY_RUN: false
+
+      - name: Update pyproject.toml with new version
+        run: |
+          NEW_VERSION="${{ steps.bump_version.outputs.new_tag }}"
+
+          echo "**Setting version in pyproject.toml to \`$NEW_VERSION\`**" >> $GITHUB_STEP_SUMMARY
+
+          # Update version in pyproject.toml
+          sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
+
+          # Commit the version change
+          git add pyproject.toml
+          git commit -m "chore: bump version to $NEW_VERSION"
+
+          # Push the changes
+          git push origin release
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Version Bumped" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**New version:** \`$NEW_VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Git tag:** \`$NEW_VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The deployment workflow will now trigger automatically." >> $GITHUB_STEP_SUMMARY
