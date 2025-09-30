@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime, parsedate_to_datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -102,7 +102,7 @@ def test_create_model_instance(
     # Act
     client = Client()
     response_json_parsed = json.loads(json.dumps(response_json))
-    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
 
     # Create model instance
     instance = client._create_model_instance(
@@ -159,7 +159,7 @@ def test_create_model_instance_validation_errors(
     # Act & Assert
     client = Client()
     response_json_parsed = json.loads(json.dumps(response_json))
-    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
 
     with pytest.raises(ValidationError):
         client._create_model_instance(Model, response_json_parsed, result_expiry, shared_expiry, response_date_time)
@@ -358,7 +358,7 @@ def test_get_maxage_headers_from_cache_control_header(cache_control_header: str 
 def test_deserialize(model_name: str, response_content: Any, expected_result: Any) -> None:
     # Mock Response
     Response_Object = MagicMock(Response)
-    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+    response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
     response_date_time_string = format_datetime(response_date_time)
     # json.dumps(response_content)
     Response_Object.json.return_value = response_content
@@ -634,7 +634,7 @@ def test_get_model_raises_error(model_name: str, models_dict: dict[str, type[Bas
 #         )
 
 
-datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=timezone.utc)
+datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
 
 
 @pytest.mark.parametrize(
