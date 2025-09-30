@@ -56,11 +56,19 @@ def extract_dependency_version(content: str, dep_name: str) -> str | None:
     data = tomllib.loads(content)
     dependencies = data.get("project", {}).get("dependencies", [])
 
+    # Pattern matches: package-name [constraint] version
+    # Examples: "pydantic>=2.8.2", "requests==2.32.3,<3.0"
+    dep_pattern = re.compile(
+        rf"^{re.escape(dep_name)}\s*([><=!~]+)?\s*([0-9]+(?:\.[0-9]+)*)"
+    )
+
     for dep in dependencies:
-        match = re.search(r"([><=!]+)?\s*([0-9]+\.[0-9]+\.[0-9]+)", dep)
-        if isinstance(dep, str) and dep.strip().startswith(dep_name) and match:
-            # Extract version using regex: matches >=X.Y.Z or ==X.Y.Z etc
-            return match[2]
+        if not isinstance(dep, str):
+            continue
+        match = dep_pattern.match(dep.strip())
+        if match:
+            # Return the version number (group 2)
+            return match.group(2)
 
     return None
 
@@ -106,13 +114,15 @@ def compare_versions(old_ver: str, new_ver: str) -> BumpType | None:
     if new_major > old_major:
         return "major"
 
-    # Compare minor versions
-    if new_major == old_major and new_minor > old_minor:
-        return "minor"
+    # If major versions equal, check minor and patch
+    if new_major == old_major:
+        # Compare minor versions
+        if new_minor > old_minor:
+            return "minor"
 
-    # Compare patch versions
-    if new_major == old_major and new_minor == old_minor and new_patch > old_patch:
-        return "patch"
+        # Compare patch versions
+        if new_minor == old_minor and new_patch > old_patch:
+            return "patch"
 
     # Version increased in pre/post/dev only - treat as patch
     return "patch"

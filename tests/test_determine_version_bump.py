@@ -112,6 +112,35 @@ name = "test"
         with pytest.raises(tomllib.TOMLDecodeError):
             extract_dependency_version("invalid toml {{{", "pydantic")
 
+    def test_extract_empty_dependency_list(self) -> None:
+        """Test extracting from empty dependency list returns None."""
+        content = """
+[project]
+dependencies = []
+"""
+        assert extract_dependency_version(content, "pydantic") is None
+
+    def test_extract_no_dependencies_key(self) -> None:
+        """Test extracting when dependencies key is missing."""
+        content = """
+[project]
+name = "test"
+"""
+        assert extract_dependency_version(content, "pydantic") is None
+
+    def test_extract_exact_match_only(self) -> None:
+        """Test that exact package name matching works (not substring)."""
+        content = """
+[project]
+dependencies = [
+    "pydantic-core>=2.0.0",
+    "pydantic>=2.8.2",
+]
+"""
+        # Should match only "pydantic", not "pydantic-core"
+        assert extract_dependency_version(content, "pydantic") == "2.8.2"
+        assert extract_dependency_version(content, "pydantic-core") == "2.0.0"
+
 
 class TestDetermineBumpType:
     """Tests for determine_bump_type function - our business logic."""
@@ -276,3 +305,34 @@ dependencies = [
         """Test that TOML parse errors return safe default (patch)."""
         mock_get_content.return_value = "invalid toml {{{"
         assert determine_bump_type("origin/release", "origin/main") == "patch"
+
+    @patch("scripts.determine_version_bump.get_pyproject_content")
+    def test_empty_dependency_lists(self, mock_get_content: Mock) -> None:
+        """Test with empty dependency lists returns patch (no changes)."""
+        content = """
+[project]
+dependencies = []
+"""
+        mock_get_content.return_value = content
+        assert determine_bump_type("origin/release", "origin/main") == "patch"
+
+    @patch("scripts.determine_version_bump.get_pyproject_content")
+    def test_custom_dependency_list(self, mock_get_content: Mock) -> None:
+        """Test with custom dependency list parameter."""
+        old_content = """
+[project]
+dependencies = [
+    "numpy>=1.20.0",
+    "pandas>=1.3.0",
+]
+"""
+        new_content = """
+[project]
+dependencies = [
+    "numpy>=2.0.0",
+    "pandas>=1.3.0",
+]
+"""
+        mock_get_content.side_effect = [old_content, new_content]
+        # Check numpy specifically - should detect major bump
+        assert determine_bump_type("origin/release", "origin/main", dependencies=["numpy"]) == "major"

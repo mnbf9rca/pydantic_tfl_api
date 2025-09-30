@@ -51,7 +51,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           enable-cache: true
 
@@ -110,16 +110,8 @@ jobs:
 
           echo "**Setting version in pyproject.toml to \`$NEW_VERSION\`**" >> $GITHUB_STEP_SUMMARY
 
-          # Update version in pyproject.toml using sed
-          sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
-
-          # Verify the change
-          if ! grep -q "version = \"$NEW_VERSION\"" pyproject.toml; then
-            echo "Error: Failed to update version in pyproject.toml" >&2
-            exit 1
-          fi
-
-          echo "Updated version to $NEW_VERSION"
+          # Update version in pyproject.toml using Python script
+          uv run --group release python scripts/update_pyproject_version.py "$NEW_VERSION"
 
           # Commit the version change
           git add pyproject.toml
