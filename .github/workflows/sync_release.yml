@@ -93,6 +93,9 @@ jobs:
           # Check if release is already up to date
           if git merge-base --is-ancestor origin/main release; then
             echo "✅ Release branch is already up to date with main" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**No sync needed.** To bump version anyway, manually trigger:" >> $GITHUB_STEP_SUMMARY
+            echo "- Workflow: \`bump_version.yml\`" >> $GITHUB_STEP_SUMMARY
             echo "synced=false" >> $GITHUB_OUTPUT
           else
             # Try to merge main into release
@@ -131,7 +134,7 @@ jobs:
 
   bump_version:
     needs: sync_branches
-    if: needs.sync_branches.result == 'success'
+    if: needs.sync_branches.outputs.synced == 'true'
     uses: ./.github/workflows/bump_version.yml
     with:
       bump_type: ${{ github.event.inputs.bump_type }}
