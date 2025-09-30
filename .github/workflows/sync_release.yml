@@ -1,0 +1,156 @@
+name: Sync Release Branch
+
+on:
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      force_sync:
+        description: 'Force sync even if there are conflicts'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync_release_branch:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0  # Full history for proper syncing
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if release branch exists
+        id: check_branch
+        run: |
+          if git ls-remote --heads origin release | grep -q release; then
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+            echo "Release branch exists"
+          else
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+            echo "Release branch does not exist"
+          fi
+
+      - name: Create release branch (first time)
+        if: steps.check_branch.outputs.branch_exists == 'false'
+        run: |
+          echo "## 🎉 Creating Release Branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This is the first time the release branch is being created." >> $GITHUB_STEP_SUMMARY
+          echo "It will be created from the current main branch." >> $GITHUB_STEP_SUMMARY
+
+          git checkout -b release
+          git push -u origin release
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release branch created successfully" >> $GITHUB_STEP_SUMMARY
+
+      - name: Sync release branch with main
+        if: steps.check_branch.outputs.branch_exists == 'true'
+        run: |
+          echo "## 🔄 Syncing Release Branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Fetch and checkout release branch
+          git fetch origin release:release
+          git checkout release
+
+          # Get commit info
+          MAIN_COMMIT=$(git rev-parse origin/main)
+          RELEASE_COMMIT=$(git rev-parse release)
+
+          echo "**Current Status:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Main branch: \`${MAIN_COMMIT:0:7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Release branch: \`${RELEASE_COMMIT:0:7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check if release is behind main
+          if git merge-base --is-ancestor origin/main release; then
+            echo "✅ Release branch is up to date with main" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          # Try to merge main into release
+          echo "**Attempting to merge main into release...**" >> $GITHUB_STEP_SUMMARY
+
+          if git merge origin/main --no-edit; then
+            echo "✅ Merge successful" >> $GITHUB_STEP_SUMMARY
+            git push origin release
+
+            # Get the merge commit
+            MERGE_COMMIT=$(git rev-parse HEAD)
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**New release commit:** \`${MERGE_COMMIT:0:7}\`" >> $GITHUB_STEP_SUMMARY
+
+            # Show what was merged
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>📝 Commits merged</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            git log --oneline ${RELEASE_COMMIT}..origin/main >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Merge conflicts detected!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Conflicting files:**" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            git diff --name-only --diff-filter=U >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Manual intervention required. Please resolve conflicts manually." >> $GITHUB_STEP_SUMMARY
+
+            # Abort the merge
+            git merge --abort
+            exit 1
+          fi
+
+      - name: Verify sync
+        if: steps.check_branch.outputs.branch_exists == 'true'
+        run: |
+          git fetch origin release:release
+          git fetch origin main:main
+
+          if git merge-base --is-ancestor main release; then
+            echo "## ✅ Verification Successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Release branch is now in sync with main" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ⚠️ Verification Warning" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Release branch may not be fully in sync. Manual review recommended." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Create summary for new branch
+        if: steps.check_branch.outputs.branch_exists == 'false'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Configure branch protection rules** for the release branch:" >> $GITHUB_STEP_SUMMARY
+          echo "   - Go to Settings > Branches > Add branch protection rule" >> $GITHUB_STEP_SUMMARY
+          echo "   - Branch name pattern: \`release\`" >> $GITHUB_STEP_SUMMARY
+          echo "   - Enable: Require a pull request before merging" >> $GITHUB_STEP_SUMMARY
+          echo "   - Enable: Require status checks to pass before merging" >> $GITHUB_STEP_SUMMARY
+          echo "   - Enable: Require branches to be up to date before merging" >> $GITHUB_STEP_SUMMARY
+          echo "   - Enable: Include administrators" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Update deployment workflows** to deploy from release branch" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Test the sync workflow** by making a change to main" >> $GITHUB_STEP_SUMMARY
