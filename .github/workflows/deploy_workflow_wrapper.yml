@@ -9,13 +9,6 @@ on:
         required: false
         default: false
 
-  workflow_run:
-    workflows: ["bump version"]
-    types:
-      - completed
-    branches:
-      - release  # Only trigger from release branch
-
 jobs:
   build_artifacts:
     uses: ./.github/workflows/deploy_build_artifact.yaml
