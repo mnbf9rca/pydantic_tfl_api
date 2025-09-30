@@ -124,6 +124,7 @@ exclude = [
     "dist",
     "venv",
     ".venv",
+    "scripts/LEGACY_DO_NOT_USE_build_models.py",
 ]
 
 [tool.ruff.lint]
@@ -187,7 +188,7 @@ files = [
 
 # Exclude auto-generated models and endpoints
 exclude = [
-
+ "scripts/LEGACY_DO_NOT_USE_build_models.py"
 ]
 
 [[tool.mypy.overrides]]

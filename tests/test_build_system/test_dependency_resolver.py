@@ -133,6 +133,157 @@ class TestDependencyResolver:
         assert a_idx < c_idx
         assert b_idx < c_idx
 
+    def test_topological_sort_kahns_algorithm_correct(self, dependency_resolver: Any) -> None:
+        """Test that topological sort correctly implements Kahn's algorithm.
+
+        Kahn's algorithm:
+        1. Calculate in-degree (number of incoming edges) for each node
+        2. Start with nodes that have in-degree 0
+        3. Process nodes in order, decrementing in-degree of dependents
+
+        Graph: A -> B -> C (B depends on A, C depends on B)
+        In-degrees: A=0, B=1, C=1
+        Order should be: A, B, C
+        """
+        # B depends on A, C depends on B
+        # This means: import A first, then B (which uses A), then C (which uses B)
+        graph = {
+            "A": set(),      # A has no dependencies (in-degree = 0)
+            "B": {"A"},      # B depends on A (in-degree = 1)
+            "C": {"B"},      # C depends on B (in-degree = 1)
+        }
+
+        sorted_models = dependency_resolver.topological_sort(graph)
+
+        # Verify correct ordering
+        assert sorted_models.index("A") < sorted_models.index("B")
+        assert sorted_models.index("B") < sorted_models.index("C")
+        assert sorted_models == ["A", "B", "C"]
+
+    def test_topological_sort_complex_dependencies(self, dependency_resolver: Any) -> None:
+        """Test topological sort with complex dependency graph.
+
+        Graph structure:
+            A (no deps)
+            B depends on A
+            C depends on A
+            D depends on B and C
+            E depends on D
+
+        Valid orderings include: [A, B, C, D, E] or [A, C, B, D, E]
+        Invalid: any where dependent comes before dependency
+        """
+        graph = {
+            "A": set(),
+            "B": {"A"},
+            "C": {"A"},
+            "D": {"B", "C"},
+            "E": {"D"},
+        }
+
+        sorted_models = dependency_resolver.topological_sort(graph)
+
+        # Verify all dependency constraints are satisfied
+        a_idx = sorted_models.index("A")
+        b_idx = sorted_models.index("B")
+        c_idx = sorted_models.index("C")
+        d_idx = sorted_models.index("D")
+        e_idx = sorted_models.index("E")
+
+        # A must come before B, C, D, E
+        assert a_idx < b_idx
+        assert a_idx < c_idx
+        assert a_idx < d_idx
+        assert a_idx < e_idx
+
+        # B and C must come before D
+        assert b_idx < d_idx
+        assert c_idx < d_idx
+
+        # D must come before E
+        assert d_idx < e_idx
+
+    def test_topological_sort_deterministic(self, dependency_resolver: Any) -> None:
+        """Test that topological sort produces deterministic results.
+
+        When there are multiple valid orderings (e.g., B and C both depend only on A),
+        the sort should consistently choose the same order (alphabetical tiebreaker).
+        """
+        graph = {
+            "A": set(),
+            "B": {"A"},
+            "C": {"A"},
+        }
+
+        # Run multiple times
+        results = [dependency_resolver.topological_sort(graph) for _ in range(5)]
+
+        # All results should be identical
+        assert all(result == results[0] for result in results)
+
+        # With alphabetical tiebreaker, should be [A, B, C]
+        assert results[0] == ["A", "B", "C"]
+
+    def test_topological_sort_no_dependencies(self, dependency_resolver: Any) -> None:
+        """Test topological sort with models that have no dependencies.
+
+        Should return alphabetically sorted list.
+        """
+        graph: dict[str, set[str]] = {
+            "Zebra": set(),
+            "Apple": set(),
+            "Mango": set(),
+        }
+
+        sorted_models = dependency_resolver.topological_sort(graph)
+
+        # Should be alphabetically sorted when no dependencies
+        assert sorted_models == ["Apple", "Mango", "Zebra"]
+
+    def test_topological_sort_array_models_after_base(self, dependency_resolver: Any) -> None:
+        """REGRESSION: Array models must come AFTER their base models.
+
+        This was a bug in the legacy build system where AccidentDetailArray
+        would be imported BEFORE AccidentDetail, even though the array depends
+        on the base model. This test ensures dependencies always come first.
+
+        Graph: ModelArray depends on Model, Model depends on nothing
+        Correct order: [Model, ModelArray]
+        Wrong order: [ModelArray, Model] ← legacy bug
+        """
+        graph = {
+            "AccidentDetail": {"Casualty", "Vehicle"},
+            "AccidentDetailArray": {"AccidentDetail"},
+            "Casualty": set(),
+            "Vehicle": set(),
+        }
+
+        sorted_models = dependency_resolver.topological_sort(graph)
+
+        # Get indices
+        detail_idx = sorted_models.index("AccidentDetail")
+        array_idx = sorted_models.index("AccidentDetailArray")
+        casualty_idx = sorted_models.index("Casualty")
+        vehicle_idx = sorted_models.index("Vehicle")
+
+        # Base model must come before array
+        assert detail_idx < array_idx, (
+            "AccidentDetail must be imported before AccidentDetailArray "
+            f"(got {sorted_models})"
+        )
+
+        # Dependencies of base model must come before base model
+        assert casualty_idx < detail_idx, (
+            "Casualty must be imported before AccidentDetail"
+        )
+        assert vehicle_idx < detail_idx, (
+            "Vehicle must be imported before AccidentDetail"
+        )
+
+        # Verify full chain: dependencies → base → array
+        assert casualty_idx < detail_idx < array_idx
+        assert vehicle_idx < detail_idx < array_idx
+
     def test_topological_sort_with_circular_dependencies(self, dependency_resolver: Any) -> None:
         """Test topological sorting handles circular dependencies."""
         graph = {

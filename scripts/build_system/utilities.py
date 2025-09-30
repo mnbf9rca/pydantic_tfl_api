@@ -134,3 +134,186 @@ def join_url_paths(a: str, b: str) -> str:
 
     # Ensure the base path ends with a slash for urljoin to work properly
     return urljoin(a + "/", b.lstrip("/"))
+
+
+def are_models_equal(model1: Any, model2: Any) -> bool:
+    """Check if two Pydantic models are equal based on their fields, types, and metadata.
+
+    Args:
+        model1: First model to compare
+        model2: Second model to compare
+
+    Returns:
+        True if models are equal, False otherwise
+    """
+    from pydantic import BaseModel
+
+    # Must both be BaseModel types
+    if not (isinstance(model1, type) and isinstance(model2, type)):
+        return False
+    if not (issubclass(model1, BaseModel) and issubclass(model2, BaseModel)):
+        return False
+
+    # Compare field structure
+    if set(model1.model_fields.keys()) != set(model2.model_fields.keys()):
+        return False
+
+    # Compare each field's annotation, alias, default, and constraints
+    for field_name in model1.model_fields:
+        field1 = model1.model_fields[field_name]
+        field2 = model2.model_fields[field_name]
+
+        # Compare field annotations
+        if str(field1.annotation) != str(field2.annotation):
+            return False
+
+        # Compare aliases
+        if field1.alias != field2.alias:
+            return False
+
+        # Compare default values
+        if field1.default != field2.default:
+            return False
+
+        # Compare if field is required
+        if field1.is_required() != field2.is_required():
+            return False
+
+        # Compare field constraints (title, description, etc.)
+        if (
+            hasattr(field1, "json_schema_extra")
+            and hasattr(field2, "json_schema_extra")
+            and field1.json_schema_extra != field2.json_schema_extra
+        ):
+            return False
+
+    return True
+
+
+def deduplicate_models(
+    models: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, str]]:
+    """Deduplicate models by removing models with the same content.
+
+    Args:
+        models: Dictionary of model names to model classes
+
+    Returns:
+        Tuple of (deduplicated_models, reference_map) where reference_map
+        maps duplicate model names to their canonical equivalents
+    """
+    import logging
+
+
+    deduplicated_models: dict[str, Any] = {}
+    reference_map: dict[str, str] = {}
+
+    # Compare models to detect duplicates
+    for model_name, model in models.items():
+        found_duplicate = False
+
+        # Compare with already deduplicated models
+        for dedup_model_name, dedup_model in deduplicated_models.items():
+            # Handle BaseModel types
+            if isinstance(model, type) and isinstance(dedup_model, type) and are_models_equal(model, dedup_model):
+                reference_map[model_name] = dedup_model_name
+                found_duplicate = True
+                logging.info(f"Model '{model_name}' is a duplicate of '{dedup_model_name}'")
+                break
+
+            # Handle RootModel[list[X]] - Check if both are RootModel wrapping lists
+            from pydantic import RootModel
+            try:
+                # Check if both are RootModel subclasses with list types
+                if (isinstance(model, type) and issubclass(model, RootModel) and
+                    isinstance(dedup_model, type) and issubclass(dedup_model, RootModel)):
+                    # Get the root type (what RootModel wraps)
+                    model_root = model.model_fields.get('root')
+                    dedup_root = dedup_model.model_fields.get('root')
+
+                    if model_root and dedup_root:
+                        # Extract the inner type from list[X]
+                        model_origin = get_origin(model_root.annotation)
+                        dedup_origin = get_origin(dedup_root.annotation)
+
+                        if model_origin is list and dedup_origin is list:
+                            model_inner = get_args(model_root.annotation)[0] if get_args(model_root.annotation) else None
+                            dedup_inner = get_args(dedup_root.annotation)[0] if get_args(dedup_root.annotation) else None
+
+                            if model_inner and dedup_inner and model_inner == dedup_inner:
+                                reference_map[model_name] = dedup_model_name
+                                found_duplicate = True
+                                logging.info(f"Model '{model_name}' is a duplicate RootModel[list[...]] of '{dedup_model_name}'")
+                                break
+            except (AttributeError, TypeError):
+                pass  # Not a RootModel or doesn't have expected structure
+
+            # Handle plain List models (generic list types, not RootModel)
+            model_origin = get_origin(model)
+            dedup_model_origin = get_origin(dedup_model)
+
+            if model_origin in {list} and dedup_model_origin in {list}:
+                model_inner_type = get_args(model)[0] if get_args(model) else None
+                dedup_inner_type = get_args(dedup_model)[0] if get_args(dedup_model) else None
+
+                # If the inner types of the lists are the same, consider them duplicates
+                if model_inner_type and dedup_inner_type and model_inner_type == dedup_inner_type:
+                    reference_map[model_name] = dedup_model_name
+                    found_duplicate = True
+                    logging.info(f"Model '{model_name}' is a duplicate list type of '{dedup_model_name}'")
+                    break
+
+        # If no duplicate found, keep the model
+        if not found_duplicate:
+            deduplicated_models[model_name] = model
+
+    # Return the deduplicated models and reference map
+    return deduplicated_models, reference_map
+
+
+def update_model_references(
+    models: dict[str, Any], reference_map: dict[str, str]
+) -> dict[str, Any]:
+    """Update references in models based on the deduplication reference map, including nested generics.
+
+    Args:
+        models: Dictionary of model names to model classes
+        reference_map: Mapping from duplicate model names to canonical names
+
+    Returns:
+        Updated models dictionary with references resolved
+    """
+    from typing import Optional
+
+    def resolve_model_reference(annotation: Any) -> Any:
+        """Resolve references in the model recursively, including nested types."""
+        origin = get_origin(annotation)
+        args = get_args(annotation)
+
+        # Handle Union, List, or any other generic types
+        if origin in {Union, list, Optional} and args:
+            # Recursively resolve references for the inner types
+            resolved_inner_types = tuple(resolve_model_reference(arg) for arg in args)
+            return origin[resolved_inner_types]
+
+        # Handle direct references in the reference_map
+        annotation_name = str(annotation).split(".")[-1].strip("'>")
+        if annotation_name in reference_map:
+            resolved_model = models[reference_map[annotation_name]]
+            return resolved_model
+
+        # If it's a normal type or not in the map, return as-is
+        return annotation
+
+    updated_models = {}
+
+    for model_name, model in models.items():
+        if model_name in reference_map:
+            # If the model name is in the reference map, update its reference
+            dedup_model_name = reference_map[model_name]
+            updated_models[model_name] = models[dedup_model_name]
+        else:
+            # Recursively resolve references in model annotations if they are generic
+            updated_models[model_name] = resolve_model_reference(model)
+
+    return updated_models

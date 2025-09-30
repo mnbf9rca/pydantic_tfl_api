@@ -157,57 +157,6 @@ class ModelBuilder:
                         f"Array model {sanitized_name} has no valid 'items' reference. Using list[Any]."
                     )
 
-        # Generate additional array models that are needed but not explicitly defined
-        self.generate_additional_array_models()
-
-    def generate_additional_array_models(self) -> None:
-        """Generate additional RootModel-based array models for common types.
-
-        Some models need array versions even if not explicitly defined in OpenAPI specs.
-        This generates RootModel classes for these models based on production requirements.
-        """
-        from pydantic import ConfigDict, RootModel, create_model
-
-        # Models that need array versions based on production system analysis
-        # Format: (base_model_name, desired_array_name) or just base_model_name
-        models_needing_arrays = [
-            "ArrivalDeparture",
-            "BikePointOccupancy",
-            "ChargeConnectorOccupancy",
-            "DisruptedPoint",
-            "LineServiceType",
-            # Note: PlaceCategory already has PlaceCategoryArray, and StopPointCategory
-            # is deduplicated to PlaceCategory, so no need for StopPointCategoryArray
-            "StopPointRouteSection",
-        ]
-
-        for model_config in models_needing_arrays:
-            if isinstance(model_config, tuple):
-                base_model_name, array_model_name = model_config
-            else:
-                base_model_name = model_config
-                array_model_name = f"{base_model_name}Array"
-
-            if base_model_name in self.models:
-                # Only create if not already exists
-                if array_model_name not in self.models:
-                    base_model = self.models[base_model_name]
-
-                    # Create RootModel-based array class
-                    # Use type: ignore since base_model is a runtime value used as a type parameter
-                    array_class = create_model(
-                        array_model_name,
-                        __base__=RootModel[list[base_model]],  # type: ignore[valid-type]
-                        __config__=ConfigDict(from_attributes=True),
-                    )
-
-                    self.models[array_model_name] = array_class
-                    self.logger.info(f"Generated additional array model: {array_model_name} (from {base_model_name})")
-                else:
-                    self.logger.debug(f"Array model {array_model_name} already exists")
-            else:
-                self.logger.warning(f"Base model {base_model_name} not found for array generation")
-
     def get_models(self) -> dict[str, type[BaseModel] | type]:
         """Return a copy of the models dictionary."""
         return self.models.copy()

@@ -24,7 +24,7 @@ class TestBuildIntegration:
     def build_output(self, project_root: Any, specs_dir: Any) -> Any:
         """Run the build once and share output across all tests in this class."""
         temp_dir = tempfile.mkdtemp()
-        build_script = project_root / "scripts" / "build_models.py"
+        build_script = project_root / "scripts" / "build_with_coordinator.py"
 
         # Run the build process once
         result = subprocess.run(
@@ -65,7 +65,7 @@ class TestBuildIntegration:
         # Check for critical errors in output
         stderr = build_output.result.stderr
         assert "ERROR" not in stderr or "Unexpected error" not in stderr
-        assert "Model generation completed successfully" in stderr
+        assert "Build completed successfully" in stderr
 
     def test_creates_expected_directories(self, build_output: Any) -> None:
         """Test that required directories are created and populated."""
@@ -213,7 +213,7 @@ class TestBuildIntegration:
 
     def test_build_fails_gracefully_with_invalid_input(self, project_root: Any) -> None:
         """Test that build handles missing specs directory gracefully."""
-        build_script = project_root / "scripts" / "build_models.py"
+        build_script = project_root / "scripts" / "build_with_coordinator.py"
         temp_dir = tempfile.mkdtemp()
 
         try:

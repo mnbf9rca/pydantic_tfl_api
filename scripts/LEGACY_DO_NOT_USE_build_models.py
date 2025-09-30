@@ -1,3 +1,29 @@
+"""
+DEPRECATION WARNING: This script is deprecated and will be removed in a future version.
+
+Please use the new modular build system instead:
+    scripts/build_with_coordinator.py
+
+The legacy monolithic build_models.py script has been superseded by a more maintainable,
+modular architecture:
+- scripts/build_system/build_coordinator.py - Orchestrates the build process
+- scripts/build_system/spec_processor.py - Handles OpenAPI specification loading and processing
+- scripts/build_system/model_builder.py - Creates Pydantic models from schemas
+- scripts/build_system/dependency_resolver.py - Manages model dependencies
+- scripts/build_system/file_manager.py - Handles all file I/O operations
+- scripts/build_system/client_generator.py - Generates API client code
+- scripts/build_system/utilities.py - Shared utility functions
+
+All functions from this script have been migrated to the appropriate modules above.
+"""
+import warnings
+
+warnings.warn(
+    "build_models.py is deprecated. Use scripts/build_with_coordinator.py instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 import argparse
 import builtins
 import json

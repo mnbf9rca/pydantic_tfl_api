@@ -21,6 +21,7 @@ class FileManager:
     def __init__(self) -> None:
         """Initialize the FileManager with empty state."""
         self._generated_files: list[str] = []
+        self.logger = logging.getLogger(__name__)
 
     def save_models(
         self,
@@ -648,3 +649,67 @@ class FileManager:
                 import_set.add("ForwardRef")
 
         return import_set
+
+    def create_mermaid_class_diagram(
+        self, dependency_graph: dict[str, set[str]], sort_order: list[str], output_file: str
+    ) -> None:
+        """Create a Mermaid class diagram from the dependency graph.
+
+        Args:
+            dependency_graph: Dictionary mapping model names to their dependencies
+            sort_order: List of model names in topologically sorted order
+            output_file: Path to output .mmd file
+        """
+        with open(output_file, "w") as f:
+            f.write("classDiagram\n")
+            for model in sort_order:
+                if model in dependency_graph:
+                    dependencies = sorted(dependency_graph[model])
+                    if dependencies:
+                        for dep in dependencies:
+                            f.write(f"    {model} --> {dep}\n")
+                    else:
+                        f.write(f"    class {model}\n")
+                else:
+                    f.write(f"    class {model}\n")
+
+        self.logger.info(f"Created Mermaid class diagram at: {output_file}")
+
+    def copy_infrastructure(self, output_path: str) -> None:
+        """Copy hand-crafted infrastructure components to the output directory.
+
+        This function copies the core infrastructure files (client.py, package_models.py, etc.)
+        from the infrastructure/core directory to the output directory, ensuring that
+        generated code has access to the necessary infrastructure components.
+
+        Args:
+            output_path: Directory where infrastructure should be copied
+
+        Raises:
+            FileNotFoundError: If infrastructure directory doesn't exist
+            PermissionError: If unable to copy files
+        """
+        import shutil
+        from pathlib import Path
+
+        # Get the directory containing this script (should be project root/scripts/build_system)
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent.parent
+        infrastructure_dir = project_root / "infrastructure" / "core"
+
+        if not infrastructure_dir.exists():
+            raise FileNotFoundError(f"Infrastructure directory not found: {infrastructure_dir}")
+
+        output_core_dir = Path(output_path) / "core"
+
+        self.logger.info(f"Copying infrastructure from {infrastructure_dir} to {output_core_dir}")
+
+        # Create output core directory and copy all infrastructure files
+        output_core_dir.mkdir(parents=True, exist_ok=True)
+
+        for infrastructure_file in infrastructure_dir.glob("*.py"):
+            destination = output_core_dir / infrastructure_file.name
+
+            shutil.copy2(infrastructure_file, destination)
+            self.logger.info(f"Copied infrastructure: {infrastructure_file.name}")
+            self._generated_files.append(str(destination))

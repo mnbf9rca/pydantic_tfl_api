@@ -195,7 +195,7 @@ class TestBuildCoordinator:
         diagram_file = temp_output_dir / "class_diagram.mmd"
         assert diagram_file.exists()
 
-    @patch("scripts.build_system.build_coordinator.copy_infrastructure")
+    @patch("scripts.build_system.file_manager.FileManager.copy_infrastructure")
     def test_copy_infrastructure_called(self, mock_copy: Any, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test that infrastructure copying is called during build."""
         # Run the full build
@@ -208,7 +208,7 @@ class TestBuildCoordinator:
     def test_build_complete_workflow(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test the complete build workflow."""
         # Mock the infrastructure copying to avoid file system dependencies
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Check that all expected outputs were created
@@ -236,7 +236,7 @@ class TestBuildCoordinator:
         try:
             with (
                 pytest.raises(ValueError, match="No valid specifications found"),
-                patch("scripts.build_system.build_coordinator.copy_infrastructure"),
+                patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"),
             ):
                 build_coordinator.build(empty_dir, str(temp_output_dir))
         finally:
@@ -247,7 +247,7 @@ class TestBuildCoordinator:
         # Try to write to a read-only directory (simulate permission error)
         with (
             pytest.raises((PermissionError, OSError, RuntimeError)),
-            patch("scripts.build_system.build_coordinator.copy_infrastructure"),
+            patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"),
         ):
             build_coordinator.build(str(temp_spec_dir), "/root/no_permission")
 
@@ -258,7 +258,7 @@ class TestBuildCoordinator:
         assert stats == {}
 
         # After build, should have statistics
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         stats = build_coordinator.get_build_stats()
@@ -270,7 +270,7 @@ class TestBuildCoordinator:
     def test_clear_state(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test clearing coordinator state."""
         # Run a build first
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Verify state exists
@@ -286,7 +286,7 @@ class TestBuildCoordinator:
 
     def test_validate_output_after_build(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test validating the build output."""
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         # Validate output
@@ -316,7 +316,7 @@ class TestBuildCoordinator:
 
     def test_get_component_counts(self, build_coordinator: Any, temp_spec_dir: Any, temp_output_dir: Any) -> None:
         """Test getting component counts after build."""
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir))
 
         counts = build_coordinator.get_component_counts()
@@ -335,7 +335,7 @@ class TestBuildCoordinator:
         """Test build with custom configuration options."""
         config = {"generate_diagrams": False, "validate_output": True, "base_url": "https://custom.example.com"}
 
-        with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+        with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
             build_coordinator.build(str(temp_spec_dir), str(temp_output_dir), config=config)
 
         # Diagram should not be created when disabled
@@ -348,7 +348,7 @@ class TestBuildCoordinator:
         output_dir2 = Path(tempfile.mkdtemp())
 
         try:
-            with patch("scripts.build_system.build_coordinator.copy_infrastructure"):
+            with patch("scripts.build_system.file_manager.FileManager.copy_infrastructure"):
                 # Should be able to run multiple builds
                 build_coordinator.build(str(temp_spec_dir), str(output_dir1))
                 build_coordinator.build(str(temp_spec_dir), str(output_dir2))

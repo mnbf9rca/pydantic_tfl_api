@@ -2,30 +2,15 @@
 
 import logging
 import os
-
-# Import functions from build_models.py
-import sys
 from pathlib import Path
 from typing import Any
 
 from scripts.build_system.client_generator import ClientGenerator
 from scripts.build_system.dependency_resolver import DependencyResolver
 from scripts.build_system.file_manager import FileManager
-
-# Import existing build system components
 from scripts.build_system.model_builder import ModelBuilder
 from scripts.build_system.spec_processor import SpecProcessor
-
-sys.path.append(str(Path(__file__).parent.parent))
-from build_models import (  # type: ignore[import-not-found]
-    combine_components_and_paths,
-    copy_infrastructure,
-    create_mermaid_class_diagram,
-    deduplicate_models,
-    handle_dependencies,
-    load_specs,
-    update_model_references,
-)
+from scripts.build_system.utilities import deduplicate_models, update_model_references
 
 
 class BuildCoordinator:
@@ -75,7 +60,7 @@ class BuildCoordinator:
             self._validate_and_setup_paths(spec_path, output_path)
 
             # Step 2: Copy infrastructure files
-            copy_infrastructure(output_path)
+            self.file_manager.copy_infrastructure(output_path)
 
             # Step 3: Load and process specifications
             specs, components, paths = self._load_and_process_specs(spec_path)
@@ -141,14 +126,10 @@ class BuildCoordinator:
     def _load_and_process_specs(self, spec_path: str) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
         """Load OpenAPI specs and process components and paths."""
         self.logger.info("Loading OpenAPI specs...")
-        specs = load_specs(spec_path)
+        specs, components, paths = self.spec_processor.process_specs(spec_path)
 
         if not specs:
             raise ValueError(f"No valid specifications found in {spec_path}")
-
-        self.logger.info("Generating components...")
-        pydantic_names: dict[str, str] = {}
-        components, paths = combine_components_and_paths(specs, pydantic_names)
 
         return specs, components, paths
 
@@ -160,21 +141,30 @@ class BuildCoordinator:
         self.model_builder.create_pydantic_models(components)
         models = self.model_builder.get_models()
 
-        # Deduplicate models before saving them
-        self.logger.info("Deduplicating models...")
+        # First deduplication pass: remove duplicate base models
+        self.logger.info("Deduplicating models (first pass)...")
         deduplicated_models, reference_map = deduplicate_models(models)
 
-        # Update model references
+        # Update model references to point to canonical models
+        self.logger.info("Updating model references...")
         models = update_model_references(deduplicated_models, reference_map)
 
-        return models, reference_map
+        # Second deduplication pass: remove duplicate array/composite models
+        # that become identical after reference updates
+        self.logger.info("Deduplicating models (second pass)...")
+        final_models, additional_refs = deduplicate_models(models)
+
+        # Merge reference maps
+        reference_map.update(additional_refs)
+
+        return final_models, reference_map
 
     def _handle_dependencies_and_save_models(
         self, models: dict[str, Any], output_path: str
-    ) -> tuple[dict[str, list[str]], set[str], list[str]]:
+    ) -> tuple[dict[str, set[str]], set[str], list[str]]:
         """Handle model dependencies and save models to files."""
         self.logger.info("Handling dependencies...")
-        dependency_graph, circular_models, sorted_models = handle_dependencies(models)
+        dependency_graph, circular_models, sorted_models = self.dependency_resolver.resolve_dependencies(models)
 
         # Save the models using FileManager
         self.logger.info("Saving models to files...")
@@ -205,7 +195,7 @@ class BuildCoordinator:
 
         if generate_diagrams:
             self.logger.info("Creating class diagram...")
-            create_mermaid_class_diagram(
+            self.file_manager.create_mermaid_class_diagram(
                 dependency_graph, sorted_models, os.path.join(output_path, "class_diagram.mmd")
             )
 

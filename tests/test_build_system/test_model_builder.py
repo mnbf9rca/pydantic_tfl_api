@@ -253,39 +253,6 @@ class TestModelBuilder:
         assert hasattr(enum_type, "__name__")
         assert "Enum" in enum_type.__name__
 
-    def test_generate_missing_array_models_regression(self, model_builder: Any) -> None:
-        """REGRESSION: Ensure all needed array models are generated."""
-        # Components that should generate array models based on production system
-        components_needing_arrays = {
-            "ArrivalDeparture": {"type": "object", "properties": {"id": {"type": "string"}}},
-            "BikePointOccupancy": {"type": "object", "properties": {"id": {"type": "string"}}},
-            "ChargeConnectorOccupancy": {"type": "object", "properties": {"id": {"type": "string"}}},
-            "DisruptedPoint": {"type": "object", "properties": {"id": {"type": "string"}}},
-            "LineServiceType": {"type": "object", "properties": {"id": {"type": "string"}}},
-            "StopPointRouteSection": {"type": "object", "properties": {"id": {"type": "string"}}},
-        }
-
-        model_builder.create_pydantic_models(components_needing_arrays)
-        models = model_builder.get_models()
-
-        # These array models should be auto-generated for RootModel usage
-        expected_arrays = [
-            "ArrivalDepartureArray",
-            "BikePointOccupancyArray",
-            "ChargeConnectorOccupancyArray",
-            "DisruptedPointArray",
-            "LineServiceTypeArray",
-            "StopPointRouteSectionArray",
-        ]
-
-        # Check if the original models were created
-        assert "ArrivalDeparture" in models
-        assert "BikePointOccupancy" in models
-
-        # CRITICAL: The array models should also be generated automatically
-        # This is the regression test for missing array models
-        for array_name in expected_arrays:
-            assert array_name in models, f"Array model {array_name} should be auto-generated"
 
     def test_array_models_are_rootmodel_based(self, model_builder: Any) -> None:
         """REGRESSION: Ensure array models use RootModel pattern."""
