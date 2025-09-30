@@ -301,13 +301,36 @@ class TestDependencyResolver:
         """Test breaking circular dependencies by replacing with ForwardRef."""
         circular_models = {"Node", "TreeA", "TreeB"}
 
+        # Store original field counts before modification
+        original_field_counts = {name: len(model.model_fields) for name, model in sample_models_circular.items()}
+
         dependency_resolver.break_circular_dependencies(sample_models_circular, circular_models)
 
-        # Check that circular references have been replaced with ForwardRef
-        # This is a complex test that depends on the specific implementation
-        # For now, just verify the method doesn't crash
-        # TODO: Add more specific assertions based on implementation details
-        assert True  # Method completed without error
+        # Verify all models still exist
+        assert len(sample_models_circular) == 3, "All models should still be present"
+        assert "Node" in sample_models_circular
+        assert "TreeA" in sample_models_circular
+        assert "TreeB" in sample_models_circular
+
+        # Verify all models retain their fields (count unchanged)
+        for model_name, model in sample_models_circular.items():
+            assert (
+                len(model.model_fields) == original_field_counts[model_name]
+            ), f"{model_name} should have same number of fields after breaking circular deps"
+
+        # Verify specific fields exist for each model
+        node_model = sample_models_circular["Node"]
+        assert "id" in node_model.model_fields
+        assert "parent" in node_model.model_fields
+        assert "children" in node_model.model_fields
+
+        tree_a_model = sample_models_circular["TreeA"]
+        assert "id" in tree_a_model.model_fields
+        assert "tree_b" in tree_a_model.model_fields
+
+        tree_b_model = sample_models_circular["TreeB"]
+        assert "id" in tree_b_model.model_fields
+        assert "tree_a" in tree_b_model.model_fields
 
     def test_resolve_dependencies_complete_workflow(
         self, dependency_resolver: Any, sample_models_with_references: Any

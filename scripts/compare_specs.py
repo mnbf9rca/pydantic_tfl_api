@@ -62,22 +62,32 @@ class SpecComparator:
     def rebuild_models(self) -> bool:
         """Rebuild the pydantic models from the fetched specs.
 
+        Uses subprocess to invoke the build coordinator script, which:
+        - Isolates the build process for clean output capture
+        - Matches how the build system is designed to be invoked
+        - Provides proper error handling and logging
+
         Returns:
             True if rebuild was successful, False otherwise.
         """
         print("\n🔨 Rebuilding pydantic models...")
         try:
-            # Run the build script
+            # Build command with validated, controlled paths
+            # All paths are internal to the repo, no user input
+            cmd = [
+                sys.executable,  # Python interpreter (trusted)
+                str(self.build_script),  # Build script path (validated at __init__)
+                str(self.specs_dir),  # Specs directory (created by this script)
+                str(self.repo_root / "pydantic_tfl_api"),  # Output dir (fixed path)
+            ]
+
+            # Run the build script in isolated subprocess
             result = subprocess.run(
-                [
-                    sys.executable,
-                    str(self.build_script),
-                    str(self.specs_dir),
-                    str(self.repo_root / "pydantic_tfl_api"),
-                ],
+                cmd,
                 capture_output=True,
                 text=True,
                 check=True,
+                cwd=str(self.repo_root),  # Set working directory explicitly
             )
             print("✅ Models rebuilt successfully")
             if result.stdout:
@@ -166,8 +176,33 @@ class SpecComparator:
             "diff_hash": diff_hash,
         }
 
+    def _cleanup_old_metadata(self, metadata_dir: Path, keep_count: int = 10) -> None:
+        """Remove old metadata files, keeping only the most recent ones.
+
+        Args:
+            metadata_dir: Directory containing metadata files
+            keep_count: Number of most recent files to keep
+        """
+        if not metadata_dir.exists():
+            return
+
+        # Get all JSON files, sort by modification time (newest first)
+        metadata_files = sorted(
+            metadata_dir.glob("change_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+
+        # Remove files beyond keep_count
+        for old_file in metadata_files[keep_count:]:
+            old_file.unlink()
+            print(f"   Cleaned up old metadata: {old_file.name}")
+
     def save_change_metadata(self, summary: dict[str, Any]) -> None:
-        """Save change metadata to a JSON file.
+        """Save change metadata to a JSON file and cleanup old files.
+
+        Metadata is saved locally for the GitHub workflow to upload as artifacts.
+        Old files are automatically cleaned up to prevent unbounded growth.
 
         Args:
             summary: The change summary dictionary.
@@ -183,6 +218,9 @@ class SpecComparator:
             json.dump(summary, f, indent=2, ensure_ascii=False)
 
         print(f"\n📝 Change metadata saved to: {filepath!s}")
+
+        # Cleanup old metadata files (keep last 10)
+        self._cleanup_old_metadata(metadata_dir, keep_count=10)
 
     def compare(self, save_metadata: bool = True) -> tuple[bool, dict[str, Any] | None]:
         """Run the full comparison workflow.

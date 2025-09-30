@@ -302,6 +302,26 @@ class ClientGenerator:
             ]
         )
 
+    def _normalize_api_name(self, api_name: str, index: int) -> str:
+        """Normalize and clean API name for use in client generation.
+
+        Args:
+            api_name: Raw API name from spec
+            index: Index of the spec in the list (for handling duplicates)
+
+        Returns:
+            Cleaned API name
+        """
+        # Remove API/Api suffix
+        api_name_clean = api_name.replace(" API", "").replace(" Api", "")
+
+        # Handle case where multiple specs have identical names due to shared references
+        # This ensures unique client names when the same title appears multiple times
+        if api_name_clean in ["Order", "Test"] and index == 0:
+            api_name_clean = "User"
+
+        return api_name_clean
+
     def save_classes(
         self, specs: list[dict[str, Any]], base_path: str, base_url: str, reference_map: dict[str, str] | None = None
     ) -> None:
@@ -322,12 +342,7 @@ class ClientGenerator:
         class_names = []
         for i, spec in enumerate(specs):
             api_name = get_api_name(spec)
-            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
-
-            # Handle case where multiple specs have identical names due to shared references
-            # This ensures unique client names when the same title appears multiple times
-            if api_name_clean in ["Order", "Test"] and i == 0:
-                api_name_clean = "User"
+            api_name_clean = self._normalize_api_name(api_name, i)
 
             class_name = f"{sanitize_name(api_name_clean)}Client"
             class_names.append(class_name)
@@ -363,11 +378,10 @@ class ClientGenerator:
 
         for i, spec in enumerate(specs):
             api_name = get_api_name(spec)
+            api_name_clean = self._normalize_api_name(api_name, i)
 
-            # Apply same handling for identical names during file creation
-            api_name_clean = api_name.replace(" API", "").replace(" Api", "")
-            if api_name_clean in ["Order", "Test"] and i == 0:
-                api_name_clean = "User"
+            # Update spec title if normalization changed the name
+            if api_name_clean == "User" and api_name != "User":
                 spec["info"]["title"] = "User API"
 
             logging.info(f"Creating config and class files for {api_name}...")
