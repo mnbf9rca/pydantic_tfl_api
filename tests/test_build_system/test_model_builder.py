@@ -154,16 +154,23 @@ class TestModelBuilder:
 
     def test_create_pydantic_models_array_types(self, model_builder: Any, sample_components: Any) -> None:
         """Test creating array type models."""
+        from pydantic import RootModel
+        from typing import get_origin
+
         model_builder.create_pydantic_models(sample_components)
 
         # Check UserArray was created
         assert "UserArray" in model_builder.models
         user_array_type = model_builder.models["UserArray"]
 
-        # Should be a list type
-        from typing import get_origin
+        # Should be a RootModel-based class (as of the Python 3.13 compatibility fix)
+        assert issubclass(user_array_type, RootModel)
 
-        assert get_origin(user_array_type) is list
+        # Check that the RootModel's root type is list-based
+        # The proper way to check a RootModel's root type is through model_fields['root']
+        assert "root" in user_array_type.model_fields
+        root_field = user_array_type.model_fields["root"]
+        assert get_origin(root_field.annotation) is list
 
     def test_create_pydantic_models_handles_missing_properties(self, model_builder: Any) -> None:
         """Test that models with missing properties are handled gracefully."""

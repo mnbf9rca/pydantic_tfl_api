@@ -4,7 +4,7 @@ import logging
 from enum import Enum
 from typing import Any, ForwardRef
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, Field, RootModel, create_model
 
 from .utilities import map_openapi_type, sanitize_field_name, sanitize_name
 
@@ -145,16 +145,30 @@ class ModelBuilder:
                         raise KeyError(
                             f"Referenced model '{ref_model_name}' not found while creating array '{sanitized_name}'"
                         )
-                    # Get the referenced model and create a list type
+                    # Get the referenced model and create a RootModel-based array class
                     ref_model = self.models[ref_model_name]
+                    # Create a RootModel subclass for the array to ensure it's a proper class
+                    # This is necessary for Python 3.13+ compatibility where type aliases
+                    # don't have __bases__ attribute
                     # Use type: ignore since ref_model is a runtime value used as a type parameter
-                    self.models[sanitized_name] = list[ref_model]  # type: ignore[valid-type]
-                    self.logger.info(f"Created array model: {sanitized_name} -> list[{ref_model_name}]")
+                    array_model = type(
+                        sanitized_name,
+                        (RootModel[list[ref_model]],),  # type: ignore[valid-type]
+                        {"__module__": __name__}
+                    )
+                    self.models[sanitized_name] = array_model
+                    self.logger.info(f"Created array model: {sanitized_name} -> RootModel[list[{ref_model_name}]]")
                 else:
                     # Fallback if 'items' is missing or doesn't have a reference
-                    self.models[sanitized_name] = list[Any]
+                    # Also use RootModel for consistency
+                    array_model = type(
+                        sanitized_name,
+                        (RootModel[list[Any]],),
+                        {"__module__": __name__}
+                    )
+                    self.models[sanitized_name] = array_model
                     self.logger.warning(
-                        f"Array model {sanitized_name} has no valid 'items' reference. Using list[Any]."
+                        f"Array model {sanitized_name} has no valid 'items' reference. Using RootModel[list[Any]]."
                     )
 
     def get_models(self) -> dict[str, type[BaseModel] | type]:
