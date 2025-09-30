@@ -1,0 +1,154 @@
+name: Fetch TfL API Specifications
+
+on:
+  schedule:
+    # Run weekly on Monday at 3:00 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      create_pr:
+        description: 'Create PR if changes detected'
+        required: false
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  fetch_and_compare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          fetch-depth: 0  # Full history for accurate diffing
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3.2.4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Fetch specs and detect changes
+        id: compare
+        run: |
+          # Run the comparison script
+          if uv run python scripts/compare_specs.py; then
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in TfL API specifications"
+          else
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in TfL API specifications!"
+          fi
+        continue-on-error: true
+
+      - name: Display changes
+        if: steps.compare.outputs.changes_detected == 'true'
+        run: |
+          echo "## TfL API Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The following files were modified:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          git diff --stat pydantic_tfl_api/models pydantic_tfl_api/endpoints >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Create Pull Request
+        if: steps.compare.outputs.changes_detected == 'true' && (github.event_name == 'schedule' || inputs.create_pr == true)
+        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            feat(specs): update TfL API specifications
+
+            Automated update from TfL API portal. Changes detected in generated models.
+
+            This PR was automatically created by the spec monitoring workflow.
+          branch: automated/update-tfl-specs-${{ github.run_number }}
+          delete-branch: true
+          title: 'feat(specs): Update TfL API specifications'
+          body: |
+            ## 🔄 TfL API Specification Update
+
+            This PR contains automated updates to the TfL API specifications fetched from the official API portal.
+
+            ### 📊 Changes Summary
+
+            ```
+            ${{ steps.compare.outputs.changes_detected == 'true' && 'Changes detected in generated models' || 'No changes detected' }}
+            ```
+
+            <details>
+            <summary>📝 Files Changed</summary>
+
+            ```bash
+            git diff --stat pydantic_tfl_api/models pydantic_tfl_api/endpoints
+            ```
+
+            </details>
+
+            ### ✅ Review Checklist
+
+            - [ ] Review generated model changes for breaking changes
+            - [ ] Check if any new fields were added/removed
+            - [ ] Verify endpoint signatures are still compatible
+            - [ ] Run tests to ensure backward compatibility
+            - [ ] Update version number if needed (semantic versioning)
+
+            ### 🔍 What Changed?
+
+            The workflow performed the following steps:
+            1. ✅ Fetched latest specs from TfL API portal
+            2. ✅ Rebuilt pydantic models from specs
+            3. ✅ Compared generated code with committed version
+            4. ✅ Detected changes and created this PR
+
+            ### 📌 Next Steps
+
+            1. Review the changes carefully
+            2. Run the test suite: `uv run pytest`
+            3. Check for breaking changes in the diff
+            4. Merge if tests pass and changes are acceptable
+            5. Consider version bump based on change impact:
+               - **MAJOR** (breaking changes): Removed fields, changed types
+               - **MINOR** (new features): New fields, new endpoints
+               - **PATCH** (bug fixes): Documentation, minor fixes
+
+            ---
+
+            🤖 This PR was automatically created by the [fetch_tfl_specs.yml](.github/workflows/fetch_tfl_specs.yml) workflow.
+
+            Run ID: ${{ github.run_id }}
+            Run Number: ${{ github.run_number }}
+
+            🔗 [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          labels: |
+            automated
+            specs
+            tfl-api
+          reviewers: mnbf9rca
+          draft: false
+
+      - name: Upload change metadata
+        if: steps.compare.outputs.changes_detected == 'true'
+        uses: actions/upload-artifact@84480863f228bb9747b473957fcc9e309aa96097 # v4.4.2
+        with:
+          name: spec-change-metadata
+          path: .github/spec_changes/
+          retention-days: 90
+
+      - name: No changes detected
+        if: steps.compare.outputs.changes_detected == 'false'
+        run: |
+          echo "## ✅ No Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "TfL API specifications are unchanged. No PR needed." >> $GITHUB_STEP_SUMMARY
