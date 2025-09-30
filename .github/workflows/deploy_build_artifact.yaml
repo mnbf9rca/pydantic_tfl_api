@@ -31,7 +31,7 @@ jobs:
       - name: check out code
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
-          fetch-depth: 1
+          fetch-depth: 0  # Fetch all history including tags for validation
 
       - name: Install uv
         uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3.2.4
@@ -44,6 +44,32 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
+
+      - name: Extract version and validate tag exists
+        id: validate_version
+        run: |
+          # Extract version from pyproject.toml
+          VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION"
+
+          # Check if git tag exists for this version
+          if git show-ref --tags --verify --quiet "refs/tags/$VERSION"; then
+            echo "✅ Git tag '$VERSION' exists"
+          else
+            echo "❌ ERROR: Git tag '$VERSION' does not exist!"
+            echo ""
+            echo "This workflow requires that a git tag matching the version in pyproject.toml"
+            echo "already exists before building and publishing."
+            echo ""
+            echo "Please run the version bump workflow first:"
+            echo "  gh workflow run bump_version.yml --ref release"
+            echo ""
+            echo "Or if you need to create the tag manually:"
+            echo "  git tag $VERSION"
+            echo "  git push origin $VERSION"
+            exit 1
+          fi
 
       - name: Lint with ruff
         run: |
@@ -58,11 +84,11 @@ jobs:
       - name: Build
         id: Build
         run: |
-          version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version is $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          VERSION="${{ steps.validate_version.outputs.version }}"
+          echo "Building version $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          artifact_name="dist-$version"
+          artifact_name="dist-$VERSION"
           echo "artifact_name is $artifact_name"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
