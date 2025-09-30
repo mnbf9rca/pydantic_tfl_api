@@ -390,7 +390,7 @@ class TestFileManager:
         sorted_models = ["PathAttribute", "TestModel"]
 
         file_manager.save_models(
-            {"PathAttribute": PathAttribute, "TestModel": TestModel},
+            {"PathAttribute": PathAttribute, "TestModel": TestModel},  # type: ignore[dict-item]
             str(temp_dir),
             {"PathAttribute": set(), "TestModel": {"PathAttribute"}},
             circular_models,
@@ -404,3 +404,36 @@ class TestFileManager:
         assert "from typing import Any, Type" not in content
         # PathAttribute should be imported from relative module
         assert "from .PathAttribute import PathAttribute" in content
+
+    def test_docstring_generation(self, file_manager: Any, temp_dir: Any) -> None:
+        """Test that docstrings and Field descriptions are written to model files."""
+
+        class Place(BaseModel):
+            id: str = Field(...)
+            name: str = Field(...)
+
+        model_descriptions = {"Place": "A location in the TfL network."}
+        field_descriptions = {"Place": {"id": "A unique identifier.", "name": "The name of the place."}}
+
+        circular_models: set[str] = set()
+        sorted_models = ["Place"]
+
+        file_manager.save_models(
+            {"Place": Place},
+            str(temp_dir),
+            {"Place": set()},
+            circular_models,
+            sorted_models,
+            model_descriptions,
+            field_descriptions,
+        )
+
+        place_file = temp_dir / "models" / "Place.py"
+        content = place_file.read_text()
+
+        # Verify class docstring is present
+        assert '"""A location in the TfL network."""' in content
+
+        # Verify field descriptions are in Field() calls for IDE support
+        assert 'description="A unique identifier."' in content
+        assert 'description="The name of the place."' in content

@@ -35,6 +35,8 @@ class FileManager:
         dependency_graph: dict[str, set[str]],
         circular_models: set[str],
         sorted_models: list[str] | None = None,
+        model_descriptions: dict[str, str] | None = None,
+        field_descriptions: dict[str, dict[str, str]] | None = None,
     ) -> None:
         """
         Save models to individual files and create the __init__.py file.
@@ -45,7 +47,14 @@ class FileManager:
             dependency_graph: Model dependency relationships
             circular_models: Set of models with circular dependencies
             sorted_models: Optional list of models in dependency order
+            model_descriptions: Optional dictionary of model-level descriptions from OpenAPI
+            field_descriptions: Optional dictionary of field-level descriptions per model
         """
+        # Provide defaults if not specified
+        if model_descriptions is None:
+            model_descriptions = {}
+        if field_descriptions is None:
+            field_descriptions = {}
         models_dir = os.path.join(base_path, "models")
         os.makedirs(models_dir, exist_ok=True)
 
@@ -74,6 +83,8 @@ class FileManager:
                     dependency_graph,
                     circular_models,
                     init_f,
+                    model_descriptions,
+                    field_descriptions,
                 )
 
             # Add ResponseModelName Literal type
@@ -98,6 +109,8 @@ class FileManager:
         dependency_graph: dict[str, set[str]],
         circular_models: set[str],
         init_f: TextIOWrapper,
+        model_descriptions: dict[str, str],
+        field_descriptions: dict[str, dict[str, str]],
     ) -> None:
         """
         Save an individual model to its own file.
@@ -110,6 +123,8 @@ class FileManager:
             dependency_graph: Model dependency relationships
             circular_models: Set of models with circular dependencies
             init_f: File handle for the __init__.py file
+            model_descriptions: Dictionary of model-level descriptions from OpenAPI
+            field_descriptions: Dictionary of field-level descriptions per model
         """
         sanitized_model_name = sanitize_name(model_name)
         model_file = os.path.join(models_dir, f"{sanitized_model_name}.py")
@@ -139,6 +154,8 @@ class FileManager:
                     dependency_graph,
                     circular_models,
                     sanitized_model_name,
+                    model_descriptions,
+                    field_descriptions,
                 )
 
     def get_pydantic_imports(self, sanitized_model_name: str, is_root_model: bool) -> str:
@@ -381,6 +398,8 @@ class FileManager:
         dependency_graph: dict[str, set],
         circular_models: set[str],
         sanitized_model_name: str,
+        model_descriptions: dict[str, str],
+        field_descriptions: dict[str, dict[str, str]],
     ) -> None:
         """Handle regular BaseModel or RootModel types."""
         # Check if the model is a RootModel
@@ -450,13 +469,24 @@ class FileManager:
             else:
                 # Fallback for RootModel without proper root field
                 model_file.write(f"class {sanitized_model_name}(RootModel[list]):\n")
+            # Add docstring if available
+            if sanitized_model_name in model_descriptions:
+                model_file.write(f'    """{model_descriptions[sanitized_model_name]}"""\n\n')
         else:
             model_file.write(f"class {sanitized_model_name}(BaseModel):\n")
+            # Add docstring if available
+            if sanitized_model_name in model_descriptions:
+                model_file.write(f'    """{model_descriptions[sanitized_model_name]}"""\n\n')
             if hasattr(model, "model_fields"):
-                self._write_model_fields(model_file, model, models, circular_models)
+                self._write_model_fields(
+                    model_file, model, models, circular_models, field_descriptions.get(sanitized_model_name, {})
+                )
 
         # Pydantic model config
         model_file.write(f"\n    {self.get_model_config(sanitized_model_name)}\n")
+
+        # Note: __slots__ removed - Pydantic v2 BaseModel already uses __slots__ internally
+        # Manual __slots__ definition conflicts with Pydantic's metaclass
 
         # Add model_rebuild() if circular dependencies exist
         if sanitized_model_name in circular_models:
@@ -529,10 +559,13 @@ class FileManager:
         model: BaseModel,
         models: dict[str, type[BaseModel]],
         circular_models: set[str],
-    ) -> None:
-        """Write the fields for the model."""
+        field_descs: dict[str, str],
+    ) -> list[str]:
+        """Write the fields for the model and return the list of field names for __slots__."""
+        field_names = []
         for field_name, field in model.model_fields.items():
             sanitized_field_name = sanitize_field_name(field_name)
+            field_names.append(sanitized_field_name)
 
             # Resolve the field's annotation to get the type string, including handling ForwardRefs
             field_type = self._resolve_forward_refs_in_annotation(field.annotation, models, circular_models)
@@ -544,13 +577,25 @@ class FileManager:
             if not field.is_required() and not field_type.endswith(" | None") and field_type != "None":
                 field_type = f"{field_type} | None"
 
-            # Only include alias if it differs from the original field name
+            # Prepare description for Field() if available
+            description_param = ""
+            if sanitized_field_name in field_descs:
+                # Normalize description: replace newlines and collapse multiple spaces
+                desc = field_descs[sanitized_field_name].replace("\n", " ")
+                desc = " ".join(desc.split())  # Collapse multiple spaces
+                # Escape quotes in description
+                desc = desc.replace('"', '\\"')
+                description_param = f', description="{desc}"'
+
+            # Build Field() call with alias and/or description
+            field_params = field_default
             if field.alias and field.alias != field_name:
-                model_file.write(
-                    f"    {sanitized_field_name}: {field_type} = Field({field_default}, alias='{field.alias}')\n"
-                )
-            else:
-                model_file.write(f"    {sanitized_field_name}: {field_type} = Field({field_default})\n")
+                field_params += f", alias='{field.alias}'"
+            field_params += description_param
+
+            model_file.write(f"    {sanitized_field_name}: {field_type} = Field({field_params})\n")
+
+        return field_names
 
     def _write_enum_files(self, models: dict[str, type[BaseModel]], models_dir: str) -> None:
         """Write enum files directly from the model's fields."""

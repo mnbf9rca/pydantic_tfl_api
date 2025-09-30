@@ -168,6 +168,9 @@ warn_unused_configs = true
 show_error_codes = true
 pretty = true
 
+# Enable Pydantic plugin for proper Field default handling
+plugins = ["pydantic.mypy"]
+
 # Core safety checks (but not fully strict)
 disallow_untyped_defs = true
 disallow_incomplete_defs = true

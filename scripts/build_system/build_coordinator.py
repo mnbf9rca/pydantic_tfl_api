@@ -166,9 +166,15 @@ class BuildCoordinator:
         self.logger.info("Handling dependencies...")
         dependency_graph, circular_models, sorted_models = self.dependency_resolver.resolve_dependencies(models)
 
+        # Get descriptions from model_builder
+        model_descriptions = self.model_builder.get_model_descriptions()
+        field_descriptions = self.model_builder.get_field_descriptions()
+
         # Save the models using FileManager
         self.logger.info("Saving models to files...")
-        self.file_manager.save_models(models, output_path, dependency_graph, circular_models, sorted_models)
+        self.file_manager.save_models(
+            models, output_path, dependency_graph, circular_models, sorted_models, model_descriptions, field_descriptions
+        )
 
         return dependency_graph, circular_models, sorted_models
 

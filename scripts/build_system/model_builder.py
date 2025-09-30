@@ -15,6 +15,8 @@ class ModelBuilder:
     def __init__(self) -> None:
         """Initialize the ModelBuilder with an empty models dictionary."""
         self.models: dict[str, type[BaseModel] | type] = {}
+        self.model_descriptions: dict[str, str] = {}  # Model-level descriptions from OpenAPI
+        self.field_descriptions: dict[str, dict[str, str]] = {}  # Field-level descriptions per model
         self.logger = logging.getLogger(__name__)
 
     def sanitize_name(self, name: str, prefix: str = "Model") -> str:
@@ -98,6 +100,11 @@ class ModelBuilder:
         # First pass: create object models
         for model_name, model_spec in components.items():
             sanitized_name = self.sanitize_name(model_name)  # Ensure the model name is valid
+
+            # Extract model-level description from OpenAPI spec
+            if "description" in model_spec:
+                self.model_descriptions[sanitized_name] = model_spec["description"]
+
             if model_spec.get("type") == "object":
                 if "properties" not in model_spec:
                     # Fallback if 'properties' is missing
@@ -109,12 +116,18 @@ class ModelBuilder:
                     continue
                 # Handle object models first
                 fields: dict[str, Any] = {}
+                field_descs: dict[str, str] = {}
                 required_fields = model_spec.get("required", [])
                 for field_name, field_spec in model_spec["properties"].items():
                     field_type = self.map_type(
                         field_spec, field_name, components, self.models
                     )  # Map the OpenAPI type to Python type
                     sanitized_field_name = self.sanitize_field_name(field_name)
+
+                    # Extract field-level description
+                    if "description" in field_spec:
+                        field_descs[sanitized_field_name] = field_spec["description"]
+
                     if field_name in required_fields:
                         fields[sanitized_field_name] = (
                             field_type,
@@ -125,6 +138,11 @@ class ModelBuilder:
                             field_type | None,
                             Field(None, alias=field_name),
                         )
+
+                # Store field descriptions
+                if field_descs:
+                    self.field_descriptions[sanitized_name] = field_descs
+
                 self.models[sanitized_name] = create_model(sanitized_name, **fields)
                 self.logger.info(f"Created object model: {sanitized_name}")
 
@@ -167,6 +185,16 @@ class ModelBuilder:
         """Return a copy of the models dictionary."""
         return self.models.copy()
 
+    def get_model_descriptions(self) -> dict[str, str]:
+        """Return a copy of the model descriptions dictionary."""
+        return self.model_descriptions.copy()
+
+    def get_field_descriptions(self) -> dict[str, dict[str, str]]:
+        """Return a copy of the field descriptions dictionary."""
+        return self.field_descriptions.copy()
+
     def clear_models(self) -> None:
-        """Clear the models dictionary."""
+        """Clear the models dictionary and descriptions."""
         self.models.clear()
+        self.model_descriptions.clear()
+        self.field_descriptions.clear()

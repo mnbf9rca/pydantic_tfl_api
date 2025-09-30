@@ -223,12 +223,14 @@ Release:      Weekly/on-demand sync → release branch
 4. **Configure branch protection** for `release` branch (see CONTRIBUTING.md)
 5. **Trigger release branch creation**: Workflow will auto-create on first sync
 
-**Optional Future Enhancements** (Phase 8):
-- Add `__slots__` to generated models for memory efficiency
-- Generate .pyi stub files for better IDE support
-- Extract docstrings from OpenAPI specs
-- Enhance ApiError with more context
-- Add field deprecation warnings
+**Phase 8: Code Generation Enhancements** ✅ Completed (2025-09-30):
+- ✅ Extract docstrings from OpenAPI specs (class and field descriptions)
+- ✅ Field descriptions in `Field(description="...")` for IDE tooltip support
+- ✅ Enhanced ApiError with debugging context (request/response details, retry count, error category)
+- ✅ Confirmed Pydantic v2 uses `__slots__` internally (memory optimization built-in)
+- ✅ 370 tests passing with 94.88% coverage
+- ⏭️ Skipped: .pyi stub files (generated code already has complete type annotations)
+- ⏭️ Skipped: Deprecation warnings (TfL specs don't mark fields as deprecated)
 
 ---
 

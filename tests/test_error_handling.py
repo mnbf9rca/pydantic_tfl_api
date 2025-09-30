@@ -96,3 +96,62 @@ class TestErrorHandling:
         # Error should be representable as string for logging
         error_str = str(result)
         assert error_str != "", "ApiError string representation should not be empty"
+
+    def test_enhanced_api_error_fields(self) -> None:
+        """Test that ApiError has enhanced context fields for Phase 8."""
+        from datetime import datetime
+
+        from pydantic_tfl_api.core.package_models import ApiError
+
+        # Create an enhanced ApiError with new fields
+        error = ApiError(
+            timestamp_utc=datetime.now(),
+            exception_type="TestException",
+            http_status_code=404,
+            http_status="Not Found",
+            relative_uri="/test/endpoint",
+            message="Test error message",
+            request_method="GET",
+            request_url="https://api.tfl.gov.uk/test/endpoint",
+            request_headers={"User-Agent": "pydantic-tfl-api"},
+            response_body='{"error": "not found"}',
+            retry_count=3,
+            error_category="client_error",
+        )
+
+        # Verify all enhanced fields are present and accessible
+        assert error.request_method == "GET"
+        assert error.request_url == "https://api.tfl.gov.uk/test/endpoint"
+        assert error.request_headers == {"User-Agent": "pydantic-tfl-api"}
+        assert error.response_body == '{"error": "not found"}'
+        assert error.retry_count == 3
+        assert error.error_category == "client_error"
+
+        # Verify original fields still work
+        assert error.http_status_code == 404
+        assert error.http_status == "Not Found"
+        assert error.message == "Test error message"
+
+    def test_enhanced_api_error_optional_fields(self) -> None:
+        """Test that enhanced ApiError fields are optional."""
+        from datetime import datetime
+
+        from pydantic_tfl_api.core.package_models import ApiError
+
+        # Create ApiError with only required fields (enhanced fields are optional)
+        error = ApiError(
+            timestamp_utc=datetime.now(),
+            exception_type="TestException",
+            http_status_code=500,
+            http_status="Internal Server Error",
+            relative_uri="/test",
+            message="Basic error",
+        )
+
+        # All enhanced fields should be None
+        assert error.request_method is None
+        assert error.request_url is None
+        assert error.request_headers is None
+        assert error.response_body is None
+        assert error.retry_count is None
+        assert error.error_category is None

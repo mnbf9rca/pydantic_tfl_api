@@ -232,6 +232,13 @@ class ClientGenerator:
         all_package_models: set[str] = set()
         method_lines = [f"class {class_name}(Client):\n"]
 
+        # Add class docstring from API description if available
+        if api_description := spec.get("info", {}).get("description"):
+            # Normalize multi-line descriptions
+            normalized_desc = api_description.replace("\n", " ")
+            normalized_desc = " ".join(normalized_desc.split())  # Collapse multiple spaces
+            method_lines.append(f'    """{normalized_desc}"""\n\n')
+
         # Process all API methods
         for path, methods in paths.items():
             for method, details in methods.items():
