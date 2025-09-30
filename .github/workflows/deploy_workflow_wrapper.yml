@@ -9,35 +9,46 @@ on:
         required: false
         default: false
 
+env:
+  RELEASE_BRANCH: release
+
 jobs:
   validate_branch:
     runs-on: ubuntu-latest
+    if: github.ref_name == 'release'
     steps:
-      - name: Validate workflow is running on release branch
+      - name: Confirm running on release branch
         run: |
-          if [ "${{ github.ref_name }}" != "release" ]; then
-            echo "❌ ERROR: This workflow can only run on the 'release' branch!"
-            echo ""
-            echo "Current branch: ${{ github.ref_name }}"
-            echo "Required branch: release"
-            echo ""
-            echo "This is a safety measure to prevent accidental deployments from non-release branches."
-            echo ""
-            echo "To deploy, please:"
-            echo "  1. Ensure your changes are merged to main"
-            echo "  2. Run: gh workflow run sync_release.yml"
-            echo "  3. After sync completes, run: gh workflow run deploy_workflow_wrapper.yml --ref release"
-            exit 1
-          fi
-          echo "✅ Running on release branch"
+          echo "✅ Running on ${{ env.RELEASE_BRANCH }} branch"
+          echo "Current branch: ${{ github.ref_name }}"
+
+  check_wrong_branch:
+    runs-on: ubuntu-latest
+    if: github.ref_name != 'release'
+    steps:
+      - name: Fail if not on release branch
+        run: |
+          echo "❌ ERROR: This workflow can only run on the '${{ env.RELEASE_BRANCH }}' branch!"
+          echo ""
+          echo "Current branch: ${{ github.ref_name }}"
+          echo "Required branch: ${{ env.RELEASE_BRANCH }}"
+          echo ""
+          echo "This is a safety measure to prevent accidental deployments from non-release branches."
+          echo ""
+          echo "To deploy, please:"
+          echo "  1. Ensure your changes are merged to main"
+          echo "  2. Run: gh workflow run sync_release.yml"
+          echo "  3. After sync completes, run: gh workflow run deploy_workflow_wrapper.yml --ref ${{ env.RELEASE_BRANCH }}"
+          exit 1
 
   build_artifacts:
     needs: [validate_branch]
+    if: github.ref_name == 'release'
     uses: ./.github/workflows/deploy_build_artifact.yaml
 
   deploy_to_pypi_test:
-    needs: [build_artifacts]
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_test == 'true' }}
+    needs: [validate_branch, build_artifacts]
+    if: github.ref_name == 'release' && github.event.inputs.deploy_to_test == 'true'
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
@@ -45,8 +56,8 @@ jobs:
       artifact-name: ${{ needs.build_artifacts.outputs.artifact-name }}
 
   deploy_to_pypi_prod_direct:
-    needs: [build_artifacts]
-    if: ${{ github.event.inputs.deploy_to_test != 'true' }}
+    needs: [validate_branch, build_artifacts]
+    if: github.ref_name == 'release' && github.event.inputs.deploy_to_test != 'true'
     uses: ./.github/workflows/deploy_to_pypi.yml
     with:
       package-version: ${{ needs.build_artifacts.outputs.package-version }}
