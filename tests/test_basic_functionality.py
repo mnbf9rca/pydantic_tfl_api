@@ -111,7 +111,7 @@ class TestBasicFunctionality:
         )
 
         # Should parse without errors (ResponseModel or ApiError both indicate parsing worked)
-        assert isinstance(result, (ResponseModel, ApiError)), f"Expected ResponseModel or ApiError, got {type(result)}"
+        assert isinstance(result, ResponseModel | ApiError), f"Expected ResponseModel or ApiError, got {type(result)}"
 
         # If we got a ResponseModel, validate it has content
         # If we got an ApiError, that's also valid (could be network/API issue)
