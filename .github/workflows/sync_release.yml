@@ -54,13 +54,26 @@ jobs:
             echo "Release branch does not exist"
           fi
 
+      - name: Set up Python
+        if: steps.check_branch.outputs.branch_exists == 'false'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: steps.check_branch.outputs.branch_exists == 'false'
+        run: pip install tomli
+
       - name: Create release branch (first time)
         if: steps.check_branch.outputs.branch_exists == 'false'
         run: |
+          # Get current version from pyproject.toml
+          CURRENT_VERSION=$(python3 -c 'import sys; exec("try:\n    import tomllib\nexcept ImportError:\n    import tomli as tomllib\nwith open(\"pyproject.toml\", \"rb\") as f:\n    data = tomllib.load(f)\n    print(data.get(\"project\", {}).get(\"version\", \"unknown\"))")')
+
           echo "## 🎉 Creating Release Branch" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "This is the first time the release branch is being created." >> $GITHUB_STEP_SUMMARY
-          echo "It will be created from the current main branch with version 2.0.0" >> $GITHUB_STEP_SUMMARY
+          echo "It will be created from the current main branch with version \`$CURRENT_VERSION\`" >> $GITHUB_STEP_SUMMARY
 
           git checkout -b release
           git push -u origin release
@@ -132,10 +145,30 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
 
-  bump_version:
+  validate_and_bump:
     needs: sync_branches
+    if: needs.sync_branches.outputs.synced == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate bump_type input
+        id: validate
+        run: |
+          BUMP_TYPE="${{ github.event.inputs.bump_type }}"
+
+          # Validate bump_type is one of the allowed values
+          if [[ ! "$BUMP_TYPE" =~ ^(auto|major|minor|patch)$ ]]; then
+            echo "❌ Invalid bump_type: $BUMP_TYPE"
+            echo "Valid options: auto, major, minor, patch"
+            exit 1
+          fi
+
+          echo "✅ Validated bump_type: $BUMP_TYPE"
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+  bump_version:
+    needs: [sync_branches, validate_and_bump]
     if: needs.sync_branches.outputs.synced == 'true'
     uses: ./.github/workflows/bump_version.yml
     with:
-      bump_type: ${{ github.event.inputs.bump_type }}
+      bump_type: ${{ needs.validate_and_bump.outputs.bump_type }}
     secrets: inherit

@@ -57,42 +57,57 @@ compare_versions() {
     echo "none"
 }
 
-# Function to extract dependency version from pyproject.toml
-# Args: dependency name, file content
+# Function to extract dependency version from pyproject.toml using Python TOML parser
+# Args: dependency name, branch name (for fetching file)
 extract_dependency_version() {
     local dep_name="$1"
-    local content="$2"
+    local branch="$2"
 
-    # Match patterns like: "pydantic>=2.8.2,<3.0" or "requests>=2.32.3,<3.0"
-    # Extract the minimum version requirement
-    version=$(echo "$content" | grep -E "^[[:space:]]*\"$dep_name" | sed -E "s/.*${dep_name}[><=]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/")
+    # Use Python with tomllib (Python 3.11+ built-in) or tomli fallback
+    version=$(git show "${branch}:pyproject.toml" | python3 -c "
+import sys
+import re
 
-    if [ -z "$version" ]; then
-        echo "0.0.0"
-    else
-        echo "$version"
-    fi
+try:
+    # Python 3.11+ has tomllib in stdlib
+    import tomllib
+except ImportError:
+    try:
+        # Fallback to tomli (available as dev dependency)
+        import tomli as tomllib
+    except ImportError:
+        print('__PARSER_ERROR__: tomllib/tomli not available', file=sys.stderr)
+        sys.exit(1)
+
+dep_name = sys.argv[1]
+content = sys.stdin.read()
+
+try:
+    data = tomli.loads(content)
+except Exception as e:
+    print(f'__PARSE_ERROR__: {e}', file=sys.stderr)
+    sys.exit(1)
+
+# Get dependencies list
+deps = data.get('project', {}).get('dependencies', [])
+
+# Find the dependency
+for dep in deps:
+    if isinstance(dep, str) and dep.strip().startswith(dep_name):
+        # Extract version using regex: matches >=X.Y.Z or ==X.Y.Z etc
+        match = re.search(r'([><=!]+)?\s*([0-9]+\.[0-9]+\.[0-9]+)', dep)
+        if match:
+            print(match.group(2))
+            sys.exit(0)
+
+# Dependency not found
+print('__NOT_FOUND__')
+" "$dep_name" 2>&1)
+
+    echo "$version"
 }
 
 echo -e "${GREEN}[INFO]${NC} Analyzing dependency changes between release and main branches..."
-
-# Get pyproject.toml content from both branches
-echo -e "${GREEN}[INFO]${NC} Fetching pyproject.toml from release branch..."
-release_content=$(git show origin/release:pyproject.toml 2>/dev/null || echo "")
-
-echo -e "${GREEN}[INFO]${NC} Fetching pyproject.toml from main branch..."
-main_content=$(git show origin/main:pyproject.toml 2>/dev/null || echo "")
-
-if [ -z "$release_content" ]; then
-    echo -e "${RED}[ERROR]${NC} Could not fetch pyproject.toml from release branch" >&2
-    echo "patch"  # Default to patch if release branch doesn't exist yet
-    exit 0
-fi
-
-if [ -z "$main_content" ]; then
-    echo -e "${RED}[ERROR]${NC} Could not fetch pyproject.toml from main branch" >&2
-    exit 1
-fi
 
 # Production dependencies to check
 DEPENDENCIES=("pydantic" "requests")
@@ -104,11 +119,50 @@ echo -e "${GREEN}[INFO]${NC} Checking production dependencies..."
 
 # Check each dependency
 for dep in "${DEPENDENCIES[@]}"; do
-    old_version=$(extract_dependency_version "$dep" "$release_content")
-    new_version=$(extract_dependency_version "$dep" "$main_content")
+    old_version=$(extract_dependency_version "$dep" "origin/release")
+    new_version=$(extract_dependency_version "$dep" "origin/main")
+
+    # Handle parser errors
+    if [[ "$old_version" == __PARSER_ERROR__* ]] || [[ "$new_version" == __PARSER_ERROR__* ]]; then
+        echo -e "${RED}[ERROR]${NC} Failed to parse pyproject.toml. Ensure tomli is installed." >&2
+        echo "patch"  # Safe default
+        exit 0
+    fi
+
+    # Handle parse errors
+    if [[ "$old_version" == __PARSE_ERROR__* ]] || [[ "$new_version" == __PARSE_ERROR__* ]]; then
+        echo -e "${RED}[ERROR]${NC} Failed to parse pyproject.toml format" >&2
+        echo "patch"  # Safe default
+        exit 0
+    fi
 
     echo -e "${GREEN}[INFO]${NC} $dep: $old_version (release) vs $new_version (main)"
 
+    # Handle new dependencies (added in main)
+    if [ "$old_version" = "__NOT_FOUND__" ] && [ "$new_version" != "__NOT_FOUND__" ]; then
+        echo -e "${YELLOW}[WARN]${NC} $dep: New dependency added in main ($new_version)" >&2
+        # New dependency suggests minor bump (new functionality)
+        if [ "$bump_type" = "patch" ]; then
+            bump_type="minor"
+        fi
+        continue
+    fi
+
+    # Handle removed dependencies (removed from main)
+    if [ "$old_version" != "__NOT_FOUND__" ] && [ "$new_version" = "__NOT_FOUND__" ]; then
+        echo -e "${YELLOW}[WARN]${NC} $dep: Dependency removed from main" >&2
+        # Removed dependency suggests major bump (breaking change)
+        bump_type="major"
+        continue
+    fi
+
+    # Handle both not found (dependency doesn't exist in either branch)
+    if [ "$old_version" = "__NOT_FOUND__" ] && [ "$new_version" = "__NOT_FOUND__" ]; then
+        echo -e "${YELLOW}[WARN]${NC} $dep: Dependency not found in either branch" >&2
+        continue
+    fi
+
+    # Compare versions if both exist
     if [ "$old_version" != "$new_version" ]; then
         dep_bump=$(compare_versions "$old_version" "$new_version" "$dep")
 

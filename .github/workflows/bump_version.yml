@@ -49,6 +49,16 @@ jobs:
           ref: release
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          # Install tomli as fallback for Python < 3.11
+          pip install tomli toml
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
@@ -86,7 +96,7 @@ jobs:
 
       - name: Bump version and create tag
         id: bump_version
-        uses: anothrNick/github-tag-action@1.70.0
+        uses: anothrNick/github-tag-action@777684df761b882a3f4f70db16ac70d8cc78d0ea # v1.70.0
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           WITH_V: false
@@ -100,8 +110,8 @@ jobs:
 
           echo "**Setting version in pyproject.toml to \`$NEW_VERSION\`**" >> $GITHUB_STEP_SUMMARY
 
-          # Update version in pyproject.toml
-          sed -i "s/^version = .*/version = \"$NEW_VERSION\"/" pyproject.toml
+          # Update version in pyproject.toml using TOML parser
+          python3 -c 'import sys; exec("try:\n    import tomllib\nexcept ImportError:\n    import tomli as tomllib\nimport toml\n\npyproject_path = \"pyproject.toml\"\nnew_version = \"'"$NEW_VERSION"'\"\n\nwith open(pyproject_path, \"rb\") as f:\n    data = tomllib.load(f)\n\nif \"project\" in data and \"version\" in data[\"project\"]:\n    data[\"project\"][\"version\"] = new_version\nelse:\n    print(\"Error: Could not find project.version in pyproject.toml\", file=sys.stderr)\n    sys.exit(1)\n\nwith open(pyproject_path, \"w\") as f:\n    toml.dump(data, f)\n\nprint(f\"Updated version to {new_version}\")")'
 
           # Commit the version change
           git add pyproject.toml
