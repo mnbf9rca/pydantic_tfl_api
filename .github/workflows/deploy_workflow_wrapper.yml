@@ -10,7 +10,29 @@ on:
         default: false
 
 jobs:
+  validate_branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate workflow is running on release branch
+        run: |
+          if [ "${{ github.ref_name }}" != "release" ]; then
+            echo "❌ ERROR: This workflow can only run on the 'release' branch!"
+            echo ""
+            echo "Current branch: ${{ github.ref_name }}"
+            echo "Required branch: release"
+            echo ""
+            echo "This is a safety measure to prevent accidental deployments from non-release branches."
+            echo ""
+            echo "To deploy, please:"
+            echo "  1. Ensure your changes are merged to main"
+            echo "  2. Run: gh workflow run sync_release.yml"
+            echo "  3. After sync completes, run: gh workflow run deploy_workflow_wrapper.yml --ref release"
+            exit 1
+          fi
+          echo "✅ Running on release branch"
+
   build_artifacts:
+    needs: [validate_branch]
     uses: ./.github/workflows/deploy_build_artifact.yaml
 
   deploy_to_pypi_test:
