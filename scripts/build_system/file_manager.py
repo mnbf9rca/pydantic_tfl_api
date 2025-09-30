@@ -17,7 +17,14 @@ from typing import __all__ as typing_all
 from pydantic import BaseModel, RootModel
 from pydantic.fields import FieldInfo
 
-from .utilities import extract_inner_types, get_builtin_types, sanitize_field_name, sanitize_name
+from .utilities import (
+    escape_description_for_field,
+    extract_inner_types,
+    get_builtin_types,
+    normalize_description,
+    sanitize_field_name,
+    sanitize_name,
+)
 
 
 class FileManager:
@@ -469,14 +476,18 @@ class FileManager:
             else:
                 # Fallback for RootModel without proper root field
                 model_file.write(f"class {sanitized_model_name}(RootModel[list]):\n")
-            # Add docstring if available
+            # Add docstring if available (normalize and skip if empty)
             if sanitized_model_name in model_descriptions:
-                model_file.write(f'    """{model_descriptions[sanitized_model_name]}"""\n\n')
+                desc = normalize_description(model_descriptions[sanitized_model_name])
+                if desc:
+                    model_file.write(f'    """{desc}"""\n\n')
         else:
             model_file.write(f"class {sanitized_model_name}(BaseModel):\n")
-            # Add docstring if available
+            # Add docstring if available (normalize and skip if empty)
             if sanitized_model_name in model_descriptions:
-                model_file.write(f'    """{model_descriptions[sanitized_model_name]}"""\n\n')
+                desc = normalize_description(model_descriptions[sanitized_model_name])
+                if desc:
+                    model_file.write(f'    """{desc}"""\n\n')
             if hasattr(model, "model_fields"):
                 self._write_model_fields(
                     model_file, model, models, circular_models, field_descriptions.get(sanitized_model_name, {})
@@ -577,15 +588,12 @@ class FileManager:
             if not field.is_required() and not field_type.endswith(" | None") and field_type != "None":
                 field_type = f"{field_type} | None"
 
-            # Prepare description for Field() if available
+            # Prepare description for Field() if available (escape and skip if empty)
             description_param = ""
             if sanitized_field_name in field_descs:
-                # Normalize description: replace newlines and collapse multiple spaces
-                desc = field_descs[sanitized_field_name].replace("\n", " ")
-                desc = " ".join(desc.split())  # Collapse multiple spaces
-                # Escape quotes in description
-                desc = desc.replace('"', '\\"')
-                description_param = f', description="{desc}"'
+                escaped_desc = escape_description_for_field(field_descs[sanitized_field_name])
+                if escaped_desc:  # Only add if not empty after normalization
+                    description_param = f', description="{escaped_desc}"'
 
             # Build Field() call with alias and/or description
             field_params = field_default

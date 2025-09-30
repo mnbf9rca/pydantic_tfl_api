@@ -155,3 +155,36 @@ class TestErrorHandling:
         assert error.response_body is None
         assert error.retry_count is None
         assert error.error_category is None
+
+    def test_enhanced_api_error_partial_fields(self) -> None:
+        """Test ApiError with only some enhanced fields populated."""
+        from datetime import datetime
+
+        from pydantic_tfl_api.core.package_models import ApiError
+
+        # Create ApiError with mix of enhanced and empty fields
+        error = ApiError(
+            timestamp_utc=datetime.now(),
+            exception_type="PartialException",
+            http_status_code=503,
+            http_status="Service Unavailable",
+            relative_uri="/partial",
+            message="Partial error",
+            request_method="POST",  # Set this one
+            error_category="server_error",  # And this one
+            # Leave others as None (not specified)
+        )
+
+        # Verify set fields
+        assert error.request_method == "POST"
+        assert error.error_category == "server_error"
+
+        # Verify unset fields default to None
+        assert error.request_url is None
+        assert error.request_headers is None
+        assert error.response_body is None
+        assert error.retry_count is None
+
+        # Verify original fields still work
+        assert error.http_status_code == 503
+        assert error.message == "Partial error"

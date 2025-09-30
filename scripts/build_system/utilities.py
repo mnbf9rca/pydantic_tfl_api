@@ -1,6 +1,7 @@
 """Shared utility functions for the build system."""
 
 import builtins
+import json
 import keyword
 import logging
 import re
@@ -343,3 +344,61 @@ def update_model_references(models: dict[str, Any], reference_map: dict[str, str
                 updated_models[model_name] = resolve_model_reference(model)
 
     return updated_models
+
+
+def normalize_description(description: str) -> str:
+    """
+    Normalize a description string for use in Python code.
+
+    - Replaces newlines with spaces
+    - Collapses multiple spaces into single spaces
+    - Strips leading/trailing whitespace
+
+    Args:
+        description: Raw description string from OpenAPI spec
+
+    Returns:
+        Normalized description string safe for Python code
+    """
+    if not description:
+        return ""
+
+    # Replace newlines with spaces
+    normalized = description.replace("\n", " ")
+    # Collapse multiple spaces
+    normalized = " ".join(normalized.split())
+    # Strip leading/trailing whitespace
+    normalized = normalized.strip()
+
+    return normalized
+
+
+def escape_description_for_field(description: str) -> str:
+    """
+    Escape a description string for safe use in Field(description="...") parameter.
+
+    Uses json.dumps() to properly escape all special characters including:
+    - Double quotes
+    - Backslashes
+    - Newlines
+    - Unicode characters
+
+    Args:
+        description: Description string to escape
+
+    Returns:
+        JSON-escaped string ready for Field() parameter (without outer quotes)
+    """
+    if not description:
+        return ""
+
+    # Normalize first
+    normalized = normalize_description(description)
+    if not normalized:
+        return ""
+
+    # Use json.dumps to escape all special characters
+    # Remove the outer quotes added by json.dumps
+    escaped = json.dumps(normalized)[1:-1]
+
+    return escaped

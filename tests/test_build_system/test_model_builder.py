@@ -427,3 +427,32 @@ class TestModelBuilder:
         # Verify descriptions are cleared
         assert len(model_builder.get_model_descriptions()) == 0
         assert len(model_builder.get_field_descriptions()) == 0
+
+    def test_partial_field_descriptions(self, model_builder: Any) -> None:
+        """Test handling of models where only some fields have descriptions."""
+        components = {
+            "PartialModel": {
+                "type": "object",
+                "description": "Model with partial field descriptions",
+                "properties": {
+                    "documented_field": {"type": "string", "description": "This field has a description"},
+                    "undocumented_field": {"type": "integer"},  # No description
+                    "another_documented": {"type": "boolean", "description": "Another documented field"},
+                },
+                "required": ["documented_field"],
+            }
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Verify model was created
+        assert "PartialModel" in model_builder.models
+
+        # Verify field descriptions only include documented fields
+        field_descriptions = model_builder.get_field_descriptions()
+        assert "PartialModel" in field_descriptions
+        assert "documented_field" in field_descriptions["PartialModel"]
+        assert "another_documented" in field_descriptions["PartialModel"]
+        assert "undocumented_field" not in field_descriptions["PartialModel"]
+        assert field_descriptions["PartialModel"]["documented_field"] == "This field has a description"
+        assert field_descriptions["PartialModel"]["another_documented"] == "Another documented field"

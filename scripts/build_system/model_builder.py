@@ -139,7 +139,7 @@ class ModelBuilder:
                             Field(None, alias=field_name),
                         )
 
-                # Store field descriptions
+                # Store field descriptions from OpenAPI spec as-is
                 if field_descs:
                     self.field_descriptions[sanitized_name] = field_descs
 

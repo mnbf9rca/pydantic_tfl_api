@@ -437,3 +437,47 @@ class TestFileManager:
         # Verify field descriptions are in Field() calls for IDE support
         assert 'description="A unique identifier."' in content
         assert 'description="The name of the place."' in content
+
+    def test_multiline_and_special_character_descriptions(self, file_manager: Any, temp_dir: Any) -> None:
+        """Test that multi-line and special character descriptions are properly normalized and escaped."""
+
+        class TestModel(BaseModel):
+            multiline_field: str = Field(...)
+            special_char_field: str = Field(...)
+            quotes_field: str = Field(...)
+
+        model_descriptions = {"TestModel": "A model with\nmulti-line\ndescription"}
+        field_descriptions = {
+            "TestModel": {
+                "multiline_field": "Description with\nmultiple lines\nof text",
+                "special_char_field": 'Contains "quotes" and unicode: café',
+                "quotes_field": 'Field with "nested" "quotes"',
+            }
+        }
+
+        circular_models: set[str] = set()
+        sorted_models = ["TestModel"]
+
+        file_manager.save_models(
+            {"TestModel": TestModel},
+            str(temp_dir),
+            {"TestModel": set()},
+            circular_models,
+            sorted_models,
+            model_descriptions,
+            field_descriptions,
+        )
+
+        test_file = temp_dir / "models" / "TestModel.py"
+        content = test_file.read_text()
+
+        # Verify class docstring is normalized (no newlines)
+        assert '"""A model with multi-line description"""' in content
+        assert "\nmulti-line\n" not in content  # Original newlines should be gone
+
+        # Verify field descriptions are properly escaped
+        # Multi-line should be collapsed to single line
+        assert 'description="Description with multiple lines of text"' in content
+        # Quotes should be escaped, unicode should be escaped as \uXXXX
+        assert 'description="Contains \\"quotes\\" and unicode: caf\\u00e9"' in content
+        assert 'description="Field with \\"nested\\" \\"quotes\\""' in content
