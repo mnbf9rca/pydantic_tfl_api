@@ -1,20 +1,19 @@
 [project]
 name = "pydantic-tfl-api"
-version = "1.2.3"
+version = "2.0.0"
 description = "A Pydantic-based wrapper for the TfL Unified API https://api-portal.tfl.gov.uk/. Not associated with or endorsed by TfL."
 authors = [
     {name = "Rob Aleck", email = "mnbf9rca@users.noreply.github.com"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 keywords = ["pydantic", "tfl", "tfl-api", "transport-for-london", "unified-api"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -162,7 +161,7 @@ ignore = [
 
 [tool.mypy]
 # Progressive typing - start with basic checks, can be made stricter over time
-python_version = "3.10"
+python_version = "3.11"
 warn_unused_configs = true
 show_error_codes = true
 pretty = true
@@ -198,7 +197,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.bumpversion]
-current_version = "1.2.3"
+current_version = "2.0.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
