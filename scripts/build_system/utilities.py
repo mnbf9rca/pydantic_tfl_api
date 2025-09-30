@@ -2,9 +2,13 @@
 
 import builtins
 import keyword
+import logging
 import re
 import types
-from typing import Any, Union, get_args, get_origin
+from typing import Any, Optional, Union, get_args, get_origin
+from urllib.parse import urljoin
+
+from pydantic import BaseModel, RootModel
 
 
 def sanitize_name(name: str, prefix: str = "Model") -> str:
@@ -130,8 +134,6 @@ def clean_enum_name(value: str) -> str:
 
 def join_url_paths(a: str, b: str) -> str:
     """Join URL paths ensuring proper slash handling."""
-    from urllib.parse import urljoin
-
     # Ensure the base path ends with a slash for urljoin to work properly
     return urljoin(a + "/", b.lstrip("/"))
 
@@ -146,8 +148,6 @@ def are_models_equal(model1: Any, model2: Any) -> bool:
     Returns:
         True if models are equal, False otherwise
     """
-    from pydantic import BaseModel
-
     # Must both be BaseModel types
     if not (isinstance(model1, type) and isinstance(model2, type)):
         return False
@@ -202,9 +202,6 @@ def deduplicate_models(
         Tuple of (deduplicated_models, reference_map) where reference_map
         maps duplicate model names to their canonical equivalents
     """
-    import logging
-
-
     deduplicated_models: dict[str, Any] = {}
     reference_map: dict[str, str] = {}
 
@@ -222,7 +219,6 @@ def deduplicate_models(
                 break
 
             # Handle RootModel[list[X]] - Check if both are RootModel wrapping lists
-            from pydantic import RootModel
             try:
                 # Check if both are RootModel subclasses with list types
                 if (isinstance(model, type) and issubclass(model, RootModel) and
@@ -283,8 +279,6 @@ def update_model_references(
     Returns:
         Updated models dictionary with references resolved
     """
-    from typing import Optional
-
     def resolve_model_reference(annotation: Any) -> Any:
         """Resolve references in the model recursively, including nested types."""
         origin = get_origin(annotation)
@@ -313,7 +307,30 @@ def update_model_references(
             dedup_model_name = reference_map[model_name]
             updated_models[model_name] = models[dedup_model_name]
         else:
-            # Recursively resolve references in model annotations if they are generic
-            updated_models[model_name] = resolve_model_reference(model)
+            # Handle RootModel classes - need to recreate with updated inner references
+            if isinstance(model, type) and issubclass(model, RootModel):
+                root_field = model.model_fields.get('root')
+                if root_field:
+                    # Resolve references in the root annotation
+                    updated_annotation = resolve_model_reference(root_field.annotation)
+
+                    # Check if the annotation actually changed
+                    if updated_annotation != root_field.annotation:
+                        # Recreate the RootModel with the updated type
+                        updated_model = type(
+                            model_name,
+                            (RootModel[updated_annotation],),  # type: ignore[valid-type]
+                            {"__module__": getattr(model, "__module__", __name__)}
+                        )
+                        updated_models[model_name] = updated_model
+                    else:
+                        # No change needed, keep original
+                        updated_models[model_name] = model
+                else:
+                    # No root field, keep original
+                    updated_models[model_name] = model
+            else:
+                # Recursively resolve references in model annotations if they are generic
+                updated_models[model_name] = resolve_model_reference(model)
 
     return updated_models
