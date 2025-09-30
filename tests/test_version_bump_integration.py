@@ -7,8 +7,6 @@ in a real environment with actual git operations.
 import subprocess
 from pathlib import Path
 
-import pytest
-
 
 class TestBashWrapperIntegration:
     """Integration tests for the bash wrapper script."""
