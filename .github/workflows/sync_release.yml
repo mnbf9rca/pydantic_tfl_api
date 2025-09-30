@@ -86,18 +86,25 @@ jobs:
         if: steps.check_branch.outputs.branch_exists == 'true'
         id: sync_result
         run: |
+          echo "🔄 Syncing Release Branch"
           echo "## 🔄 Syncing Release Branch" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Fetch both branches
+          echo "Fetching branches..."
           git fetch origin release main
 
           # Checkout release branch
+          echo "Checking out release branch..."
           git checkout release
 
           # Get commit info
           MAIN_COMMIT=$(git rev-parse origin/main)
           RELEASE_COMMIT=$(git rev-parse release)
+
+          echo "Current Status:"
+          echo "- Main branch: ${MAIN_COMMIT:0:7}"
+          echo "- Release branch: ${RELEASE_COMMIT:0:7}"
 
           echo "**Current Status:**" >> $GITHUB_STEP_SUMMARY
           echo "- Main branch: \`${MAIN_COMMIT:0:7}\`" >> $GITHUB_STEP_SUMMARY
@@ -105,7 +112,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # Check if release is already up to date
+          echo "Checking if release is up to date with main..."
           if git merge-base --is-ancestor origin/main release; then
+            echo "✅ Release branch is already up to date with main"
+            echo "No sync needed. To bump version anyway, manually trigger bump_version.yml"
+
             echo "✅ Release branch is already up to date with main" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**No sync needed.** To bump version anyway, manually trigger:" >> $GITHUB_STEP_SUMMARY
@@ -113,9 +124,14 @@ jobs:
             echo "synced=false" >> $GITHUB_OUTPUT
           else
             # Try to merge main into release
+            echo "Attempting to merge main into release..."
             echo "**Attempting to merge main into release...**" >> $GITHUB_STEP_SUMMARY
 
             if ! git merge origin/main --no-edit; then
+              echo "❌ Merge conflicts detected!"
+              echo "Conflicting files:"
+              git diff --name-only --diff-filter=U
+
               echo "❌ Merge conflicts detected!" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "**Conflicting files:**" >> $GITHUB_STEP_SUMMARY
@@ -128,10 +144,16 @@ jobs:
               exit 1
             fi
 
-            echo "✅ Merge successful" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Merge successful"
+            echo "Pushing to origin/release..."
             git push origin release
 
+            echo "✅ Merge successful" >> $GITHUB_STEP_SUMMARY
+
             # Show what was merged
+            echo "Commits merged:"
+            git log --oneline ${RELEASE_COMMIT}..origin/main
+
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "<details>" >> $GITHUB_STEP_SUMMARY
             echo "<summary>📝 Commits merged</summary>" >> $GITHUB_STEP_SUMMARY
@@ -141,10 +163,11 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
             echo "</details>" >> $GITHUB_STEP_SUMMARY
             echo "synced=true" >> $GITHUB_OUTPUT
-          fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
+            echo "Version bump will proceed automatically"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Next:** Version bump will proceed automatically" >> $GITHUB_STEP_SUMMARY
+          fi
 
   validate_and_bump:
     needs: sync_branches
