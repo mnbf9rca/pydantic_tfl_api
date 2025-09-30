@@ -327,3 +327,132 @@ class TestModelBuilder:
         """Test OpenAPI type to Python type mapping."""
         result = model_builder.map_openapi_type(openapi_type)
         assert result == expected_python_type
+
+    def test_extract_model_descriptions(self, model_builder: Any) -> None:
+        """Test that model-level descriptions are extracted from OpenAPI specs."""
+        components = {
+            "Station": {
+                "type": "object",
+                "description": "Represents a station in the TfL network.",
+                "properties": {
+                    "id": {"type": "string"},
+                    "name": {"type": "string"},
+                },
+            },
+            "Place": {
+                "type": "object",
+                "description": "A location with coordinates.",
+                "properties": {
+                    "lat": {"type": "number"},
+                    "lon": {"type": "number"},
+                },
+            },
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Verify model descriptions were extracted
+        model_descriptions = model_builder.get_model_descriptions()
+        assert "Station" in model_descriptions
+        assert model_descriptions["Station"] == "Represents a station in the TfL network."
+        assert "Place" in model_descriptions
+        assert model_descriptions["Place"] == "A location with coordinates."
+
+    def test_extract_field_descriptions(self, model_builder: Any) -> None:
+        """Test that field-level descriptions are extracted from OpenAPI specs."""
+        components = {
+            "Place": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string", "description": "A unique identifier."},
+                    "name": {"type": "string", "description": "The name of the place."},
+                    "lat": {"type": "number", "description": "Latitude coordinate."},
+                },
+            }
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Verify field descriptions were extracted
+        field_descriptions = model_builder.get_field_descriptions()
+        assert "Place" in field_descriptions
+        assert field_descriptions["Place"]["id"] == "A unique identifier."
+        assert field_descriptions["Place"]["name"] == "The name of the place."
+        assert field_descriptions["Place"]["lat"] == "Latitude coordinate."
+
+    def test_descriptions_without_specs(self, model_builder: Any) -> None:
+        """Test that models without descriptions work correctly."""
+        components = {
+            "SimpleModel": {
+                "type": "object",
+                "properties": {
+                    "field1": {"type": "string"},
+                    "field2": {"type": "integer"},
+                },
+            }
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Should have created model without errors
+        assert "SimpleModel" in model_builder.models
+
+        # Descriptions should be empty for this model
+        model_descriptions = model_builder.get_model_descriptions()
+        field_descriptions = model_builder.get_field_descriptions()
+        assert "SimpleModel" not in model_descriptions
+        assert "SimpleModel" not in field_descriptions
+
+    def test_clear_models_clears_descriptions(self, model_builder: Any) -> None:
+        """Test that clear_models also clears description dictionaries."""
+        components = {
+            "TestModel": {
+                "type": "object",
+                "description": "Test description",
+                "properties": {
+                    "field": {"type": "string", "description": "Field description"},
+                },
+            }
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Verify descriptions were created
+        assert len(model_builder.get_model_descriptions()) > 0
+        assert len(model_builder.get_field_descriptions()) > 0
+
+        # Clear everything
+        model_builder.clear_models()
+
+        # Verify descriptions are cleared
+        assert len(model_builder.get_model_descriptions()) == 0
+        assert len(model_builder.get_field_descriptions()) == 0
+
+    def test_partial_field_descriptions(self, model_builder: Any) -> None:
+        """Test handling of models where only some fields have descriptions."""
+        components = {
+            "PartialModel": {
+                "type": "object",
+                "description": "Model with partial field descriptions",
+                "properties": {
+                    "documented_field": {"type": "string", "description": "This field has a description"},
+                    "undocumented_field": {"type": "integer"},  # No description
+                    "another_documented": {"type": "boolean", "description": "Another documented field"},
+                },
+                "required": ["documented_field"],
+            }
+        }
+
+        model_builder.create_pydantic_models(components)
+
+        # Verify model was created
+        assert "PartialModel" in model_builder.models
+
+        # Verify field descriptions only include documented fields
+        field_descriptions = model_builder.get_field_descriptions()
+        assert "PartialModel" in field_descriptions
+        assert "documented_field" in field_descriptions["PartialModel"]
+        assert "another_documented" in field_descriptions["PartialModel"]
+        assert "undocumented_field" not in field_descriptions["PartialModel"]
+        assert field_descriptions["PartialModel"]["documented_field"] == "This field has a description"
+        assert field_descriptions["PartialModel"]["another_documented"] == "Another documented field"

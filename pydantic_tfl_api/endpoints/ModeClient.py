@@ -4,6 +4,8 @@ from .ModeClient_config import base_url, endpoints
 
 
 class ModeClient(Client):
+    """APIs relating to Mode and similar services"""
+
     def GetActiveServiceTypes(self, ) -> ResponseModel[ActiveServiceTypesArray] | ApiError:
         '''
         Returns the service type active for a mode.

@@ -8,6 +8,8 @@ from .SearchCriteria import SearchCriteria
 
 
 class ItineraryResult(BaseModel):
+    """A DTO representing a list of possible journeys."""
+
     journeys: list[Journey] | None = Field(None)
     lines: list[Line] | None = Field(None)
     cycleHireDockingStationData: JourneyPlannerCycleHireDockingStationData | None = Field(None)

@@ -390,7 +390,7 @@ class TestFileManager:
         sorted_models = ["PathAttribute", "TestModel"]
 
         file_manager.save_models(
-            {"PathAttribute": PathAttribute, "TestModel": TestModel},
+            {"PathAttribute": PathAttribute, "TestModel": TestModel},  # type: ignore[dict-item]
             str(temp_dir),
             {"PathAttribute": set(), "TestModel": {"PathAttribute"}},
             circular_models,
@@ -404,3 +404,80 @@ class TestFileManager:
         assert "from typing import Any, Type" not in content
         # PathAttribute should be imported from relative module
         assert "from .PathAttribute import PathAttribute" in content
+
+    def test_docstring_generation(self, file_manager: Any, temp_dir: Any) -> None:
+        """Test that docstrings and Field descriptions are written to model files."""
+
+        class Place(BaseModel):
+            id: str = Field(...)
+            name: str = Field(...)
+
+        model_descriptions = {"Place": "A location in the TfL network."}
+        field_descriptions = {"Place": {"id": "A unique identifier.", "name": "The name of the place."}}
+
+        circular_models: set[str] = set()
+        sorted_models = ["Place"]
+
+        file_manager.save_models(
+            {"Place": Place},
+            str(temp_dir),
+            {"Place": set()},
+            circular_models,
+            sorted_models,
+            model_descriptions,
+            field_descriptions,
+        )
+
+        place_file = temp_dir / "models" / "Place.py"
+        content = place_file.read_text()
+
+        # Verify class docstring is present
+        assert '"""A location in the TfL network."""' in content
+
+        # Verify field descriptions are in Field() calls for IDE support
+        assert 'description="A unique identifier."' in content
+        assert 'description="The name of the place."' in content
+
+    def test_multiline_and_special_character_descriptions(self, file_manager: Any, temp_dir: Any) -> None:
+        """Test that multi-line and special character descriptions are properly normalized and escaped."""
+
+        class TestModel(BaseModel):
+            multiline_field: str = Field(...)
+            special_char_field: str = Field(...)
+            quotes_field: str = Field(...)
+
+        model_descriptions = {"TestModel": "A model with\nmulti-line\ndescription"}
+        field_descriptions = {
+            "TestModel": {
+                "multiline_field": "Description with\nmultiple lines\nof text",
+                "special_char_field": 'Contains "quotes" and unicode: café',
+                "quotes_field": 'Field with "nested" "quotes"',
+            }
+        }
+
+        circular_models: set[str] = set()
+        sorted_models = ["TestModel"]
+
+        file_manager.save_models(
+            {"TestModel": TestModel},
+            str(temp_dir),
+            {"TestModel": set()},
+            circular_models,
+            sorted_models,
+            model_descriptions,
+            field_descriptions,
+        )
+
+        test_file = temp_dir / "models" / "TestModel.py"
+        content = test_file.read_text()
+
+        # Verify class docstring is normalized (no newlines)
+        assert '"""A model with multi-line description"""' in content
+        assert "\nmulti-line\n" not in content  # Original newlines should be gone
+
+        # Verify field descriptions are properly escaped
+        # Multi-line should be collapsed to single line
+        assert 'description="Description with multiple lines of text"' in content
+        # Quotes should be escaped, unicode should be escaped as \uXXXX
+        assert 'description="Contains \\"quotes\\" and unicode: caf\\u00e9"' in content
+        assert 'description="Field with \\"nested\\" \\"quotes\\""' in content

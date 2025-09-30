@@ -8,7 +8,14 @@ import re
 from typing import Any
 from urllib.parse import urlparse
 
-from .utilities import get_builtin_types, join_url_paths, map_openapi_type, sanitize_field_name, sanitize_name
+from .utilities import (
+    get_builtin_types,
+    join_url_paths,
+    map_openapi_type,
+    normalize_description,
+    sanitize_field_name,
+    sanitize_name,
+)
 
 
 def get_api_name(spec: dict[str, Any]) -> str:
@@ -231,6 +238,13 @@ class ClientGenerator:
         all_types: set[str] = set()
         all_package_models: set[str] = set()
         method_lines = [f"class {class_name}(Client):\n"]
+
+        # Add class docstring from API description if available
+        if api_description := spec.get("info", {}).get("description"):
+            # Normalize description using shared utility
+            normalized_desc = normalize_description(api_description)
+            if normalized_desc:  # Only add if not empty
+                method_lines.append(f'    """{normalized_desc}"""\n\n')
 
         # Process all API methods
         for path, methods in paths.items():

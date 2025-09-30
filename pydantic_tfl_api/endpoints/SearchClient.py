@@ -4,6 +4,8 @@ from .SearchClient_config import base_url, endpoints
 
 
 class SearchClient(Client):
+    """APIs relating to Search and similar services"""
+
     def GetByQueryQuery(self, query: str) -> ResponseModel[SearchResponse] | ApiError:
         '''
         Search the site for occurrences of the query string. The maximum number of results returned is equal to the maximum page size of 100. To return subsequent pages, use the paginated overload.

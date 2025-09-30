@@ -17,6 +17,8 @@ from .StopPointClient_config import base_url, endpoints
 
 
 class StopPointClient(Client):
+    """API's relating to StopPoint and similar services"""
+
     def MetaCategories(self, ) -> ResponseModel[PlaceCategoryArray] | ApiError:
         '''
         Gets the list of available StopPoint additional information categories

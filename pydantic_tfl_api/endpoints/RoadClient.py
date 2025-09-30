@@ -11,6 +11,8 @@ from .RoadClient_config import base_url, endpoints
 
 
 class RoadClient(Client):
+    """APIs relating to Road and similar services"""
+
     def Get(self, ) -> ResponseModel[RoadCorridorsArray] | ApiError:
         '''
         Gets all roads managed by TfL

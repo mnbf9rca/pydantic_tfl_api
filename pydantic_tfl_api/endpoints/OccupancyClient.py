@@ -4,6 +4,8 @@ from .OccupancyClient_config import base_url, endpoints
 
 
 class OccupancyClient(Client):
+    """API's relating to Occupancy and similar services"""
+
     def GetAllChargeConnectorStatus(self, ) -> ResponseModel[ChargeConnectorOccupancyArray] | ApiError:
         '''
         Gets the occupancy for all charge connectors

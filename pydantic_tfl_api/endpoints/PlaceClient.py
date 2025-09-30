@@ -10,6 +10,8 @@ from .PlaceClient_config import base_url, endpoints
 
 
 class PlaceClient(Client):
+    """APIs relating to Place and similar services"""
+
     def MetaCategories(self, ) -> ResponseModel[PlaceCategoryArray] | ApiError:
         '''
         Gets a list of all of the available place property categories and keys.

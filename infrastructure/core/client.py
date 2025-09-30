@@ -165,11 +165,11 @@ class Client:
         if response.headers.get("Content-Type") == "application/json":
             return self._deserialize("ApiError", response)
         return ApiError(
-            timestampUtc=parsedate_to_datetime(response.headers.get("Date")) or datetime.utcnow(),
-            exceptionType="Unknown",
-            httpStatusCode=response.status_code,
-            httpStatus=response.reason,
-            relativeUri=response.url,
+            timestamp_utc=parsedate_to_datetime(response.headers.get("Date")) or datetime.utcnow(),
+            exception_type="Unknown",
+            http_status_code=response.status_code,
+            http_status=response.reason,
+            relative_uri=response.url,
             message=response.text,
         )
 

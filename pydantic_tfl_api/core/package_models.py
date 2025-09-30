@@ -33,6 +33,14 @@ class GenericResponseModel(RootModel[Any]):
 
 
 class ApiError(BaseModel):
+    """
+    Enhanced API error model with comprehensive debugging context.
+
+    Provides detailed information about API errors including the original
+    TfL error response plus additional context for debugging and monitoring.
+    """
+
+    # TfL API error fields
     timestamp_utc: datetime = Field(alias="timestampUtc")
     exception_type: str = Field(alias="exceptionType")
     http_status_code: int = Field(alias="httpStatusCode")
@@ -40,10 +48,21 @@ class ApiError(BaseModel):
     relative_uri: str = Field(alias="relativeUri")
     message: str = Field(alias="message")
 
+    # Extended context fields for debugging
+    request_method: str | None = Field(None, description="HTTP method used (GET, POST, etc.)")
+    request_url: str | None = Field(None, description="Full URL of the failed request")
+    request_headers: dict[str, str] | None = Field(None, description="Request headers (sensitive data filtered)")
+    response_body: str | None = Field(None, description="Raw response body for debugging")
+    retry_count: int | None = Field(None, description="Number of retries attempted")
+    error_category: str | None = Field(
+        None,
+        description="Error category: network, authentication, rate_limit, client_error, server_error, timeout, unknown",
+    )
+
     @field_validator("timestamp_utc", mode="before")
     @classmethod
     def parse_timestamp(cls, v: Any) -> datetime:
         return v if isinstance(v, datetime) else parsedate_to_datetime(v)
         # return datetime.strptime(v, '%a, %d %b %Y %H:%M:%S %Z')
 
-    model_config = {"populate_by_name": True}
+    model_config = ConfigDict(populate_by_name=True)
