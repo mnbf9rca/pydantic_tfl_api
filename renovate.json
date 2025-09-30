@@ -13,16 +13,6 @@
       "description": "Auto-merge dev dependencies after tests pass",
       "matchDatasources": ["pypi"],
       "matchDepTypes": ["dev-dependencies"],
-      "matchPackagePatterns": [
-        "^pytest",
-        "^black",
-        "^ruff",
-        "^mypy",
-        "^coverage",
-        "^pre-commit",
-        "^types-",
-        "^jsonschema"
-      ],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
@@ -31,42 +21,71 @@
       "labels": ["dependencies", "dev", "automerge"]
     },
     {
-      "description": "Auto-merge GitHub Actions with digest pinning",
+      "description": "Auto-merge GitHub Actions",
       "matchManagers": ["github-actions"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "squash",
-      "pinDigests": true,
+      "pinDigests": false,
       "groupName": "GitHub Actions",
       "labels": ["github-actions", "automerge"],
       "commitMessageTopic": "action {{depName}}"
     },
     {
-      "description": "Production dependencies - widen ranges, manual review",
+      "description": "Production dependencies - test compatibility (close PR after review)",
       "matchDatasources": ["pypi"],
       "matchDepTypes": ["dependencies"],
       "matchPackageNames": ["pydantic", "requests"],
       "automerge": false,
+      "prCreation": "not-pending",
+      "recreateWhen": "never",
       "rangeStrategy": "widen",
       "separateMinorPatch": true,
-      "labels": ["dependencies", "production", "needs-review"],
-      "reviewers": ["mnbf9rca"],
-      "commitMessagePrefix": "deps(prod):",
+      "labels": ["dependencies", "production", "test-only", "do-not-merge"],
+      "commitMessagePrefix": "[TEST ONLY]",
       "commitMessageTopic": "{{depName}}",
-      "commitMessageExtra": "to {{#if isPatch}}~{{newVersion}}{{else}}{{newValue}}{{/if}}",
+      "commitMessageExtra": "{{newValue}} compatibility check",
       "prBodyNotes": [
-        "⚠️ **Production Dependency Update**",
+        "## ⚠️ TEST ONLY - DO NOT MERGE ⚠️",
         "",
-        "This update affects a production dependency. Please:",
-        "1. Review the changelog for breaking changes",
-        "2. Verify all tests pass (especially Pydantic version matrix)",
-        "3. Consider impact on existing users",
-        "4. Merge only if widening the range maintains compatibility"
+        "🧪 **This PR validates compatibility but should NOT be merged.**",
+        "",
+        "### Purpose",
+        "Automated test to verify that `{{depName}} {{newValue}}` works with our codebase.",
+        "",
+        "### Instructions",
+        "1. ✅ Wait for CI tests to complete",
+        "2. 📊 Review test results (especially Pydantic version matrix)",
+        "3. 📝 Note compatibility in issue/changelog",
+        "4. ❌ **Close this PR** (it won't be recreated)",
+        "5. 🔧 When ready, manually update `pyproject.toml` to widen range",
+        "",
+        "### What the test results mean",
+        "- ✅ **Tests pass**: This version is compatible with our codebase",
+        "- ❌ **Tests fail**: Breaking changes exist, review changelog before widening",
+        "",
+        "### To actually widen the version range",
+        "After reviewing several validation PRs and changelogs:",
+        "1. Manually edit `pyproject.toml`",
+        "2. Update the dependency range (e.g., `pydantic>=2.8.2,<4.0`)",
+        "3. Create a normal PR with your changes",
+        "",
+        "**Close this PR after reviewing test results.**"
       ]
     },
     {
-      "description": "Auto-merge security patches for all dependencies",
+      "description": "Security patches - dev deps auto-merge, prod deps test-only",
       "matchUpdateTypes": ["patch"],
+      "vulnerabilityAlerts": {
+        "enabled": true
+      },
+      "labels": ["security"],
+      "prPriority": 10
+    },
+    {
+      "description": "Security patches for dev dependencies - auto-merge",
+      "matchUpdateTypes": ["patch"],
+      "matchDepTypes": ["dev-dependencies"],
       "vulnerabilityAlerts": {
         "enabled": true
       },
@@ -112,9 +131,7 @@
     "labels": ["security"]
   },
   "lockFileMaintenance": {
-    "enabled": true,
-    "automerge": true,
-    "schedule": ["before 4am on the first day of the month"]
+    "enabled": false
   },
   "rebaseWhen": "behind-base-branch",
   "updateNotScheduled": true,

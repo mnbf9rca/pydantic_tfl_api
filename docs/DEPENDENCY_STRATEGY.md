@@ -10,7 +10,7 @@ We use Renovate to automatically manage dependencies with different merge strate
 
 ### 1. Dev Dependencies (Auto-Merge)
 
-**Packages**: pytest, black, ruff, mypy, coverage, pre-commit, types-*, jsonschema
+**Scope**: All packages in `[dependency-groups] dev` section of pyproject.toml
 
 **Strategy**: Automatic merge after tests pass
 
@@ -28,28 +28,41 @@ We use Renovate to automatically manage dependencies with different merge strate
 
 **Labels**: `github-actions`, `automerge`
 
-### 3. Production Dependencies (Manual Review)
+### 3. Production Dependencies (Test & Auto-Close)
 
 **Packages**: pydantic, requests
 
-**Strategy**: Create PR for manual review, widen version ranges where possible
+**Strategy**: Create PR to test compatibility, then auto-close after tests complete (validation only)
 
-**Rationale**: These dependencies directly affect package users. Changes require careful review for:
-- Breaking changes in dependencies
-- Compatibility across version ranges
-- Impact on existing users
-- Whether we can widen support (e.g., pydantic>=2.8.2,<3.0 → >=2.8.2,<4.0)
+**Rationale**: These dependencies directly affect package users. We want to validate new versions work, but manual control over when to actually widen ranges.
 
-**Review Checklist**:
-1. ✅ Review dependency changelog for breaking changes
-2. ✅ Verify Pydantic version matrix tests pass (2.8.2 and latest)
-3. ✅ Consider impact on users with older dependency versions
-4. ✅ Prefer widening ranges over bumping minimums
-5. ✅ Test package build and installation
+**How it works**:
+1. Renovate detects new pydantic/requests version
+2. Creates PR with widened range (e.g., `pydantic>=2.8.2,<4.0`)
+3. CI runs full test suite including version matrix
+4. PR automatically closes after tests complete (pass or fail)
+5. You review test results to inform decisions about widening ranges
 
-**Labels**: `dependencies`, `production`, `needs-review`
+**Benefits**:
+- Automated validation without noise
+- Evidence-based decisions (see test results before committing)
+- Manual control over when to widen ranges
+- Can observe multiple versions before making changes
 
-**Assignees**: @mnbf9rca
+**When to manually widen ranges**:
+- Multiple validation PRs show compatibility
+- Changelog review shows no breaking changes
+- New features in dependency are desirable
+- User ecosystem has adopted new version
+
+**Manual Update Process**:
+1. Review several validation PR test results
+2. Check dependency changelogs for breaking changes
+3. Verify Pydantic version matrix tests passed
+4. Manually update `pyproject.toml` with widened range
+5. Create PR with your changes
+
+**Labels**: `dependencies`, `production`, `test-only`, `do-not-merge`
 
 ### 4. Security Patches (Auto-Merge)
 
