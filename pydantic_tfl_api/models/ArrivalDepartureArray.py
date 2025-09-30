@@ -1,8 +1,8 @@
-from pydantic import RootModel, ConfigDict
-from typing import List
+from pydantic import ConfigDict, RootModel
+
 from .ArrivalDeparture import ArrivalDeparture
 
 
-class ArrivalDepartureArray(RootModel[List[ArrivalDeparture]]):
+class ArrivalDepartureArray(RootModel[list[ArrivalDeparture]]):
 
     model_config = ConfigDict(from_attributes=True)

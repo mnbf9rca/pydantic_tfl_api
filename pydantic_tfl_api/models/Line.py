@@ -1,10 +1,10 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Crowding import Crowding
 from .Disruption import Disruption
 from .LineServiceTypeInfo import LineServiceTypeInfo
 from .LineStatus import LineStatus
 from .MatchedRoute import MatchedRoute
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Match
 
 
 class Line(BaseModel):

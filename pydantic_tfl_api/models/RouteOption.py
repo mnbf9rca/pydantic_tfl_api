@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Identifier import Identifier
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RouteOption(BaseModel):

@@ -14,6 +14,7 @@ import time
 from contextlib import suppress
 
 import pytest
+import requests
 
 from pydantic_tfl_api.core import ApiError, ResponseModel
 from pydantic_tfl_api.endpoints import BikePointClient, JourneyClient, LineClient, ModeClient, StopPointClient
@@ -23,16 +24,17 @@ class TestBasicFunctionality:
     """Basic smoke tests for core TfL API functionality."""
 
     @pytest.fixture(autouse=True)
-    def rate_limit_delay(self):
+    def rate_limit_delay(self) -> None:
         """Respect TfL rate limiting between tests."""
         time.sleep(1.1)
 
-    def _validate_response_model(self, result, expected_type=ResponseModel):
+    def _validate_response_model(self, result: ResponseModel | ApiError, expected_type: type = ResponseModel) -> None:
         """Helper to validate ResponseModel content consistently."""
         assert isinstance(result, expected_type), f"Expected {expected_type.__name__}, got {type(result)}"
-        assert result.content is not None, "Response should have content"
+        if isinstance(result, ResponseModel):
+            assert result.content is not None, "Response should have content"
 
-    def _validate_journey_result(self, result):
+    def _validate_journey_result(self, result: ResponseModel | ApiError) -> None:
         """Helper to validate journey results which can be ResponseModel or ApiError."""
         if isinstance(result, ResponseModel):
             assert result.content is not None, "ResponseModel should have content"
@@ -43,16 +45,16 @@ class TestBasicFunctionality:
             pytest.fail(f"Unexpected result type: {type(result)}")
 
     @pytest.fixture(scope="class")
-    def api_health_check(self):
+    def api_health_check(self) -> bool:
         """Skip tests if TfL API is unavailable."""
-        import requests
+
         with suppress(Exception):
             response = requests.get("https://api.tfl.gov.uk/", timeout=10)
             if response.status_code == 200:
                 return True
         pytest.skip("TfL API unavailable - skipping basic functionality tests")
 
-    def test_line_client_basic_query(self, api_health_check):
+    def test_line_client_basic_query(self, api_health_check: bool) -> None:
         """Test LineClient can query TfL and parse response."""
         client = LineClient()
         result = client.MetaModes()
@@ -60,7 +62,7 @@ class TestBasicFunctionality:
         # Should get ResponseModel, not ApiError
         self._validate_response_model(result)
 
-    def test_line_client_tube_status(self, api_health_check):
+    def test_line_client_tube_status(self, api_health_check: bool) -> None:
         """Test LineClient can get tube line status."""
         client = LineClient()
         result = client.StatusByModeByPathModesQueryDetailQuerySeverityLevel("tube")
@@ -68,7 +70,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_stoppoint_client_basic_query(self, api_health_check):
+    def test_stoppoint_client_basic_query(self, api_health_check: bool) -> None:
         """Test StopPointClient can query TfL and parse response."""
         client = StopPointClient()
         result = client.MetaModes()
@@ -76,7 +78,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_stoppoint_client_by_type(self, api_health_check):
+    def test_stoppoint_client_by_type(self, api_health_check: bool) -> None:
         """Test StopPointClient can get stops by type."""
         client = StopPointClient()
         result = client.GetByTypeByPathTypes("NaptanMetroStation")
@@ -84,7 +86,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_bikepoint_client_basic_query(self, api_health_check):
+    def test_bikepoint_client_basic_query(self, api_health_check: bool) -> None:
         """Test BikePointClient can query TfL and parse response."""
         client = BikePointClient()
         result = client.GetAll()
@@ -92,7 +94,7 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_mode_client_basic_query(self, api_health_check):
+    def test_mode_client_basic_query(self, api_health_check: bool) -> None:
         """Test ModeClient can query TfL and parse response."""
         client = ModeClient()
         result = client.GetActiveServiceTypes()
@@ -100,11 +102,13 @@ class TestBasicFunctionality:
         # Should parse without errors
         self._validate_response_model(result)
 
-    def test_journey_client_basic_query(self, api_health_check):
+    def test_journey_client_basic_query(self, api_health_check: bool) -> None:
         """Test JourneyClient can query TfL and parse response."""
         client = JourneyClient()
         # Use specific station codes to avoid ambiguity
-        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu("940GZZLUKSX", "940GZZLUVIC")
+        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "940GZZLUKSX", "940GZZLUVIC"
+        )
 
         # Should parse without errors (ResponseModel or ApiError both indicate parsing worked)
         assert isinstance(result, (ResponseModel, ApiError)), f"Expected ResponseModel or ApiError, got {type(result)}"
@@ -114,22 +118,23 @@ class TestBasicFunctionality:
         # Both outcomes indicate successful parsing, which is what we're testing here
         self._validate_journey_result(result)
 
-    def test_journey_client_invalid_station_codes(self, api_health_check):
+    def test_journey_client_invalid_station_codes(self, api_health_check: bool) -> None:
         """Test JourneyClient returns ApiError for ambiguous or invalid station codes."""
         client = JourneyClient()
-        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu("INVALID_CODE", "940GZZLUXXX")
+        result = client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "INVALID_CODE", "940GZZLUXXX"
+        )
 
         # Should return ApiError for invalid/ambiguous station codes
         assert isinstance(result, ApiError), f"Expected ApiError for invalid station codes, got {type(result)}"
         assert result.http_status_code is not None, "ApiError should have HTTP status code"
 
-    def test_error_handling_returns_api_error(self):
+    def test_error_handling_returns_api_error(self) -> None:
         """Test that invalid API calls return ApiError objects."""
         client = LineClient("invalid_api_key")
         result = client.MetaModes()
 
         # Should return ApiError for invalid key
         assert isinstance(result, ApiError), f"Expected ApiError for invalid key, got {type(result)}"
-        assert hasattr(result, 'http_status_code'), "ApiError should have status code"
-        assert hasattr(result, 'http_status'), "ApiError should have status message"
-
+        assert hasattr(result, "http_status_code"), "ApiError should have status code"
+        assert hasattr(result, "http_status"), "ApiError should have status message"

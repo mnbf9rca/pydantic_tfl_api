@@ -1,7 +1,8 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .PathAttribute import PathAttribute
 from .SkyDirectionDescriptionEnum import SkyDirectionDescriptionEnum
 from .TrackTypeEnum import TrackTypeEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class InstructionStep(BaseModel):

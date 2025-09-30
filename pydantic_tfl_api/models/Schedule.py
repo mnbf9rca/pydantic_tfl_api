@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .KnownJourney import KnownJourney
 from .Period import Period
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Schedule(BaseModel):

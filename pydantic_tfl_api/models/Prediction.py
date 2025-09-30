@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .PredictionTiming import PredictionTiming
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Prediction(BaseModel):

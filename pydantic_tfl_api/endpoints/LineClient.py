@@ -1,6 +1,19 @@
-from .LineClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
-from ..models import DisruptionArray, LineArray, ModeArray, ObjectResponse, PredictionArray, RouteSearchResponse, RouteSequence, StatusSeveritiesArray, StopPointArray, StringsArray, TimetableResponse
+from ..core import ApiError, Client, ResponseModel
+from ..models import (
+    DisruptionArray,
+    LineArray,
+    ModeArray,
+    ObjectResponse,
+    PredictionArray,
+    RouteSearchResponse,
+    RouteSequence,
+    StatusSeveritiesArray,
+    StopPointArray,
+    StringsArray,
+    TimetableResponse,
+)
+from .LineClient_config import base_url, endpoints
+
 
 class LineClient(Client):
     def MetaModes(self, ) -> ResponseModel[ModeArray] | ApiError:
@@ -97,7 +110,7 @@ class LineClient(Client):
 
 
   Parameters:
-    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByQueryServiceTypes'], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -112,7 +125,7 @@ class LineClient(Client):
 
   Parameters:
     `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
-    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_LineRoutesByIdsByPathIdsQueryServiceTypes'], params=[ids], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -127,7 +140,7 @@ class LineClient(Client):
 
   Parameters:
     `modes`: str - A comma-separated list of modes e.g. tube,dlr. Example: `tube`
-    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteByModeByPathModesQueryServiceTypes'], params=[modes], endpoint_args={ 'serviceTypes': serviceTypes })
 
@@ -143,8 +156,8 @@ class LineClient(Client):
   Parameters:
     `id`: str - A single line id e.g. victoria. Example: `victoria`
     `direction`: str - The direction of travel. Can be inbound or outbound.. Example: `inbound`
-    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
-    `excludeCrowding`: bool - That excludes crowding from line disruptions. Can be true or false.. 
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
+    `excludeCrowding`: bool - That excludes crowding from line disruptions. Can be true or false..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding'], params=[id, direction], endpoint_args={ 'serviceTypes': serviceTypes, 'excludeCrowding': excludeCrowding })
 
@@ -161,7 +174,7 @@ class LineClient(Client):
     `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
     `startDate`: str - Format - date-time (as date-time in RFC3339). Start date for start of the period. Example: `2024-03-01`
     `endDate`: str - Format - date-time (as date-time in RFC3339). End date for the period that the disruption will fall within to be included in the results. Example: `2024-03-31`
-    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByPathIdsPathStartDatePathEndDateQueryDetail'], params=[ids, startDate, endDate], endpoint_args={ 'detail': detail })
 
@@ -176,7 +189,7 @@ class LineClient(Client):
 
   Parameters:
     `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
-    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByIdsByPathIdsQueryDetail'], params=[ids], endpoint_args={ 'detail': detail })
 
@@ -191,8 +204,8 @@ class LineClient(Client):
 
   Parameters:
     `query`: str - Search term e.g victoria. Example: `victoria`
-    `modes`: list - Optionally filter by the specified modes. 
-    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified. 
+    `modes`: list - Optionally filter by the specified modes.
+    `serviceTypes`: str - A comma seperated list of service types to filter on. Supported values: Regular, Night. Defaulted to 'Regular' if not specified.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_SearchByPathQueryQueryModesQueryServiceTypes'], params=[query], endpoint_args={ 'modes': modes, 'serviceTypes': serviceTypes })
 
@@ -221,8 +234,8 @@ class LineClient(Client):
 
   Parameters:
     `modes`: str - A comma-separated list of modes to filter by. e.g. tube,dlr. Example: `tube`
-    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes. 
-    `severityLevel`: str - If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level.. 
+    `detail`: bool - Include details of the disruptions that are causing the line status including the affected stops and routes.
+    `severityLevel`: str - If specified, ensures that only those line status(es) are returned within the lines that have disruptions with the matching severity level..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StatusByModeByPathModesQueryDetailQuerySeverityLevel'], params=[modes], endpoint_args={ 'detail': detail, 'severityLevel': severityLevel })
 
@@ -237,7 +250,7 @@ class LineClient(Client):
 
   Parameters:
     `id`: str - A single line id e.g. victoria. Example: `victoria`
-    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail line is requested, this flag will filter the national rail stations so that only those operated by TfL are returned. 
+    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail line is requested, this flag will filter the national rail stations so that only those operated by TfL are returned.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_StopPointsByPathIdQueryTflOperatedNationalRailStationsOnly'], params=[id], endpoint_args={ 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
@@ -312,8 +325,8 @@ class LineClient(Client):
   Parameters:
     `ids`: str - A comma-separated list of line ids e.g. victoria,circle,N133. Max. approx. 20 ids.. Example: `victoria`
     `stopPointId`: str - Optional. Id of stop to get arrival predictions for (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUVIC`
-    `direction`: str - Optional. The direction of travel. Can be inbound or outbound or all. If left blank, and destinationStopId is set, will default to all. 
-    `destinationStationId`: str - Optional. Id of destination stop. 
+    `direction`: str - Optional. The direction of travel. Can be inbound or outbound or all. If left blank, and destinationStopId is set, will default to all.
+    `destinationStationId`: str - Optional. Id of destination stop.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Line_ArrivalsWithStopPointByPathIdsPathStopPointIdQueryDirectionQueryDestina'], params=[ids, stopPointId], endpoint_args={ 'direction': direction, 'destinationStationId': destinationStationId })
 

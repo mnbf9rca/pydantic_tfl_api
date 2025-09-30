@@ -1,9 +1,10 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Journey import Journey
 from .JourneyPlannerCycleHireDockingStationData import JourneyPlannerCycleHireDockingStationData
 from .JourneyVector import JourneyVector
 from .Line import Line
 from .SearchCriteria import SearchCriteria
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class ItineraryResult(BaseModel):

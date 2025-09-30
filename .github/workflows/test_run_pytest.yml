@@ -17,11 +17,11 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13"]
         pydantic-version: ["2.8.2", "latest"]
         include:
           # Test minimum supported versions
-          - python-version: "3.10"
+          - python-version: "3.11"
             pydantic-version: "2.8.2"
             test-type: "minimum"
           # Test latest versions

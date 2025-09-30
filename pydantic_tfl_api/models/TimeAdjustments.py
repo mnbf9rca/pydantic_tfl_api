@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .TimeAdjustment import TimeAdjustment
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class TimeAdjustments(BaseModel):

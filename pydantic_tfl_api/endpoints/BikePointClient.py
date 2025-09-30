@@ -1,6 +1,7 @@
-from .BikePointClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import Place, PlaceArray
+from .BikePointClient_config import base_url, endpoints
+
 
 class BikePointClient(Client):
     def GetAll(self, ) -> ResponseModel[PlaceArray] | ApiError:

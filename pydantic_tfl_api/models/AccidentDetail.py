@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Casualty import Casualty
 from .Vehicle import Vehicle
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class AccidentDetail(BaseModel):

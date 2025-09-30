@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Identifier import Identifier
 from .JpElevation import JpElevation
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Path(BaseModel):

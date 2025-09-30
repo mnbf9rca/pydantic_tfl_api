@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .AdditionalProperties import AdditionalProperties
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Place(BaseModel):

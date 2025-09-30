@@ -1,7 +1,8 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Crowding import Crowding
 from .RouteTypeEnum import RouteTypeEnum
 from .StatusEnum import StatusEnum
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Identifier(BaseModel):

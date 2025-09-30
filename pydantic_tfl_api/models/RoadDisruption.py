@@ -1,10 +1,11 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .DbGeography import DbGeography
 from .RoadDisruptionImpactArea import RoadDisruptionImpactArea
 from .RoadDisruptionLine import RoadDisruptionLine
 from .RoadDisruptionSchedule import RoadDisruptionSchedule
 from .RoadProject import RoadProject
 from .Street import Street
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class RoadDisruption(BaseModel):

@@ -1,6 +1,7 @@
-from .VehicleClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import PredictionArray
+from .VehicleClient_config import base_url, endpoints
+
 
 class VehicleClient(Client):
     def GetByPathIds(self, ids: str) -> ResponseModel[PredictionArray] | ApiError:

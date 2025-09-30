@@ -1,6 +1,7 @@
-from .SearchClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import SearchResponse, StringsArray
+from .SearchClient_config import base_url, endpoints
+
 
 class SearchClient(Client):
     def GetByQueryQuery(self, query: str) -> ResponseModel[SearchResponse] | ApiError:

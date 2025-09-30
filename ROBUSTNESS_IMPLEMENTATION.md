@@ -13,6 +13,7 @@ This document tracks the implementation of robustness improvements for pydantic-
 ✅ **Phase 1**: Package Manager Migration (100%) - UV migration complete
 ✅ **Phase 2**: Project Structure Reorganization (100%) - Scripts moved to proper locations
 ✅ **Phase 2.5**: Build Script Quality Evaluation (100%) - Scripts validated and improved
+✅ **Phase 3.5**: Build System Refactoring (100%) - Complete modular architecture with comprehensive tests
 ✅ **Phase 4**: Pydantic v2 Migration Completion (100%) - Full v2 compatibility with optimized code generation
 ✅ **Phase 6**: Testing Enhancements (100%) - Comprehensive test suite and mappings modernization
 
@@ -32,6 +33,35 @@ This document tracks the implementation of robustness improvements for pydantic-
 
 **Dependencies**: Phase 1
 **Blockers**: None
+
+---
+
+### Phase 3.5: Build System Refactoring
+
+**Status**: ✅ Complete
+**Priority**: High
+
+- [x] Transform monolithic `scripts/build_models.py` (1598 lines) into modular architecture
+- [x] Create 6 specialized classes: ModelBuilder, DependencyResolver, SpecProcessor, FileManager, ClientGenerator, BuildCoordinator
+- [x] Implement comprehensive test suite (143 test cases) covering all components
+- [x] Add regression tests for critical build output issues
+- [x] Achieve 100% functional equivalence validation with production baseline
+- [x] Fix Python 3.10+ UnionType subscriptability errors
+- [x] Resolve missing array model generation (ArrivalDepartureArray, BikePointOccupancyArray, etc.)
+- [x] Correct method name casing and filename sanitization issues
+- [x] Modern Python typing patterns (`list[Type]`, `X | Y` syntax)
+- [x] Infrastructure separation (core vs generated code)
+
+**Dependencies**: Phase 2.5
+**Blockers**: None
+**Completed**: 2025-09-29 via PR #122
+
+**Key Benefits**:
+- **Maintainable Architecture**: Clear separation of concerns across 6 modular classes
+- **Comprehensive Testing**: 143 tests prevent regressions and ensure reliability
+- **Validated Quality**: Exhaustive comparison analysis confirms 100% functional equivalence
+- **Modern Standards**: Python 3.10+ typing, proper error handling, clean code structure
+- **Future-Ready**: Solid foundation for Phase 8 code generation enhancements
 
 ---
 
@@ -229,6 +259,7 @@ This document tracks the implementation of robustness improvements for pydantic-
 | 2. Project Structure         | ✅ Complete    | High     | 100%       |
 | 2.5. Build Script Evaluation | ✅ Complete    | High     | 100%       |
 | 3. Dependency Management     | 🔴 Not Started | Medium   | 0%         |
+| 3.5. Build System Refactoring| ✅ Complete    | High     | 100%       |
 | 4. Pydantic v2 Completion    | ✅ Complete    | High     | 100%       |
 | 5. Build Automation          | 🟡 Partial     | High     | 10%        |
 | 6. Testing Enhancements      | ✅ Complete    | High     | 100%       |
@@ -237,7 +268,7 @@ This document tracks the implementation of robustness improvements for pydantic-
 | 9. Documentation             | 🔴 Not Started | Low      | 0%         |
 | 10. Monitoring               | 🔴 Not Started | Low      | 0%         |
 
-**Overall Progress**: 61%
+**Overall Progress**: 70%
 
 ---
 
@@ -251,6 +282,17 @@ This document tracks the implementation of robustness improvements for pydantic-
 - ✅ `/scripts/mapping_loader.py` - Modern mapping loader
 - ✅ `/tests/test_mappings_schema.py` - Schema-based tests
 - ✅ `/tests/test_mappings_compatibility.py` - Backward compatibility tests
+- ✅ `/scripts/build_system/` - Modular build system directory
+  - `/scripts/build_system/model_builder.py` - Pydantic model creation from OpenAPI schemas
+  - `/scripts/build_system/dependency_resolver.py` - Topological sorting and circular dependency detection
+  - `/scripts/build_system/spec_processor.py` - OpenAPI specification loading and processing
+  - `/scripts/build_system/file_manager.py` - File I/O operations with proper formatting
+  - `/scripts/build_system/client_generator.py` - API client class generation
+  - `/scripts/build_system/build_coordinator.py` - Complete build workflow orchestration
+  - `/scripts/build_system/utilities.py` - Shared utility functions
+- ✅ `/tests/test_build_system/` - Comprehensive test suite (143 tests)
+  - Individual test files for each modular component
+  - Integration tests and regression tests
 
 ### Removed/Replaced
 
@@ -259,12 +301,12 @@ This document tracks the implementation of robustness improvements for pydantic-
 
 ### Modified
 
-- ✅ `/scripts/build_models.py` - Updated to use new mapping loader
+- ✅ `/scripts/build_models.py` - Refactored from 1598-line monolith to use new modular architecture
 - ✅ `/tests/test_build_models.py` - Refactored for code quality
+- ✅ `/tests/test_build_integration.py` - Enhanced integration testing with comprehensive validation
 
 ### To Be Created
 
-- `/scripts/build_models.py` - Model generation script (moved from external)
 - `/.github/workflows/update_specs.yml` - Automated spec updates
 - `/CONTRIBUTING.md` - Contribution guidelines
 

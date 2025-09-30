@@ -1,159 +1,261 @@
+---
+config:
+  class:
+    hideEmptyMembersBox: true
+---
 classDiagram
-    AccidentDetailArray --> AccidentDetail
-    AccidentDetail --> Casualty
-    AccidentDetail --> Vehicle
-    ActiveServiceTypesArray --> ActiveServiceType
+    %% API Clients
+    class AccidentStatsClient{
+        <<Client>>
+    }
+    class AirQualityClient{
+        <<Client>>
+    }
+    class BikePointClient{
+        <<Client>>
+    }
+    class CrowdingClient{
+        <<Client>>
+    }
+    class JourneyClient{
+        <<Client>>
+    }
+    class LiftDisruptionsClient{
+        <<Client>>
+    }
+    class LineClient{
+        <<Client>>
+    }
+    class ModeClient{
+        <<Client>>
+    }
+    class OccupancyClient{
+        <<Client>>
+    }
+    class PlaceClient{
+        <<Client>>
+    }
+    class RoadClient{
+        <<Client>>
+    }
+    class SearchClient{
+        <<Client>>
+    }
+    class StopPointClient{
+        <<Client>>
+    }
+    class VehicleClient{
+        <<Client>>
+    }
+
+    %% API Endpoint -> Response mappings (dotted)
+    AccidentStatsClient ..> AccidentDetailArray : returns
+    AirQualityClient ..> LondonAirForecast : returns
+    BikePointClient ..> Place : returns
+    BikePointClient ..> PlaceArray : returns
+    CrowdingClient ..> GenericResponseModel : returns
+    JourneyClient ..> ItineraryResult : returns
+    JourneyClient ..> ModeArray : returns
+    JourneyClient ..> ObjectResponse : returns
+    LiftDisruptionsClient ..> LiftDisruptionsArray : returns
+    LineClient ..> DisruptionArray : returns
+    LineClient ..> LineArray : returns
+    LineClient ..> ModeArray : returns
+    LineClient ..> ObjectResponse : returns
+    LineClient ..> PredictionArray : returns
+    LineClient ..> RouteSearchResponse : returns
+    LineClient ..> RouteSequence : returns
+    LineClient ..> StatusSeveritiesArray : returns
+    LineClient ..> StopPointArray : returns
+    LineClient ..> StringsArray : returns
+    LineClient ..> TimetableResponse : returns
+    ModeClient ..> ActiveServiceTypesArray : returns
+    ModeClient ..> PredictionArray : returns
+    OccupancyClient ..> BikePointOccupancyArray : returns
+    OccupancyClient ..> ChargeConnectorOccupancyArray : returns
+    OccupancyClient ..> GenericResponseModel : returns
+    PlaceClient ..> Object : returns
+    PlaceClient ..> ObjectResponse : returns
+    PlaceClient ..> PlaceArray : returns
+    PlaceClient ..> PlaceCategoryArray : returns
+    PlaceClient ..> StopPointArray : returns
+    RoadClient ..> Object : returns
+    RoadClient ..> RoadCorridorsArray : returns
+    RoadClient ..> RoadDisruption : returns
+    RoadClient ..> RoadDisruptionsArray : returns
+    RoadClient ..> StatusSeveritiesArray : returns
+    RoadClient ..> StringsArray : returns
+    SearchClient ..> SearchResponse : returns
+    SearchClient ..> StringsArray : returns
+    StopPointClient ..> ArrivalDepartureArray : returns
+    StopPointClient ..> DisruptedPointArray : returns
+    StopPointClient ..> GenericResponseModel : returns
+    StopPointClient ..> LineServiceTypeArray : returns
+    StopPointClient ..> ModeArray : returns
+    StopPointClient ..> Object : returns
+    StopPointClient ..> PlaceArray : returns
+    StopPointClient ..> PlaceCategoryArray : returns
+    StopPointClient ..> PredictionArray : returns
+    StopPointClient ..> SearchResponse : returns
+    StopPointClient ..> StopPointArray : returns
+    StopPointClient ..> StopPointRouteSectionArray : returns
+    StopPointClient ..> StopPointsResponse : returns
+    VehicleClient ..> PredictionArray : returns
+
+    %% Model -> Model dependencies (solid)
     class ActiveServiceType
-    ArrivalDepartureArray --> ArrivalDeparture
-    ArrivalDeparture --> PredictionTiming
-    BikePointOccupancyArray --> BikePointOccupancy
-    class BikePointOccupancy
-    CarParkOccupancy --> Bay
+    ActiveServiceTypesArray --> ActiveServiceType : contains
+    class AdditionalProperties
     class Bay
+    class BikePointOccupancy
+    BikePointOccupancyArray --> BikePointOccupancy : contains
+    CarParkOccupancy --> Bay : contains
     class Casualty
-    ChargeConnectorOccupancyArray --> ChargeConnectorOccupancy
     class ChargeConnectorOccupancy
-    DisruptedPointArray --> DisruptedPoint
+    ChargeConnectorOccupancyArray --> ChargeConnectorOccupancy : contains
+    class DbGeographyWellKnownValue
+    DbGeography --> DbGeographyWellKnownValue : contains
+    class DisambiguationOption
+    Disambiguation --> DisambiguationOption : contains
     class DisruptedPoint
-    DisruptionArray --> Disruption
-    class GenericResponseModel
-    ItineraryResult --> Journey
-    ItineraryResult --> JourneyPlannerCycleHireDockingStationData
-    ItineraryResult --> JourneyVector
-    ItineraryResult --> Line
-    ItineraryResult --> SearchCriteria
-    Journey --> JourneyFare
-    Journey --> Leg
-    JourneyFare --> Fare
-    JourneyFare --> FareCaveat
-    Fare --> FareTap
+    DisruptedPointArray --> DisruptedPoint : contains
     class FareCaveat
-    FareTap --> FareTapDetails
     class FareTapDetails
+    FareTap --> FareTapDetails : contains
+    Fare --> FareTap : contains
+    class Interval
+    JourneyFare --> Fare : contains
+    JourneyFare --> FareCaveat : contains
     class JourneyPlannerCycleHireDockingStationData
     class JourneyVector
-    Leg --> Disruption
-    Leg --> Identifier
-    Leg --> Instruction
-    Leg --> Obstacle
-    Leg --> Path
-    Leg --> PlannedWork
-    Leg --> Point
-    Leg --> RouteOption
-    Instruction --> InstructionStep
-    InstructionStep --> PathAttribute
-    LiftDisruptionsArray --> LiftDisruption
+    class JpElevation
+    class KnownJourney
     class LiftDisruption
-    LineArray --> Line
-    Line --> Crowding
-    Line --> Disruption
-    Line --> LineServiceTypeInfo
-    Line --> LineStatus
-    Line --> MatchedRoute
-    LineServiceTypeArray --> LineServiceType
-    LineServiceType --> LineSpecificServiceType
-    LineSpecificServiceType --> LineServiceTypeInfo
+    LiftDisruptionsArray --> LiftDisruption : contains
+    class LineGroup
+    class LineModeGroup
+    class LineRouteSection
     class LineServiceTypeInfo
-    LineStatus --> Disruption
-    LineStatus --> ValidityPeriod
-    Disruption --> RouteSection
-    Disruption --> StopPoint
+    LineSpecificServiceType --> LineServiceTypeInfo : contains
+    LineServiceType --> LineSpecificServiceType : contains
+    LineServiceTypeArray --> LineServiceType : contains
     class LondonAirForecast
     class MatchedRoute
-    ModeArray --> Mode
+    class MatchedRouteSections
     class Mode
+    ModeArray --> Mode : contains
     class Object
     class ObjectResponse
     class Obstacle
-    Path --> Identifier
-    Path --> JpElevation
-    class JpElevation
+    class OrderedRoute
+    class PassengerFlow
     class PathAttribute
-    PlaceArray --> Place
-    PlaceCategoryArray --> PlaceCategory
+    InstructionStep --> PathAttribute : contains
+    Instruction --> InstructionStep : contains
+    class PlaceCategory
+    PlaceCategoryArray --> PlaceCategory : contains
     class PlannedWork
     class Point
-    PredictionArray --> Prediction
-    Prediction --> PredictionTiming
     class PredictionTiming
-    RoadCorridorsArray --> RoadCorridor
+    ArrivalDeparture --> PredictionTiming : contains
+    ArrivalDepartureArray --> ArrivalDeparture : contains
+    Prediction --> PredictionTiming : contains
+    PredictionArray --> Prediction : contains
     class RoadCorridor
-    RoadDisruptionsArray --> RoadDisruption
-    RoadDisruption --> DbGeography
-    RoadDisruption --> RoadDisruptionImpactArea
-    RoadDisruption --> RoadDisruptionLine
-    RoadDisruption --> RoadDisruptionSchedule
-    RoadDisruption --> RoadProject
-    RoadDisruption --> Street
-    RoadDisruptionImpactArea --> DbGeography
-    RoadDisruptionLine --> DbGeography
-    DbGeography --> DbGeographyWellKnownValue
-    class DbGeographyWellKnownValue
+    RoadCorridorsArray --> RoadCorridor : contains
+    RoadDisruptionImpactArea --> DbGeography : contains
+    RoadDisruptionLine --> DbGeography : contains
     class RoadDisruptionSchedule
     class RoadProject
-    RouteOption --> Identifier
-    RouteSearchResponse --> RouteSearchMatch
-    RouteSearchMatch --> LineRouteSection
-    RouteSearchMatch --> MatchedRouteSections
-    RouteSearchMatch --> MatchedStop
-    class LineRouteSection
-    class MatchedRouteSections
-    RouteSection --> RouteSectionNaptanEntrySequence
-    RouteSectionNaptanEntrySequence --> StopPoint
-    RouteSequence --> MatchedStop
-    RouteSequence --> OrderedRoute
-    RouteSequence --> StopPointSequence
-    class OrderedRoute
-    SearchCriteria --> TimeAdjustments
-    SearchResponse --> SearchMatch
     class SearchMatch
-    StatusSeveritiesArray --> StatusSeverity
-    class StatusSeverity
-    StopPointArray --> StopPoint
-    StopPointCategoryArray --> PlaceCategory
-    class PlaceCategory
-    StopPointRouteSectionArray --> StopPointRouteSection
-    class StopPointRouteSection
-    StopPointSequence --> MatchedStop
-    StopPointsResponse --> StopPoint
-    StopPoint --> AdditionalProperties
-    StopPoint --> Identifier
-    StopPoint --> LineGroup
-    StopPoint --> LineModeGroup
-    StopPoint --> Place
-    class LineGroup
-    class LineModeGroup
-    Street --> StreetSegment
-    class StreetSegment
-    class StringsArray
-    TimeAdjustments --> TimeAdjustment
-    class TimeAdjustment
-    TimetableResponse --> Disambiguation
-    TimetableResponse --> MatchedStop
-    TimetableResponse --> Timetable
-    Disambiguation --> DisambiguationOption
-    class DisambiguationOption
-    MatchedStop --> Identifier
-    Identifier --> Crowding
-    Crowding --> PassengerFlow
-    Crowding --> TrainLoading
-    class PassengerFlow
-    Timetable --> TimetableRoute
-    TimetableRoute --> Schedule
-    TimetableRoute --> StationInterval
-    Schedule --> KnownJourney
-    Schedule --> Period
-    class KnownJourney
-    Period --> ServiceFrequency
-    Period --> TwentyFourHourClockTime
+    SearchResponse --> SearchMatch : contains
     class ServiceFrequency
-    StationInterval --> Interval
-    class Interval
+    StationInterval --> Interval : contains
+    class StatusSeverity
+    StatusSeveritiesArray --> StatusSeverity : contains
+    class StopPointRouteSection
+    StopPointRouteSectionArray --> StopPointRouteSection : contains
+    class StreetSegment
+    Street --> StreetSegment : contains
+    RoadDisruption --> DbGeography : contains
+    RoadDisruption --> RoadDisruptionImpactArea : contains
+    RoadDisruption --> RoadDisruptionLine : contains
+    RoadDisruption --> RoadDisruptionSchedule : contains
+    RoadDisruption --> RoadProject : contains
+    RoadDisruption --> Street : contains
+    RoadDisruptionsArray --> RoadDisruption : contains
+    class StringsArray
+    class TimeAdjustment
+    TimeAdjustments --> TimeAdjustment : contains
+    SearchCriteria --> TimeAdjustments : contains
     class TrainLoading
+    Crowding --> PassengerFlow : contains
+    Crowding --> TrainLoading : contains
+    Identifier --> Crowding : contains
+    MatchedStop --> Identifier : contains
+    Path --> Identifier : contains
+    Path --> JpElevation : contains
+    RouteOption --> Identifier : contains
+    RouteSearchMatch --> LineRouteSection : contains
+    RouteSearchMatch --> MatchedRouteSections : contains
+    RouteSearchMatch --> MatchedStop : contains
+    RouteSearchResponse --> RouteSearchMatch : contains
+    StopPointSequence --> MatchedStop : contains
+    RouteSequence --> MatchedStop : contains
+    RouteSequence --> OrderedRoute : contains
+    RouteSequence --> StopPointSequence : contains
     class TwentyFourHourClockTime
+    Period --> ServiceFrequency : contains
+    Period --> TwentyFourHourClockTime : contains
+    Schedule --> KnownJourney : contains
+    Schedule --> Period : contains
+    TimetableRoute --> Schedule : contains
+    TimetableRoute --> StationInterval : contains
+    Timetable --> TimetableRoute : contains
+    TimetableResponse --> Disambiguation : contains
+    TimetableResponse --> MatchedStop : contains
+    TimetableResponse --> Timetable : contains
     class ValidityPeriod
     class Vehicle
+    AccidentDetail --> Casualty : contains
+    AccidentDetail --> Vehicle : contains
+    AccidentDetailArray --> AccidentDetail : contains
     class VehicleMatch
-    class AdditionalProperties
-    Place --> AdditionalProperties
-    Place --> Place
+    Disruption --> RouteSection : contains
+    Disruption --> StopPoint : contains
+    DisruptionArray --> Disruption : contains
+    ItineraryResult --> Journey : contains
+    ItineraryResult --> JourneyPlannerCycleHireDockingStationData : contains
+    ItineraryResult --> JourneyVector : contains
+    ItineraryResult --> Line : contains
+    ItineraryResult --> SearchCriteria : contains
+    Journey --> JourneyFare : contains
+    Journey --> Leg : contains
+    Leg --> Disruption : contains
+    Leg --> Identifier : contains
+    Leg --> Instruction : contains
+    Leg --> Obstacle : contains
+    Leg --> Path : contains
+    Leg --> PlannedWork : contains
+    Leg --> Point : contains
+    Leg --> RouteOption : contains
+    Line --> Crowding : contains
+    Line --> Disruption : contains
+    Line --> LineServiceTypeInfo : contains
+    Line --> LineStatus : contains
+    Line --> MatchedRoute : contains
+    LineArray --> Line : contains
+    LineStatus --> Disruption : contains
+    LineStatus --> ValidityPeriod : contains
+    Place --> AdditionalProperties : contains
+    Place --> Place : contains
+    PlaceArray --> Place : contains
+    RouteSection --> RouteSectionNaptanEntrySequence : contains
+    RouteSectionNaptanEntrySequence --> StopPoint : contains
+    StopPoint --> AdditionalProperties : contains
+    StopPoint --> Identifier : contains
+    StopPoint --> LineGroup : contains
+    StopPoint --> LineModeGroup : contains
+    StopPoint --> Place : contains
+    StopPointArray --> StopPoint : contains
+    StopPointsResponse --> StopPoint : contains

@@ -1,9 +1,9 @@
-from .CrowdingClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
-from ..models import GenericResponseModel
+from ..core import ApiError, Client, GenericResponseModel, ResponseModel
+from .CrowdingClient_config import base_url, endpoints
+
 
 class CrowdingClient(Client):
-    def naptan(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:
+    def Naptan(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:
         '''
         Returns crowding information for Naptan
 
@@ -17,7 +17,7 @@ class CrowdingClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['naptan'], params=[Naptan], endpoint_args=None)
 
-    def dayofweek(self, Naptan: str, DayOfWeek: str) -> ResponseModel[GenericResponseModel] | ApiError:
+    def Dayofweek(self, Naptan: str, DayOfWeek: str) -> ResponseModel[GenericResponseModel] | ApiError:
         '''
         Returns crowding information for Naptan for Day of Week
 
@@ -32,7 +32,7 @@ class CrowdingClient(Client):
         '''
         return self._send_request_and_deserialize(base_url, endpoints['dayofweek'], params=[Naptan, DayOfWeek], endpoint_args=None)
 
-    def live(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:
+    def Live(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:
         '''
         Returns live crowding information for Naptan
 

@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Bay import Bay
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class CarParkOccupancy(BaseModel):

@@ -1,6 +1,7 @@
-from .AirQualityClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import LondonAirForecast
+from .AirQualityClient_config import base_url, endpoints
+
 
 class AirQualityClient(Client):
     def Get(self, ) -> ResponseModel[LondonAirForecast] | ApiError:

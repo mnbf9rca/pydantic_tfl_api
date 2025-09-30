@@ -6,16 +6,16 @@ for existing code that depends on the legacy mappings format.
 """
 
 
-
 class TestMappingsBackwardCompatibility:
     """Test backward compatibility of the new mapping system."""
 
-    def test_load_tfl_mappings_function_exists(self):
+    def test_load_tfl_mappings_function_exists(self) -> None:
         """Test that the load_tfl_mappings function can be imported."""
         from scripts.mapping_loader import load_tfl_mappings
+
         assert callable(load_tfl_mappings)
 
-    def test_legacy_format_structure(self):
+    def test_legacy_format_structure(self) -> None:
         """Test that the legacy format maintains expected structure."""
         from scripts.mapping_loader import load_tfl_mappings
 
@@ -26,8 +26,17 @@ class TestMappingsBackwardCompatibility:
 
         # Should have expected APIs
         expected_apis = [
-            "AccidentStats", "AirQuality", "BikePoint", "Journey",
-            "Line", "Mode", "Place", "Road", "Search", "StopPoint", "Vehicle"
+            "AccidentStats",
+            "AirQuality",
+            "BikePoint",
+            "Journey",
+            "Line",
+            "Mode",
+            "Place",
+            "Road",
+            "Search",
+            "StopPoint",
+            "Vehicle",
         ]
 
         # Validate all expected APIs exist
@@ -38,7 +47,7 @@ class TestMappingsBackwardCompatibility:
         non_dict_apis = [api for api in expected_apis if not isinstance(tfl_mappings[api], dict)]
         assert not non_dict_apis, f"APIs should be dicts but aren't: {non_dict_apis}"
 
-    def test_build_models_compatibility(self):
+    def test_build_models_compatibility(self) -> None:
         """Test that build_models.py can still import and use mappings."""
         # This would be the typical usage in build_models.py
         from scripts.mapping_loader import load_tfl_mappings
@@ -64,7 +73,7 @@ class TestMappingsBackwardCompatibility:
         empty_values = [v for v in line_mappings.values() if len(v.strip()) == 0]
         assert not empty_values, f"Empty values found: {empty_values}"
 
-    def test_mapping_loader_api_methods(self):
+    def test_mapping_loader_api_methods(self) -> None:
         """Test that the MappingLoader class provides expected API methods."""
         from scripts.mapping_loader import MappingLoader
 
@@ -84,7 +93,7 @@ class TestMappingsBackwardCompatibility:
         assert "last_updated" in metadata
         assert "source" in metadata
 
-    def test_validation_works(self):
+    def test_validation_works(self) -> None:
         """Test that schema validation is functional."""
         from scripts.mapping_loader import MappingLoader
 

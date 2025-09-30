@@ -1,5 +1,6 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .StreetSegment import StreetSegment
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class Street(BaseModel):

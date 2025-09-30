@@ -16,7 +16,7 @@ class TfLAPIFetcher:
     BASE_URL = "https://api-portal.tfl.gov.uk"
     API_VERSION = "2022-04-01-preview"
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.Session()
 
     def get_all_apis(self) -> list[dict[str, Any]]:
@@ -33,10 +33,7 @@ class TfLAPIFetcher:
     def get_api_details(self, api_id: str) -> dict[str, Any]:
         """Get detailed information about a specific API."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}"
-        params = {
-            "expandApiVersionSet": "true",
-            "api-version": self.API_VERSION
-        }
+        params = {"expandApiVersionSet": "true", "api-version": self.API_VERSION}
 
         response = self.session.get(url, params=params)
         response.raise_for_status()
@@ -46,10 +43,7 @@ class TfLAPIFetcher:
     def get_api_operations(self, api_id: str) -> list[dict[str, Any]]:
         """Get all operations for a specific API."""
         url = f"{self.BASE_URL}/developer/apis/{api_id}/operations"
-        params = {
-            "$top": "50",
-            "api-version": self.API_VERSION
-        }
+        params = {"$top": "50", "api-version": self.API_VERSION}
 
         response = self.session.get(url, params=params)
         response.raise_for_status()
@@ -93,17 +87,11 @@ class TfLAPIFetcher:
             "info": {
                 "title": api_details.get("name", api_id),
                 "description": api_details.get("description", f"APIs relating to {api_id} and similar services"),
-                "version": "1.0"
+                "version": "1.0",
             },
-            "servers": [
-                {
-                    "url": f"https://api.tfl.gov.uk/{api_details.get('path', api_id)}"
-                }
-            ],
+            "servers": [{"url": f"https://api.tfl.gov.uk/{api_details.get('path', api_id)}"}],
             "paths": {},
-            "components": {
-                "schemas": {}
-            }
+            "components": {"schemas": {}},
         }
 
         # Process each operation
@@ -127,17 +115,14 @@ class TfLAPIFetcher:
                 "summary": operation["name"],
                 "description": operation.get("description", ""),
                 "operationId": operation_id,
-                "responses": {}
+                "responses": {},
             }
 
             # Process responses
             if "responses" in op_details and op_details["responses"]:
                 for response in op_details["responses"]:
                     status_code = str(response.get("statusCode", 200))
-                    response_def = {
-                        "description": response.get("description", "OK"),
-                        "content": {}
-                    }
+                    response_def = {"description": response.get("description", "OK"), "content": {}}
 
                     # Process representations (different content types)
                     if "representations" in response:
@@ -171,7 +156,7 @@ class TfLAPIFetcher:
 
         return openapi_spec
 
-    def save_all_specs(self, output_dir: str = "specs"):
+    def save_all_specs(self, output_dir: str = "specs") -> None:
         """Download and save all API specifications."""
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)
@@ -192,7 +177,7 @@ class TfLAPIFetcher:
                 filename = f"{api_id}.json"
                 filepath = output_path / filename
 
-                with open(filepath, 'w', encoding='utf-8') as f:
+                with open(filepath, "w", encoding="utf-8") as f:
                     json.dump(spec, f, indent=2, ensure_ascii=False)
 
                 print(f"  Saved: {filepath}")
@@ -201,7 +186,7 @@ class TfLAPIFetcher:
                 print(f"  Error processing {api_name}: {e}")
 
 
-def main():
+def main() -> None:
     """Main function to demonstrate the API fetching."""
     fetcher = TfLAPIFetcher()
 
@@ -209,7 +194,9 @@ def main():
     print("Testing with Line API...")
     try:
         line_spec = fetcher.build_openapi_spec("Line")
-        print(f"Generated spec with {len(line_spec['paths'])} paths and {len(line_spec['components']['schemas'])} schemas")
+        print(
+            f"Generated spec with {len(line_spec['paths'])} paths and {len(line_spec['components']['schemas'])} schemas"
+        )
 
         # Save it
         with open("Line_test.json", "w") as f:

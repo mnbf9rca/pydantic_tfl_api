@@ -15,8 +15,8 @@ from .endpoints import (
     LiftDisruptionsClient
 )
 from . import models
+from .core import __version__
 
-__version__ = "1.2.3"
 __all__ = [
     'LineClient',
     'AirQualityClient',
@@ -32,5 +32,6 @@ __all__ = [
     'ModeClient',
     'StopPointClient',
     'LiftDisruptionsClient',
-    'models'
+    'models',
+    '__version__'
 ]

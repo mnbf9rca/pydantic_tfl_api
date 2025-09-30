@@ -36,7 +36,7 @@ if isinstance(tube_status_result, ApiError):
     print(f"Error getting tube status: {tube_status_result.message}")
 else:
     line_items = tube_status_result.content.root
-    print([f'The {line_item.name} line is {line_item.modeName}' for line_item in line_items])
+    print([f"The {line_item.name} line is {line_item.modeName}" for line_item in line_items])
 
 # Example 4: Complex data with error handling
 route_sequence_result = client.RouteSequenceByPathIdPathDirectionQueryServiceTypesQueryExcludeCrowding(

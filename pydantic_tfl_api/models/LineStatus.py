@@ -1,6 +1,7 @@
+from pydantic import BaseModel, ConfigDict, Field
+
 from .Disruption import Disruption
 from .ValidityPeriod import ValidityPeriod
-from pydantic import BaseModel, Field, ConfigDict
 
 
 class LineStatus(BaseModel):

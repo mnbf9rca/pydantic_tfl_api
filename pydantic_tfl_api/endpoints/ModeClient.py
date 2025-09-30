@@ -1,6 +1,7 @@
-from .ModeClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
+from ..core import ApiError, Client, ResponseModel
 from ..models import ActiveServiceTypesArray, PredictionArray
+from .ModeClient_config import base_url, endpoints
+
 
 class ModeClient(Client):
     def GetActiveServiceTypes(self, ) -> ResponseModel[ActiveServiceTypesArray] | ApiError:
@@ -29,7 +30,7 @@ class ModeClient(Client):
 
   Parameters:
     `mode`: str - A mode name e.g. tube, dlr. Example: `Tube`
-    `count`: int - Format - int32. A number of arrivals to return for each stop, -1 to return all available.. 
+    `count`: int - Format - int32. A number of arrivals to return for each stop, -1 to return all available..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['Mode_Arrivals'], params=[mode], endpoint_args={ 'count': count })
 

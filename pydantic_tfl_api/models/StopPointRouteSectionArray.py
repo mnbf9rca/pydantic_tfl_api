@@ -1,8 +1,8 @@
-from pydantic import RootModel, ConfigDict
-from typing import List
+from pydantic import ConfigDict, RootModel
+
 from .StopPointRouteSection import StopPointRouteSection
 
 
-class StopPointRouteSectionArray(RootModel[List[StopPointRouteSection]]):
+class StopPointRouteSectionArray(RootModel[list[StopPointRouteSection]]):
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,20 +1,19 @@
 [project]
 name = "pydantic-tfl-api"
-version = "1.2.3"
+version = "2.0.0"
 description = "A Pydantic-based wrapper for the TfL Unified API https://api-portal.tfl.gov.uk/. Not associated with or endorsed by TfL."
 authors = [
     {name = "Rob Aleck", email = "mnbf9rca@users.noreply.github.com"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 keywords = ["pydantic", "tfl", "tfl-api", "transport-for-london", "unified-api"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -29,8 +28,8 @@ Homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"
 Repository = "https://github.com/mnbf9rca/pydantic_tfl_api"
 Issues = "https://github.com/mnbf9rca/pydantic_tfl_api/issues"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black>=25.9.0",
     "pytest>=8.4.0",
     "pytest-asyncio>=1.2.0",
@@ -124,8 +123,7 @@ exclude = [
     "dist",
     "venv",
     ".venv",
-    "build_script",
-    "pydantic_tfl_api/",
+    "scripts/LEGACY_DO_NOT_USE_build_models.py",
 ]
 
 [tool.ruff.lint]
@@ -153,18 +151,25 @@ ignore = [
 "tests/*.py" = ["S101", "N801", "N999", "N802", "N803"]
 # Scripts can be more lenient
 "scripts/*.py" = ["N803", "N999"]
+# classes, models and fields match TfL API name
+"pydantic_tfl_api/models/*.py" = ["N802", "N803", "N999"]
+"pydantic_tfl_api/endpoints/*.py" = ["N802", "N803", "N999"]
+# import in topological sort order
+"pydantic_tfl_api/__init__.py" = ["I001"]
+"pydantic_tfl_api/endpoints/__init__.py" = ["I001"]
+"pydantic_tfl_api/models/__init__.py" = ["I001"]
 
 [tool.mypy]
 # Progressive typing - start with basic checks, can be made stricter over time
-python_version = "3.10"
+python_version = "3.11"
 warn_unused_configs = true
 show_error_codes = true
 pretty = true
 
 # Core safety checks (but not fully strict)
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-no_implicit_optional = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 # Allow some flexibility for complex Pydantic usage
@@ -172,15 +177,15 @@ disable_error_code = ["operator", "arg-type"]
 
 # Target specific directories for type checking
 files = [
-    "pydantic_tfl_api/core/",
     "scripts/",
     "tests/",
+    "pydantic_tfl_api/",
+    "infrastructure/",
 ]
 
 # Exclude auto-generated models and endpoints
 exclude = [
-    "pydantic_tfl_api/models/",
-    "pydantic_tfl_api/endpoints/",
+ "scripts/LEGACY_DO_NOT_USE_build_models.py"
 ]
 
 [[tool.mypy.overrides]]
@@ -192,7 +197,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.bumpversion]
-current_version = "1.2.3"
+current_version = "2.0.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

@@ -1,6 +1,20 @@
-from .StopPointClient_config import endpoints, base_url
-from ..core import ApiError, ResponseModel, Client
-from ..models import ArrivalDepartureArray, DisruptedPointArray, GenericResponseModel, LineServiceTypeArray, ModeArray, Object, PlaceArray, PlaceCategoryArray, PredictionArray, SearchResponse, StopPointArray, StopPointRouteSectionArray, StopPointsResponse
+from ..core import ApiError, Client, GenericResponseModel, ResponseModel
+from ..models import (
+    ArrivalDepartureArray,
+    DisruptedPointArray,
+    LineServiceTypeArray,
+    ModeArray,
+    Object,
+    PlaceArray,
+    PlaceCategoryArray,
+    PredictionArray,
+    SearchResponse,
+    StopPointArray,
+    StopPointRouteSectionArray,
+    StopPointsResponse,
+)
+from .StopPointClient_config import base_url, endpoints
+
 
 class StopPointClient(Client):
     def MetaCategories(self, ) -> ResponseModel[PlaceCategoryArray] | ApiError:
@@ -69,9 +83,8 @@ class StopPointClient(Client):
 
 
   Parameters:
-    `ids`: str - A comma-separated list of stop point ids (station naptan code e.g. 940GZZLUASL). Max. approx. 20 ids.
-            You can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name.. Example: `HUBWAT`
-    `includeCrowdingData`: bool - Include the crowding data (static). To Filter further use: /StopPoint/{ids}/Crowding/{line}. 
+    `ids`: str - A comma-separated list of stop point ids (station naptan code e.g. 940GZZLUASL). Max. approx. 20 ids. You can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name.. Example: `HUBWAT`
+    `includeCrowdingData`: bool - Include the crowding data (static). To Filter further use: /StopPoint/{ids}/Crowding/{line}.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByPathIdsQueryIncludeCrowdingData'], params=[ids], endpoint_args={ 'includeCrowdingData': includeCrowdingData })
 
@@ -116,8 +129,7 @@ class StopPointClient(Client):
 
 
   Parameters:
-    `types`: str - A comma-separated list of the types to return. Max. approx. 12 types. 
-            A list of valid stop types can be obtained from the StopPoint/meta/stoptypes endpoint.. Example: `TransportInterchange`
+    `types`: str - A comma-separated list of the types to return. Max. approx. 12 types. A list of valid stop types can be obtained from the StopPoint/meta/stoptypes endpoint.. Example: `TransportInterchange`
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByTypeByPathTypes'], params=[types], endpoint_args=None)
 
@@ -147,8 +159,8 @@ class StopPointClient(Client):
 
   Parameters:
     `id`: str - The Naptan id of the stop. Example: `910GSTJMSST`
-    `lineIds`: list - The lines which contain the given Naptan id (all lines relevant to the given stoppoint if empty). 
-    `modes`: list - The modes which the lines are relevant to (all if empty). 
+    `lineIds`: list - The lines which contain the given Naptan id (all lines relevant to the given stoppoint if empty).
+    `modes`: list - The modes which the lines are relevant to (all if empty).
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetServiceTypesByQueryIdQueryLineIdsQueryModes'], endpoint_args={ 'id': id, 'lineIds': lineIds, 'modes': modes })
 
@@ -223,7 +235,7 @@ class StopPointClient(Client):
 
   Parameters:
     `modes`: str - A comma-seperated list of modes e.g. tube,dlr. Example: `Tube`
-    `includeRouteBlockedStops`: bool - . 
+    `includeRouteBlockedStops`: bool - .
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByModeByPathModesQueryIncludeRouteBlockedStops'], params=[modes], endpoint_args={ 'includeRouteBlockedStops': includeRouteBlockedStops })
 
@@ -237,11 +249,10 @@ class StopPointClient(Client):
 
 
   Parameters:
-    `ids`: str - A comma-seperated list of stop point ids. Max. approx. 20 ids.
-            You can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name.. Example: `940GZZLUASL`
-    `getFamily`: bool - Specify true to return disruptions for entire family, or false to return disruptions for just this stop point. Defaults to false.. 
-    `includeRouteBlockedStops`: bool - . 
-    `flattenResponse`: bool - Specify true to associate all disruptions with parent stop point. (Only applicable when getFamily is true).. 
+    `ids`: str - A comma-seperated list of stop point ids. Max. approx. 20 ids. You can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name.. Example: `940GZZLUASL`
+    `getFamily`: bool - Specify true to return disruptions for entire family, or false to return disruptions for just this stop point. Defaults to false..
+    `includeRouteBlockedStops`: bool - .
+    `flattenResponse`: bool - Specify true to associate all disruptions with parent stop point. (Only applicable when getFamily is true)..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DisruptionByPathIdsQueryGetFamilyQueryIncludeRouteBlockedStopsQuer'], params=[ids], endpoint_args={ 'getFamily': getFamily, 'includeRouteBlockedStops': includeRouteBlockedStops, 'flattenResponse': flattenResponse })
 
@@ -257,7 +268,7 @@ class StopPointClient(Client):
   Parameters:
     `id`: str - Originating stop id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUASL`
     `toStopPointId`: str - Destination stop id (station naptan code e.g. 940GZZLUASL, you can use /StopPoint/Search/{query} endpoint to find a stop point id from a station name). Example: `940GZZLUHWY`
-    `lineId`: str - Optional line id filter e.g. victoria. 
+    `lineId`: str - Optional line id filter e.g. victoria.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_DirectionByPathIdPathToStopPointIdQueryLineId'], params=[id, toStopPointId], endpoint_args={ 'lineId': lineId })
 
@@ -274,11 +285,11 @@ class StopPointClient(Client):
     `lat`: float - Format - double. the latitude of the centre of the bounding circle. Example: `51.5`
     `lon`: float - Format - double. the longitude of the centre of the bounding circle. Example: `0.12`
     `stopTypes`: str - a list of stopTypes that should be returned (a list of valid stop types can be obtained from the StopPoint/meta/stoptypes endpoint). Example: `NaptanCoachBay`
-    `radius`: int - Format - int32. the radius of the bounding circle in metres (default : 200). 
-    `useStopPointHierarchy`: bool - Re-arrange the output into a parent/child hierarchy. 
-    `modes`: list - the list of modes to search (comma separated mode names e.g. tube,dlr). 
-    `categories`: list - an optional list of comma separated property categories to return in the StopPoint's property bag. If null or empty, all categories of property are returned. Pass the keyword "none" to return no properties (a valid list of categories can be obtained from the /StopPoint/Meta/categories endpoint). 
-    `returnLines`: bool - true to return the lines that each stop point serves as a nested resource. 
+    `radius`: int - Format - int32. the radius of the bounding circle in metres (default : 200).
+    `useStopPointHierarchy`: bool - Re-arrange the output into a parent/child hierarchy.
+    `modes`: list - the list of modes to search (comma separated mode names e.g. tube,dlr).
+    `categories`: list - an optional list of comma separated property categories to return in the StopPoint's property bag. If null or empty, all categories of property are returned. Pass the keyword "none" to return no properties (a valid list of categories can be obtained from the /StopPoint/Meta/categories endpoint).
+    `returnLines`: bool - true to return the lines that each stop point serves as a nested resource.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByGeoPointByQueryLatQueryLonQueryStopTypesQueryRadiusQueryUseSt'], endpoint_args={ 'lat': lat, 'lon': lon, 'stopTypes': stopTypes, 'radius': radius, 'useStopPointHierarchy': useStopPointHierarchy, 'modes': modes, 'categories': categories, 'returnLines': returnLines })
 
@@ -293,7 +304,7 @@ class StopPointClient(Client):
 
   Parameters:
     `modes`: str - A comma-seperated list of modes e.g. tube,dlr. Example: `Tube`
-    `page`: int - Format - int32. The data set page to return. Page 1 equates to the first 1000 stop points, page 2 equates to 1001-2000 etc. Must be entered for bus mode as data set is too large.. 
+    `page`: int - Format - int32. The data set page to return. Page 1 equates to the first 1000 stop points, page 2 equates to 1001-2000 etc. Must be entered for bus mode as data set is too large..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetByModeByPathModesQueryPage'], params=[modes], endpoint_args={ 'page': page })
 
@@ -308,13 +319,12 @@ class StopPointClient(Client):
 
   Parameters:
     `query`: str - The query string, case-insensitive. Leading and trailing wildcards are applied automatically.. Example: `Waterloo`
-    `modes`: list - An optional, parameter separated list of the modes to filter by. 
-    `faresOnly`: bool - True to only return stations in that have Fares data available for single fares to another station.. 
-    `maxResults`: int - Format - int32. An optional result limit, defaulting to and with a maximum of 50. Since children of the stop point heirarchy are returned for matches,
-            it is possible that the flattened result set will contain more than 50 items.. 
-    `lines`: list - An optional, parameter separated list of the lines to filter by. 
-    `includeHubs`: bool - If true, returns results including HUBs.. 
-    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned. 
+    `modes`: list - An optional, parameter separated list of the modes to filter by.
+    `faresOnly`: bool - True to only return stations in that have Fares data available for single fares to another station..
+    `maxResults`: int - Format - int32. An optional result limit, defaulting to and with a maximum of 50. Since children of the stop point heirarchy are returned for matches, it is possible that the flattened result set will contain more than 50 items..
+    `lines`: list - An optional, parameter separated list of the lines to filter by.
+    `includeHubs`: bool - If true, returns results including HUBs..
+    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByPathQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLines'], params=[query], endpoint_args={ 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
@@ -329,13 +339,12 @@ class StopPointClient(Client):
 
   Parameters:
     `query`: str - The query string, case-insensitive. Leading and trailing wildcards are applied automatically.. Example: `Waterloo`
-    `modes`: list - An optional, parameter separated list of the modes to filter by. 
-    `faresOnly`: bool - True to only return stations in that have Fares data available for single fares to another station.. 
-    `maxResults`: int - Format - int32. An optional result limit, defaulting to and with a maximum of 50. Since children of the stop point heirarchy are returned for matches,
-            it is possible that the flattened result set will contain more than 50 items.. 
-    `lines`: list - An optional, parameter separated list of the lines to filter by. 
-    `includeHubs`: bool - If true, returns results including HUBs.. 
-    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned. 
+    `modes`: list - An optional, parameter separated list of the modes to filter by.
+    `faresOnly`: bool - True to only return stations in that have Fares data available for single fares to another station..
+    `maxResults`: int - Format - int32. An optional result limit, defaulting to and with a maximum of 50. Since children of the stop point heirarchy are returned for matches, it is possible that the flattened result set will contain more than 50 items..
+    `lines`: list - An optional, parameter separated list of the lines to filter by.
+    `includeHubs`: bool - If true, returns results including HUBs..
+    `tflOperatedNationalRailStationsOnly`: bool - If the national-rail mode is included, this flag will filter the national rail stations so that only those operated by TfL are returned.
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_SearchByQueryQueryQueryModesQueryFaresOnlyQueryMaxResultsQueryLine'], endpoint_args={ 'query': query, 'modes': modes, 'faresOnly': faresOnly, 'maxResults': maxResults, 'lines': lines, 'includeHubs': includeHubs, 'tflOperatedNationalRailStationsOnly': tflOperatedNationalRailStationsOnly })
 
@@ -350,7 +359,7 @@ class StopPointClient(Client):
 
   Parameters:
     `id`: str - A 5-digit Countdown Bus Stop Code e.g. 73241, 50435, 56334.. Example: `73241`
-    `output`: str - If set to "web", a 302 redirect to relevant website bus stop page is returned. Valid values are : web. All other values are ignored.. 
+    `output`: str - If set to "web", a 302 redirect to relevant website bus stop page is returned. Valid values are : web. All other values are ignored..
         '''
         return self._send_request_and_deserialize(base_url, endpoints['StopPoint_GetBySmsByPathIdQueryOutput'], params=[id], endpoint_args={ 'output': output })
 
