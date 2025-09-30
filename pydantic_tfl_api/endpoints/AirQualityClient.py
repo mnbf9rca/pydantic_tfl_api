@@ -4,6 +4,8 @@ from .AirQualityClient_config import base_url, endpoints
 
 
 class AirQualityClient(Client):
+    """APIs relating to AirQuality and similar services"""
+
     def Get(self, ) -> ResponseModel[LondonAirForecast] | ApiError:
         '''
         Gets air quality data feed

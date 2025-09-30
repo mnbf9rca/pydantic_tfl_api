@@ -4,6 +4,8 @@ from .AccidentStatsClient_config import base_url, endpoints
 
 
 class AccidentStatsClient(Client):
+    """APIs relating to AccidentStats and similar services"""
+
     def Get(self, year: int) -> ResponseModel[AccidentDetailArray] | ApiError:
         '''
         Gets all accident details for accidents occuring in the specified year

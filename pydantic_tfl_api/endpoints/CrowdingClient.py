@@ -3,6 +3,8 @@ from .CrowdingClient_config import base_url, endpoints
 
 
 class CrowdingClient(Client):
+    """Information about crowding levels within Tfl Stations"""
+
     def Naptan(self, Naptan: str) -> ResponseModel[GenericResponseModel] | ApiError:
         '''
         Returns crowding information for Naptan

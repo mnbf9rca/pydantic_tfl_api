@@ -4,6 +4,8 @@ from .JourneyClient_config import base_url, endpoints
 
 
 class JourneyClient(Client):
+    """APIs relating to Journey and similar services"""
+
     def Meta(self, ) -> ResponseModel[ModeArray] | ApiError:
         '''
         Gets a list of all of the available journey planner modes

@@ -4,6 +4,8 @@ from .LiftDisruptionsClient_config import base_url, endpoints
 
 
 class LiftDisruptionsClient(Client):
+    """APIs relating to Lift disruptions at Transport for London Stations"""
+
     def Get(self, ) -> ResponseModel[LiftDisruptionsArray] | ApiError:
         '''
         List of all currently disrupted lift routes

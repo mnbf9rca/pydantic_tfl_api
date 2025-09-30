@@ -4,6 +4,8 @@ from .ComplianceEnum import ComplianceEnum
 
 
 class VehicleMatch(BaseModel):
+    """"""
+
     vrm: str | None = Field(None)
     type: str | None = Field(None)
     make: str | None = Field(None)

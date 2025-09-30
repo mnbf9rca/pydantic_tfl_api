@@ -16,6 +16,8 @@ from .LineClient_config import base_url, endpoints
 
 
 class LineClient(Client):
+    """APIs relating to Line and similar services"""
+
     def MetaModes(self, ) -> ResponseModel[ModeArray] | ApiError:
         '''
         Gets a list of valid modes

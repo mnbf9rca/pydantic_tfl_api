@@ -4,6 +4,8 @@ from .BikePointClient_config import base_url, endpoints
 
 
 class BikePointClient(Client):
+    """APIs relating to BikePoint and similar services"""
+
     def GetAll(self, ) -> ResponseModel[PlaceArray] | ApiError:
         '''
         Gets all bike point locations. The Place object has an addtionalProperties array which contains the nbBikes, nbDocks and nbSpaces

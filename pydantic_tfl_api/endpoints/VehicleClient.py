@@ -4,6 +4,8 @@ from .VehicleClient_config import base_url, endpoints
 
 
 class VehicleClient(Client):
+    """APIs relating to Vehicle and similar services"""
+
     def GetByPathIds(self, ids: str) -> ResponseModel[PredictionArray] | ApiError:
         '''
         Gets the predictions for a given list of vehicle Id's.
