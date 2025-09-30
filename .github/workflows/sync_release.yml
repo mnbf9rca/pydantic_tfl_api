@@ -21,6 +21,7 @@ permissions:
 jobs:
   sync_branches:
     runs-on: ubuntu-latest
+    environment: bump-version
     outputs:
       synced: ${{ steps.sync_result.outputs.synced }}
 
