@@ -85,7 +85,9 @@ class TestDependencyResolver:
         assert len(graph["User"]) == 0
         assert len(graph["Profile"]) == 0
 
-    def test_build_dependency_graph_with_references(self, dependency_resolver: Any, sample_models_with_references: Any) -> None:
+    def test_build_dependency_graph_with_references(
+        self, dependency_resolver: Any, sample_models_with_references: Any
+    ) -> None:
         """Test building dependency graph for models with forward references."""
         graph = dependency_resolver.build_dependency_graph(sample_models_with_references)
 
@@ -148,9 +150,9 @@ class TestDependencyResolver:
         # B depends on A, C depends on B
         # This means: import A first, then B (which uses A), then C (which uses B)
         graph = {
-            "A": set(),      # A has no dependencies (in-degree = 0)
-            "B": {"A"},      # B depends on A (in-degree = 1)
-            "C": {"B"},      # C depends on B (in-degree = 1)
+            "A": set(),  # A has no dependencies (in-degree = 0)
+            "B": {"A"},  # B depends on A (in-degree = 1)
+            "C": {"B"},  # C depends on B (in-degree = 1)
         }
 
         sorted_models = dependency_resolver.topological_sort(graph)
@@ -268,17 +270,12 @@ class TestDependencyResolver:
 
         # Base model must come before array
         assert detail_idx < array_idx, (
-            "AccidentDetail must be imported before AccidentDetailArray "
-            f"(got {sorted_models})"
+            "AccidentDetail must be imported before AccidentDetailArray " f"(got {sorted_models})"
         )
 
         # Dependencies of base model must come before base model
-        assert casualty_idx < detail_idx, (
-            "Casualty must be imported before AccidentDetail"
-        )
-        assert vehicle_idx < detail_idx, (
-            "Vehicle must be imported before AccidentDetail"
-        )
+        assert casualty_idx < detail_idx, "Casualty must be imported before AccidentDetail"
+        assert vehicle_idx < detail_idx, "Vehicle must be imported before AccidentDetail"
 
         # Verify full chain: dependencies → base → array
         assert casualty_idx < detail_idx < array_idx
@@ -309,10 +306,12 @@ class TestDependencyResolver:
         # Check that circular references have been replaced with ForwardRef
         # This is a complex test that depends on the specific implementation
         # For now, just verify the method doesn't crash
-        # TODO: Add more specific assertions based on implementation details
+        # TODO: Add more specific assertions based on implementation details
         assert True  # Method completed without error
 
-    def test_resolve_dependencies_complete_workflow(self, dependency_resolver: Any, sample_models_with_references: Any) -> None:
+    def test_resolve_dependencies_complete_workflow(
+        self, dependency_resolver: Any, sample_models_with_references: Any
+    ) -> None:
         """Test the complete dependency resolution workflow."""
         result = dependency_resolver.resolve_dependencies(sample_models_with_references)
 
@@ -412,7 +411,9 @@ class TestDependencyResolver:
     @pytest.mark.parametrize(
         "models_fixture_name", ["sample_models_simple", "sample_models_with_references", "sample_models_circular"]
     )
-    def test_resolve_dependencies_different_scenarios(self, dependency_resolver: Any, request: Any, models_fixture_name: Any) -> None:
+    def test_resolve_dependencies_different_scenarios(
+        self, dependency_resolver: Any, request: Any, models_fixture_name: Any
+    ) -> None:
         """Test dependency resolution with different model scenarios."""
         models = request.getfixturevalue(models_fixture_name)
 

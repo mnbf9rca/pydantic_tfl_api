@@ -195,9 +195,9 @@ class TestPackageInstallation:
 
         expected_version = version_match.group(1)
 
-        assert installed_version == expected_version, (
-            f"Version mismatch: installed={installed_version}, expected={expected_version}"
-        )
+        assert (
+            installed_version == expected_version
+        ), f"Version mismatch: installed={installed_version}, expected={expected_version}"
 
     def test_package_can_query_tfl_api(self, isolated_env: Any) -> None:
         """Test that the installed package can successfully query the TfL API."""

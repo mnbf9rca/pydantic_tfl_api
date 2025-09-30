@@ -49,7 +49,9 @@ def load_and_validate_expected_response(file_name: str, model: type[BaseModel]) 
     return model.model_validate(content)
 
 
-def _validate_root_model_if_applicable(response_content: BaseModel | list[BaseModel], expect_empty_response: bool) -> None:
+def _validate_root_model_if_applicable(
+    response_content: BaseModel | list[BaseModel], expect_empty_response: bool
+) -> None:
     """Helper to validate root model structure without conditionals in main test."""
     is_root_model = isinstance(response_content, type) and issubclass(response_content, RootModel)
     if not is_root_model:

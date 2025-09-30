@@ -253,7 +253,6 @@ class TestModelBuilder:
         assert hasattr(enum_type, "__name__")
         assert "Enum" in enum_type.__name__
 
-
     def test_array_models_are_rootmodel_based(self, model_builder: Any) -> None:
         """REGRESSION: Ensure array models use RootModel pattern."""
         components = {

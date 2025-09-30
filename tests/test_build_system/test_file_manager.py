@@ -60,7 +60,9 @@ class TestFileManager:
         assert hasattr(file_manager, "_generated_files")
         assert isinstance(file_manager._generated_files, list)
 
-    def test_save_models_creates_directory_structure(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_models_creates_directory_structure(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that save_models creates the expected directory structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -76,7 +78,9 @@ class TestFileManager:
         init_file = models_dir / "__init__.py"
         assert init_file.exists()
 
-    def test_save_models_creates_model_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_models_creates_model_files(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that individual model files are created."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -91,7 +95,9 @@ class TestFileManager:
         assert (models_dir / "UserArray.py").exists()
         assert (models_dir / "StatusEnum.py").exists()
 
-    def test_save_model_file_content_structure(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_model_file_content_structure(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that model files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["User"]
@@ -111,7 +117,9 @@ class TestFileManager:
         assert "age: int | None = Field(None)" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
 
-    def test_save_root_model_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_root_model_file_content(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that RootModel files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "UserArray"]
@@ -133,7 +141,9 @@ class TestFileManager:
         assert "class UserArray(RootModel[list[User]]):" in content
         assert "model_config = ConfigDict(from_attributes=True)" in content
 
-    def test_save_enum_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_enum_file_content(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that enum files have the correct content structure."""
         circular_models: set[str] = set()
         sorted_models = ["StatusEnum"]
@@ -155,7 +165,9 @@ class TestFileManager:
         assert "ACTIVE = 'active'" in content
         assert "INACTIVE = 'inactive'" in content
 
-    def test_save_models_with_circular_dependencies(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_save_models_with_circular_dependencies(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that models with circular dependencies have model_rebuild() calls."""
         circular_models = {"User"}  # Simulate User having circular dependency
         sorted_models = ["User", "Profile"]
@@ -174,7 +186,9 @@ class TestFileManager:
         # Should have model_rebuild() call for circular dependency
         assert "User.model_rebuild()" in content
 
-    def test_init_file_content(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_init_file_content(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that __init__.py has the correct import structure."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile", "UserArray", "StatusEnum"]
@@ -254,7 +268,9 @@ class TestFileManager:
         assert file_manager.sanitize_field_name("def") == "def_field"
         assert file_manager.sanitize_field_name("import") == "import_field"
 
-    def test_get_generated_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_get_generated_files(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test tracking of generated files."""
         circular_models: set[str] = set()
         sorted_models = ["User", "Profile"]
@@ -299,7 +315,9 @@ class TestFileManager:
         assert models_dir.exists()
         assert models_dir.is_dir()
 
-    def test_handle_file_permissions(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_handle_file_permissions(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that files are created with proper permissions."""
         circular_models: set[str] = set()
         sorted_models = ["User"]
@@ -314,7 +332,9 @@ class TestFileManager:
         assert os.access(user_file, os.R_OK)
         assert os.access(user_file, os.W_OK)
 
-    def test_overwrite_existing_files(self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any) -> None:
+    def test_overwrite_existing_files(
+        self, file_manager: Any, temp_dir: Any, sample_models: Any, sample_dependency_graph: Any
+    ) -> None:
         """Test that existing files are properly overwritten."""
         models_dir = temp_dir / "models"
         models_dir.mkdir(exist_ok=True)

@@ -79,7 +79,9 @@ class FileManager:
             # Add ResponseModelName Literal type
             # Include GenericResponseModel in the Literal since it's a valid response model
             model_names_for_literal = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
-            init_f.write(f"\nResponseModelName = Literal[\n    {model_names_for_literal},\n    \"GenericResponseModel\"\n]\n\n")
+            init_f.write(
+                f'\nResponseModelName = Literal[\n    {model_names_for_literal},\n    "GenericResponseModel"\n]\n\n'
+            )
 
             model_names = ",\n    ".join(f'"{key}"' for key in sorted(models.keys()))
             init_f.write(f"__all__ = [\n    {model_names},\n    'GenericResponseModel'\n]\n")
@@ -789,8 +791,10 @@ class FileManager:
                         # Find the 'endpoints' variable assignment
                         if isinstance(node, ast.Assign):
                             for target in node.targets:
-                                if isinstance(target, ast.Name) and target.id == "endpoints" and isinstance(
-                                    node.value, ast.Dict
+                                if (
+                                    isinstance(target, ast.Name)
+                                    and target.id == "endpoints"
+                                    and isinstance(node.value, ast.Dict)
                                 ):
                                     # Extract model names from the endpoints dict
                                     models = self._extract_models_from_dict_ast(node.value)

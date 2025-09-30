@@ -150,18 +150,14 @@ class ModelBuilder:
                     array_model = type(
                         sanitized_name,
                         (RootModel[list[ref_model]],),  # type: ignore[valid-type]
-                        {"__module__": __name__}
+                        {"__module__": __name__},
                     )
                     self.models[sanitized_name] = array_model
                     self.logger.info(f"Created array model: {sanitized_name} -> RootModel[list[{ref_model_name}]]")
                 else:
                     # Fallback if 'items' is missing or doesn't have a reference
                     # Also use RootModel for consistency
-                    array_model = type(
-                        sanitized_name,
-                        (RootModel[list[Any]],),
-                        {"__module__": __name__}
-                    )
+                    array_model = type(sanitized_name, (RootModel[list[Any]],), {"__module__": __name__})
                     self.models[sanitized_name] = array_model
                     self.logger.warning(
                         f"Array model {sanitized_name} has no valid 'items' reference. Using RootModel[list[Any]]."
