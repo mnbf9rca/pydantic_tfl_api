@@ -29,8 +29,8 @@ Homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"
 Repository = "https://github.com/mnbf9rca/pydantic_tfl_api"
 Issues = "https://github.com/mnbf9rca/pydantic_tfl_api/issues"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "black>=25.9.0",
     "pytest>=8.4.0",
     "pytest-asyncio>=1.2.0",
