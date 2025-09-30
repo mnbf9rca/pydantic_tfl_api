@@ -334,13 +334,13 @@ class ClientGenerator:
         init_file_path = os.path.join(base_path, "__init__.py")
         with open(init_file_path, "w") as init_file:
             class_names_joined = ",\n    ".join(class_names)
-            init_file.write(f"from .endpoints import (\n    {class_names_joined}\n)\n")
+            init_file.write(f"from .endpoints import (\n    {class_names_joined},\n)\n")
             init_file.write("from . import models\n")
             init_file.write("from .core import __version__\n")
 
             init_file.write("\n__all__ = [\n")
-            init_file.write(",\n".join([f"    '{name}'" for name in class_names]))
-            init_file.write(",\n    'models',\n    '__version__'\n]\n")
+            init_file.write(",\n".join([f'    "{name}"' for name in class_names]))
+            init_file.write(',\n    "models",\n    "__version__",\n]\n')
 
         endpoint_path = os.path.join(base_path, "endpoints")
         os.makedirs(endpoint_path, exist_ok=True)
@@ -351,12 +351,12 @@ class ClientGenerator:
             endpoint_init.write("\n\n")
 
             # Generate TfLEndpoint Literal type
-            endpoint_names = ",\n    ".join(f"'{name}'" for name in class_names)
-            endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names}\n]\n\n")
+            endpoint_names = ",\n    ".join(f'"{name}"' for name in class_names)
+            endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names},\n]\n\n")
 
             endpoint_init.write("__all__ = [\n")
-            endpoint_init.write(",\n".join([f"    '{name}'" for name in class_names]))
-            endpoint_init.write("\n]\n")
+            endpoint_init.write(",\n".join([f'    "{name}"' for name in class_names]))
+            endpoint_init.write(",\n]\n")
 
         self._generated_clients.append(init_file_path)
         self._generated_clients.append(endpoint_init_file)
