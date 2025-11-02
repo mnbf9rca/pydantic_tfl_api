@@ -50,6 +50,21 @@ release = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["pydantic_tfl_api"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"pydantic_tfl_api/py.typed" = "pydantic_tfl_api/py.typed"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/pydantic_tfl_api",
+    "/tests",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+]
+
 [tool.coverage.run]
 source = ["pydantic_tfl_api"]
 omit = [
