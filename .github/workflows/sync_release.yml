@@ -34,7 +34,7 @@ jobs:
           private-key: ${{ secrets.PUSH_APP_SECRET }}
 
       - name: Check out repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0  # Full history for proper syncing
           token: ${{ steps.app-token.outputs.token }}
@@ -57,9 +57,9 @@ jobs:
 
       - name: Set up Python
         if: steps.check_branch.outputs.branch_exists == 'false'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.11 || 3.13 || 3.14'
 
       - name: Install dependencies
         if: steps.check_branch.outputs.branch_exists == 'false'

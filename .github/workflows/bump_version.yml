@@ -44,14 +44,14 @@ jobs:
           private-key: ${{ secrets.PUSH_APP_SECRET }}
 
       - name: Check out repository
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           ref: release
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41 # v7
         with:
           enable-cache: true
 
@@ -96,7 +96,7 @@ jobs:
 
       - name: Bump version and create tag
         id: bump_version
-        uses: anothrNick/github-tag-action@777684df761b882a3f4f70db16ac70d8cc78d0ea # v1.70.0
+        uses: anothrNick/github-tag-action@4ed44965e0db8dab2b466a16da04aec3cc312fd8
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           WITH_V: false
