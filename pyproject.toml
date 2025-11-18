@@ -1,6 +1,6 @@
 [project]
 name = "pydantic-tfl-api"
-version = "2.0.0"
+version = "3.0.0"
 description = "A Pydantic-based wrapper for the TfL Unified API https://api-portal.tfl.gov.uk/. Not associated with or endorsed by TfL."
 authors = [
     {name = "Rob Aleck", email = "mnbf9rca@users.noreply.github.com"}
@@ -20,8 +20,11 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.8.2,<3.0",
-    "requests>=2.32.3,<3.0",
+    "httpx>=0.27.0,<1.0",
 ]
+
+[project.optional-dependencies]
+requests = ["requests>=2.32.3,<3.0"]
 
 [project.urls]
 Homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"
@@ -41,6 +44,7 @@ dev = [
     "pre-commit>=4.3.0",
     "jsonschema>=4.25.1",
     "types-jsonschema>=4.25.1.20250822",
+    "httpx>=0.27.0,<1.0",
 ]
 release = [
     "packaging>=24.0",
@@ -66,7 +70,7 @@ include = [
 ]
 
 [tool.coverage.run]
-source = ["pydantic_tfl_api"]
+source = ["pydantic_tfl_api", "scripts/build_system"]
 omit = [
     "*/test/*",
     "*/tests/*",
@@ -75,8 +79,10 @@ omit = [
     "*/.tox/*",
     "*/.eggs/*",
     "*/.vscode-remote/*",
-    "*/build_script/*",
-    "*/scripts/*",
+    # Exclude generated output (focus on source code)
+    "*/endpoints/*Client.py",
+    "*/endpoints/*_config.py",
+    "*/models/*.py",
 ]
 relative_files = true
 branch = true
@@ -214,5 +220,6 @@ exclude = [
 module = [
     "requests.*",
     "jsonschema.*",
+    "httpx.*",
 ]
 ignore_missing_imports = true

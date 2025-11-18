@@ -4,25 +4,41 @@
 import json
 import unittest
 from typing import get_args
+from unittest.mock import Mock
 
 from pydantic import BaseModel, RootModel, TypeAdapter
-from requests.models import Response
 
 from pydantic_tfl_api import models
 from pydantic_tfl_api.core import Client, ResponseModel
+from pydantic_tfl_api.core.http_client import HTTPResponse
 
 from .config_for_tests import response_to_request_mapping
 
 
-def create_response_from_json(json_file: str) -> Response:
+def create_response_from_json(json_file: str) -> Mock:
+    """Create a mock HTTPResponse from a JSON file.
+
+    This creates a protocol-compliant mock that works with any HTTP backend.
+    """
     with open(json_file) as f:
         serialised_response = json.load(f)
-    response = Response()
-    response.headers = serialised_response["headers"]
-    response.status_code = serialised_response["status_code"]
-    response.url = serialised_response["url"]
-    response._content = serialised_response["content"].encode("utf-8")
-    return response
+
+    # Parse content
+    content_str = serialised_response["content"]
+    try:
+        content_data = json.loads(content_str)
+    except (json.JSONDecodeError, ValueError):
+        content_data = {}
+
+    mock = Mock(spec=HTTPResponse)
+    mock.headers = serialised_response["headers"]
+    mock.status_code = serialised_response["status_code"]
+    mock.url = serialised_response["url"]
+    mock.text = content_str
+    mock.reason = "OK"
+    mock.json.return_value = content_data
+
+    return mock
 
 
 def get_and_save_response(response: BaseModel | list[BaseModel], file_name: str) -> None:

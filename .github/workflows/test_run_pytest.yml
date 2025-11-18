@@ -2,12 +2,6 @@ name: test package
 
 on:
   workflow_call:
-  push:
-    branches-ignore:
-      - main
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -19,15 +13,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
         pydantic-version: ["2.8.2", "latest"]
-        include:
-          # Test minimum supported versions
-          - python-version: "3.11"
-            pydantic-version: "2.8.2"
-            test-type: "minimum"
-          # Test latest versions
-          - python-version: "3.13"
-            pydantic-version: "latest"
-            test-type: "latest"
+        extras: ["", "requests"]
     runs-on: ubuntu-latest
 
     steps:
@@ -43,12 +29,17 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install dependencies with Pydantic ${{ matrix.pydantic-version }}
+      - name: Install dependencies with Pydantic ${{ matrix.pydantic-version }} and extras "${{ matrix.extras }}"
         run: |
-          if [ "${{ matrix.pydantic-version }}" = "latest" ]; then
-            uv sync --all-extras --dev
+          # Install with specified extras (or no extras for base install test)
+          if [ -z "${{ matrix.extras }}" ]; then
+            uv sync --dev
           else
-            uv sync --all-extras --dev
+            uv sync --extra ${{ matrix.extras }} --dev
+          fi
+
+          # Pin pydantic version if not latest
+          if [ "${{ matrix.pydantic-version }}" != "latest" ]; then
             uv add "pydantic==${{ matrix.pydantic-version }}"
           fi
 
@@ -73,10 +64,10 @@ jobs:
             -v
 
       - name: Upload coverage reports to Codecov
-        if: matrix.python-version == '3.12' && matrix.pydantic-version == 'latest'
+        if: matrix.python-version == '3.12' && matrix.pydantic-version == 'latest' && matrix.extras == 'requests'
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false

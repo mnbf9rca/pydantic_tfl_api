@@ -1,19 +1,19 @@
 from typing import Literal
 
-from .LineClient import LineClient
-from .AirQualityClient import AirQualityClient
-from .OccupancyClient import OccupancyClient
-from .VehicleClient import VehicleClient
-from .CrowdingClient import CrowdingClient
-from .BikePointClient import BikePointClient
-from .SearchClient import SearchClient
-from .AccidentStatsClient import AccidentStatsClient
-from .JourneyClient import JourneyClient
-from .RoadClient import RoadClient
-from .PlaceClient import PlaceClient
-from .ModeClient import ModeClient
-from .StopPointClient import StopPointClient
-from .LiftDisruptionsClient import LiftDisruptionsClient
+from .LineClient import AsyncLineClient, LineClient
+from .AirQualityClient import AsyncAirQualityClient, AirQualityClient
+from .OccupancyClient import AsyncOccupancyClient, OccupancyClient
+from .VehicleClient import AsyncVehicleClient, VehicleClient
+from .CrowdingClient import AsyncCrowdingClient, CrowdingClient
+from .BikePointClient import AsyncBikePointClient, BikePointClient
+from .SearchClient import AsyncSearchClient, SearchClient
+from .AccidentStatsClient import AsyncAccidentStatsClient, AccidentStatsClient
+from .JourneyClient import AsyncJourneyClient, JourneyClient
+from .RoadClient import AsyncRoadClient, RoadClient
+from .PlaceClient import AsyncPlaceClient, PlaceClient
+from .ModeClient import AsyncModeClient, ModeClient
+from .StopPointClient import AsyncStopPointClient, StopPointClient
+from .LiftDisruptionsClient import AsyncLiftDisruptionsClient, LiftDisruptionsClient
 
 TfLEndpoint = Literal[
     "LineClient",
@@ -32,6 +32,23 @@ TfLEndpoint = Literal[
     "LiftDisruptionsClient",
 ]
 
+AsyncTfLEndpoint = Literal[
+    "AsyncLineClient",
+    "AsyncAirQualityClient",
+    "AsyncOccupancyClient",
+    "AsyncVehicleClient",
+    "AsyncCrowdingClient",
+    "AsyncBikePointClient",
+    "AsyncSearchClient",
+    "AsyncAccidentStatsClient",
+    "AsyncJourneyClient",
+    "AsyncRoadClient",
+    "AsyncPlaceClient",
+    "AsyncModeClient",
+    "AsyncStopPointClient",
+    "AsyncLiftDisruptionsClient",
+]
+
 __all__ = [
     "LineClient",
     "AirQualityClient",
@@ -47,4 +64,18 @@ __all__ = [
     "ModeClient",
     "StopPointClient",
     "LiftDisruptionsClient",
+    "AsyncLineClient",
+    "AsyncAirQualityClient",
+    "AsyncOccupancyClient",
+    "AsyncVehicleClient",
+    "AsyncCrowdingClient",
+    "AsyncBikePointClient",
+    "AsyncSearchClient",
+    "AsyncAccidentStatsClient",
+    "AsyncJourneyClient",
+    "AsyncRoadClient",
+    "AsyncPlaceClient",
+    "AsyncModeClient",
+    "AsyncStopPointClient",
+    "AsyncLiftDisruptionsClient",
 ]

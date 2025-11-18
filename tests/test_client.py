@@ -2,17 +2,53 @@ import json
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime, parsedate_to_datetime
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 # from importlib import import_module
 # import pkgutil
 from pydantic import BaseModel, ConfigDict, ValidationError
-from requests.models import Response
 
 from pydantic_tfl_api import models
 from pydantic_tfl_api.core import ApiError, Client, ResponseModel, RestClient
+from pydantic_tfl_api.core.http_client import HTTPResponse
+
+
+def create_mock_http_response(
+    status_code: int = 200,
+    headers: dict[str, str] | None = None,
+    text: str = "",
+    url: str = "http://test.com",
+    reason: str = "OK",
+    content: bytes | None = None,
+) -> Mock:
+    """Create a mock HTTPResponse protocol-compliant object.
+
+    This helper creates Mock objects that conform to the HTTPResponse protocol,
+    enabling tests to work with any HTTP backend.
+    """
+    mock = Mock(spec=HTTPResponse)
+    mock.status_code = status_code
+    mock.headers = headers or {}
+    mock.text = text
+    mock.url = url
+    mock.reason = reason
+
+    # Handle content for _content attribute compatibility
+    if content is not None:
+        mock._content = content
+
+    # Handle json() method
+    if text:
+        try:
+            mock.json.return_value = json.loads(text)
+        except (json.JSONDecodeError, ValueError):
+            mock.json.return_value = {}
+    else:
+        mock.json.return_value = {}
+
+    return mock
 
 
 # Mock models module
@@ -324,13 +360,9 @@ def test_load_models_returns_non_empty_dict() -> None:
 def test_get_maxage_headers_from_cache_control_header(
     cache_control_header: str | None, expected_result: tuple[int | None, int | None]
 ) -> None:
-    # Mock Response
-    response = Response()
-    response.headers.clear()  # Start with empty headers
-
-    # Add Cache-Control header if provided
-    if cache_control_header:  # sourcery skip: no-conditionals-in-tests
-        response.headers.update({"Cache-Control": cache_control_header})
+    # Create mock response with headers
+    headers = {"Cache-Control": cache_control_header} if cache_control_header else {}
+    response = create_mock_http_response(headers=headers)
 
     # Act
     result = Client._get_maxage_headers_from_cache_control_header(response)
@@ -358,14 +390,15 @@ def test_get_maxage_headers_from_cache_control_header(
         "list_of_models",
     ],
 )
-def test_deserialize(model_name: str, response_content: Any, expected_result: Any) -> None:
-    # Mock Response
-    Response_Object = MagicMock(Response)
+def test_deserialize(model_name: str, response_content: dict[str, str] | list[dict[str, str]], expected_result: MockModel | list[MockModel]) -> None:
+    # Create mock response
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
     response_date_time_string = format_datetime(response_date_time)
-    # json.dumps(response_content)
+    Response_Object = create_mock_http_response(
+        headers={"Date": response_date_time_string},
+        text=json.dumps(response_content)
+    )
     Response_Object.json.return_value = response_content
-    Response_Object.headers = {"Date": response_date_time_string}
 
     # Act
 
@@ -527,9 +560,8 @@ def test_get_result_expiry(
     date_header: dict[str, str],
     expected_result: tuple[datetime | None, datetime | None],
 ) -> None:
-    # Mock Response
-    response = Response()
-    response.headers.update(date_header)
+    # Create mock response with headers
+    response = create_mock_http_response(headers=date_header)
 
     # Act
     with (
@@ -646,7 +678,7 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
 
 
 @pytest.mark.parametrize(
-    "content_type, response_content, expected_result",
+    "content_type, response_content, mock_deserialize_result, expected_result",
     [
         (
             "application/json",
@@ -658,11 +690,33 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
                 "relativeUri": "/uri",
                 "message": "message",
             },
-            "_deserialize return value",
+            # Mock _deserialize returns ResponseModel, we extract .content
+            ResponseModel(
+                content_expires=None,
+                shared_expires=None,
+                response_timestamp=None,
+                content=ApiError(
+                    timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
+                    exception_type="type",
+                    http_status_code=404,
+                    http_status="Not Found",
+                    relative_uri="/uri",
+                    message="message",
+                ),
+            ),
+            ApiError(
+                timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
+                exception_type="type",
+                http_status_code=404,
+                http_status="Not Found",
+                relative_uri="/uri",
+                message="message",
+            ),
         ),
         (
             "text/html",
             "Error message",
+            None,  # _deserialize not called for non-JSON
             ApiError(
                 timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
                 exception_type="Unknown",
@@ -678,22 +732,29 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
         "non_json_content",
     ],
 )
-def test_deserialize_error(content_type: str, response_content: Any, expected_result: Any) -> None:
-    # Mock Response
-    response = Response()
-    response._content = bytes(json.dumps(response_content), "utf-8")
-    response.headers.update(
-        {
+def test_deserialize_error(
+    content_type: str,
+    response_content: dict[str, str | int] | str,
+    mock_deserialize_result: ResponseModel | None,
+    expected_result: ApiError,
+) -> None:
+    # Create mock response
+    content_text = json.dumps(response_content)
+    response = create_mock_http_response(
+        status_code=404,
+        headers={
             "Content-Type": content_type,
             "Date": "Tue, 15 Nov 1994 12:45:26 GMT",
-        }
+        },
+        text=content_text,
+        url="/uri",
+        reason="Not Found",
     )
-    response.status_code = 404
-    response.reason = "Not Found"
-    response.url = "/uri"
+    # Set _content for compatibility with code that reads it directly
+    response._content = bytes(content_text, "utf-8")
 
     test_client = Client()
-    with patch.object(test_client, "_deserialize", return_value=expected_result):
+    with patch.object(test_client, "_deserialize", return_value=mock_deserialize_result):
         # Act
         result = test_client._deserialize_error(response)
 
@@ -759,9 +820,8 @@ class Test_TfL_connectivity:
     ids=["valid_date", "no_date", "invalid_date"],
 )
 def test_get_datetime_from_response_headers(headers: dict[str, str], expected_result: datetime | None) -> None:
-    # Mock Response
-    response = Response()
-    response.headers.update(headers)
+    # Create mock response with headers
+    response = create_mock_http_response(headers=headers)
 
     # Act
     result = Client._get_datetime_from_response_headers(response)
@@ -803,7 +863,6 @@ class TestApiErrorRegistration:
         but ApiError wasn't registered in the models dictionary.
         """
         # Create a mock JSON error response from TfL API
-        response = Response()
         error_json = {
             "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
             "exceptionType": "ApiException",
@@ -812,38 +871,43 @@ class TestApiErrorRegistration:
             "relativeUri": "/Line/Meta/Modes",
             "message": "Rate limit exceeded",
         }
-        response._content = bytes(json.dumps(error_json), "utf-8")
-        response.headers.update({
-            "Content-Type": "application/json",
-            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
-        })
-        response.status_code = 429
-        response.reason = "Too Many Requests"
-        response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
+        error_text = json.dumps(error_json)
+        response = create_mock_http_response(
+            status_code=429,
+            headers={
+                "Content-Type": "application/json",
+                "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+            },
+            text=error_text,
+            url="https://api.tfl.gov.uk/Line/Meta/Modes",
+            reason="Too Many Requests",
+        )
+        response._content = bytes(error_text, "utf-8")
 
         test_client = Client()
 
         # This should NOT raise ValueError about ApiError not being found
         result = test_client._deserialize_error(response)
 
-        # Verify the result is properly deserialized
-        assert isinstance(result, ResponseModel), "Should return a ResponseModel wrapping ApiError"
-        assert isinstance(result.content, ApiError), "ResponseModel content should be ApiError"
-        assert result.content.http_status_code == 429
-        assert result.content.http_status == "Invalid App Key"
-        assert result.content.message == "Rate limit exceeded"
+        # Verify the result is properly deserialized as ApiError
+        assert isinstance(result, ApiError), "Should return an ApiError"
+        assert result.http_status_code == 429
+        assert result.http_status == "Invalid App Key"
+        assert result.message == "Rate limit exceeded"
 
     def test_deserialize_error_non_json(self) -> None:
         """Test error deserialization for non-JSON responses (control test)."""
-        response = Response()
+        response = create_mock_http_response(
+            status_code=500,
+            headers={
+                "Content-Type": "text/html",
+                "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+            },
+            text="Internal Server Error",
+            url="https://api.tfl.gov.uk/Line/Meta/Modes",
+            reason="Internal Server Error",
+        )
         response._content = b"Internal Server Error"
-        response.headers.update({
-            "Content-Type": "text/html",
-            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
-        })
-        response.status_code = 500
-        response.reason = "Internal Server Error"
-        response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
 
         test_client = Client()
 
@@ -856,19 +920,21 @@ class TestApiErrorRegistration:
 
     def test_send_request_and_deserialize_error_response(self) -> None:
         """Test full flow: API call returning JSON error response."""
+        from pydantic_tfl_api.core.response import UnifiedResponse
+
         test_client = SampleClient()
 
-        # Mock the API to return a JSON error
-        mock_response = Mock()
-        mock_response.status_code = 400
-        mock_response.reason = "Bad Request"
-        mock_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
-        mock_response.headers = {
+        # Create a mock that satisfies the HTTPResponse protocol
+        mock_http_response = Mock()
+        mock_http_response.status_code = 400
+        mock_http_response.reason = "Bad Request"
+        mock_http_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
+        mock_http_response.headers = {
             "Content-Type": "application/json",
             "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
             "Cache-Control": "public, max-age=300",
         }
-        mock_response.json.return_value = {
+        mock_http_response.json.return_value = {
             "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
             "exceptionType": "EntityNotFoundException",
             "httpStatusCode": 400,
@@ -877,11 +943,13 @@ class TestApiErrorRegistration:
             "message": "Invalid mode 'invalid'",
         }
 
-        with patch("requests.Session.request", return_value=mock_response):
+        # Mock at the RestClient.send_request level to return UnifiedResponse
+        mock_unified_response = UnifiedResponse(mock_http_response)
+
+        with patch.object(test_client.client, "send_request", return_value=mock_unified_response):
             result = test_client.Line_test_endpoint("invalid")
 
-        # Should successfully deserialize the JSON error
-        assert isinstance(result, ResponseModel), "Should return ResponseModel for JSON error"
-        assert isinstance(result.content, ApiError), "Content should be ApiError"
-        assert result.content.http_status_code == 400
-        assert result.content.message == "Invalid mode 'invalid'"
+        # Should successfully deserialize the JSON error and return ApiError directly
+        assert isinstance(result, ApiError), "Should return ApiError for JSON error"
+        assert result.http_status_code == 400
+        assert result.message == "Invalid mode 'invalid'"

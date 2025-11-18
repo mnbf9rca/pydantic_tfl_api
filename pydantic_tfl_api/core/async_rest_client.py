@@ -1,7 +1,10 @@
-# from https://github.com/dhilmathy/TfL-python-api
+# Async REST Client
+# This module provides asynchronous REST client functionality using async HTTP clients.
+
 # MIT License
 
 # Copyright (c) 2018 Mathivanan Palanisamy
+# Copyright (c) 2024 Rob Aleck
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,24 +27,34 @@
 from typing import Any
 from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
 
-from .http_client import HTTPClientBase, get_default_http_client
+from .http_client import AsyncHTTPClientBase, get_default_async_http_client
 from .response import UnifiedResponse
 
 
-class RestClient:
-    """RestClient.
+class AsyncRestClient:
+    """Async REST client for making asynchronous HTTP requests.
 
     :param str app_key: App key to access TfL unified API
-    :param HTTPClientBase http_client: HTTP client implementation (defaults to HttpxClient)
+    :param AsyncHTTPClientBase http_client: Async HTTP client implementation (defaults to AsyncHttpxClient)
     """
 
-    def __init__(self, app_key: str | None = None, http_client: HTTPClientBase | None = None) -> None:
+    def __init__(self, app_key: str | None = None, http_client: AsyncHTTPClientBase | None = None) -> None:
         self.app_key = {"app_key": app_key} if app_key else None
-        self.http_client = http_client if http_client is not None else get_default_http_client()
+        self.http_client = http_client if http_client is not None else get_default_async_http_client()
 
-    def send_request(
+    async def send_request(
         self, base_url: str, location: str, params: dict[str, Any] | None = None
     ) -> UnifiedResponse:
+        """Send an async HTTP GET request.
+
+        Args:
+            base_url: The base URL for the API.
+            location: The API endpoint path.
+            params: Optional query parameters.
+
+        Returns:
+            A UnifiedResponse wrapping the HTTP response.
+        """
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 
@@ -56,7 +69,7 @@ class RestClient:
             url_parts.fragment,
         ))
 
-        response = self.http_client.get(
+        response = await self.http_client.get(
             url,
             headers=request_headers,
             timeout=30,
@@ -64,6 +77,7 @@ class RestClient:
         return UnifiedResponse(response)
 
     def _get_request_headers(self) -> dict[str, str]:
+        """Build request headers including app key if present."""
         request_headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -73,6 +87,7 @@ class RestClient:
         return request_headers
 
     def _get_query_strings(self, params: dict[str, Any] | None) -> str:
+        """Build query string from parameters, excluding None values."""
         if params is None:
             params = {}
         # drop params that are None

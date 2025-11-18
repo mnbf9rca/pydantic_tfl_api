@@ -3,6 +3,7 @@
 # the library to support multiple HTTP backends (requests, httpx, etc.)
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -21,8 +22,8 @@ class HTTPResponse(Protocol):
         ...
 
     @property
-    def headers(self) -> dict[str, str]:
-        """Response headers as a dictionary."""
+    def headers(self) -> Mapping[str, str]:
+        """Response headers as a case-insensitive mapping."""
         ...
 
     @property
@@ -75,3 +76,72 @@ class HTTPClientBase(ABC):
             An HTTPResponse object containing the response data.
         """
         ...
+
+
+class AsyncHTTPClientBase(ABC):
+    """Abstract base class for asynchronous HTTP clients.
+
+    This class defines the interface that all async HTTP client implementations
+    must follow. It provides async variants of HTTP methods for use with
+    asyncio-based applications.
+    """
+
+    @abstractmethod
+    async def get(
+        self,
+        url: str,
+        headers: dict[str, str] | None = None,
+        timeout: int | None = None,
+    ) -> HTTPResponse:
+        """Send an async GET request.
+
+        Args:
+            url: The URL to send the request to (should include query parameters).
+            headers: Optional headers to include in the request.
+            timeout: Request timeout in seconds.
+
+        Returns:
+            An HTTPResponse object containing the response data.
+        """
+        ...
+
+
+def get_default_http_client() -> HTTPClientBase:
+    """Get the default HTTP client implementation.
+
+    Tries to use httpx if available (better performance), otherwise falls back
+    to requests.
+
+    Returns:
+        An HTTPClientBase implementation.
+    """
+    try:
+        from .http_backends.httpx_client import HttpxClient
+
+        return HttpxClient()
+    except ImportError:
+        from .http_backends.requests_client import RequestsClient
+
+        return RequestsClient()
+
+
+def get_default_async_http_client() -> AsyncHTTPClientBase:
+    """Get the default async HTTP client implementation.
+
+    Returns the async httpx client for use with asyncio.
+
+    Returns:
+        An AsyncHTTPClientBase implementation.
+
+    Raises:
+        ImportError: If httpx is not installed.
+    """
+    try:
+        from .http_backends.async_httpx_client import AsyncHttpxClient
+
+        return AsyncHttpxClient()
+    except ImportError:
+        raise ImportError(
+            "httpx is required for async client support. "
+            "Install it with: pip install pydantic-tfl-api[httpx]"
+        ) from None
