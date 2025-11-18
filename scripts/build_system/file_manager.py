@@ -912,9 +912,21 @@ class FileManager:
         # Create output core directory and copy all infrastructure files
         output_core_dir.mkdir(parents=True, exist_ok=True)
 
-        for infrastructure_file in infrastructure_dir.glob("*.py"):
-            destination = output_core_dir / infrastructure_file.name
+        # Recursively copy all Python files, preserving directory structure
+        for infrastructure_file in infrastructure_dir.rglob("*.py"):
+            # Calculate relative path from infrastructure_dir to preserve subdirectory structure
+            relative_path = infrastructure_file.relative_to(infrastructure_dir)
+            destination = output_core_dir / relative_path
+
+            # Create parent directories if they don't exist (for subdirectories like http_backends/)
+            destination.parent.mkdir(parents=True, exist_ok=True)
 
             shutil.copy2(infrastructure_file, destination)
-            self.logger.info(f"Copied infrastructure: {infrastructure_file.name}")
+            self.logger.info(f"Copied infrastructure: {relative_path}")
             self._generated_files.append(str(destination))
+
+        # Create py.typed marker file for PEP 561 compliance
+        py_typed_path = Path(output_path) / "py.typed"
+        py_typed_path.touch()
+        self.logger.info("Created py.typed marker file")
+        self._generated_files.append(str(py_typed_path))
