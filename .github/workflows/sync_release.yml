@@ -4,15 +4,15 @@ on:
   workflow_dispatch:  # Manual trigger only
     inputs:
       bump_type:
-        description: 'Version bump type'
+        description: 'Version bump type (select explicitly)'
         required: true
         type: choice
         options:
-          - auto
+          - none
           - major
           - minor
           - patch
-        default: auto
+        default: none
 
 permissions:
   contents: write
@@ -173,16 +173,31 @@ jobs:
     needs: sync_branches
     if: needs.sync_branches.outputs.synced == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      bump_type: ${{ steps.validate.outputs.bump_type }}
     steps:
       - name: Validate bump_type input
         id: validate
         run: |
           BUMP_TYPE="${{ github.event.inputs.bump_type }}"
 
+          # Fail if user didn't make an explicit choice
+          if [ "$BUMP_TYPE" = "none" ]; then
+            echo "❌ You must select a version bump type (major, minor, or patch)"
+            echo "The 'none' option is a placeholder to ensure you make an explicit choice."
+            echo ""
+            echo "## ❌ Version Bump Type Required" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "You must select one of: **major**, **minor**, or **patch**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The 'none' option exists to ensure you make an explicit choice." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
           # Validate bump_type is one of the allowed values
-          if [[ ! "$BUMP_TYPE" =~ ^(auto|major|minor|patch)$ ]]; then
+          if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
             echo "❌ Invalid bump_type: $BUMP_TYPE"
-            echo "Valid options: auto, major, minor, patch"
+            echo "Valid options: major, minor, patch"
             exit 1
           fi
 
