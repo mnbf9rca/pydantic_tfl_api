@@ -1,6 +1,5 @@
 """Tests for the HTTP client abstraction layer (Phase 1)."""
 
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -258,7 +257,6 @@ class TestRestClientWithHTTPClientAbstraction:
                 self,
                 url: str,
                 headers: dict[str, str] | None = None,
-                params: dict[str, Any] | None = None,
                 timeout: int | None = None,
             ) -> HTTPResponse:
                 mock = Mock()
@@ -321,7 +319,6 @@ class TestClientWithHTTPClientAbstraction:
                 self,
                 url: str,
                 headers: dict[str, str] | None = None,
-                params: dict[str, Any] | None = None,
                 timeout: int | None = None,
             ) -> HTTPResponse:
                 mock = Mock()

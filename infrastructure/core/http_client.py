@@ -62,15 +62,13 @@ class HTTPClientBase(ABC):
         self,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
         timeout: int | None = None,
     ) -> HTTPResponse:
         """Send a GET request.
 
         Args:
-            url: The URL to send the request to.
+            url: The URL to send the request to (should include query parameters).
             headers: Optional headers to include in the request.
-            params: Optional query parameters (not used directly, URL should include params).
             timeout: Request timeout in seconds.
 
         Returns:

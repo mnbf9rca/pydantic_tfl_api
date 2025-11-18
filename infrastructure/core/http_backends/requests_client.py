@@ -67,15 +67,13 @@ class RequestsClient(HTTPClientBase):
         self,
         url: str,
         headers: dict[str, str] | None = None,
-        params: dict[str, Any] | None = None,
         timeout: int | None = None,
     ) -> HTTPResponse:
         """Send a GET request using the requests library.
 
         Args:
-            url: The URL to send the request to.
+            url: The URL to send the request to (should include query parameters).
             headers: Optional headers to include in the request.
-            params: Optional query parameters (not used, URL should include params).
             timeout: Request timeout in seconds. Defaults to 30 if not specified.
 
         Returns:
