@@ -116,6 +116,7 @@ class TestPackageInstallation:
     @pytest.mark.parametrize(
         "client",
         [
+            # Sync clients
             "LineClient",
             "StopPointClient",
             "BikePointClient",
@@ -130,6 +131,21 @@ class TestPackageInstallation:
             "CrowdingClient",
             "OccupancyClient",
             "LiftDisruptionsClient",
+            # Async clients
+            "AsyncLineClient",
+            "AsyncStopPointClient",
+            "AsyncBikePointClient",
+            "AsyncAirQualityClient",
+            "AsyncJourneyClient",
+            "AsyncPlaceClient",
+            "AsyncRoadClient",
+            "AsyncSearchClient",
+            "AsyncVehicleClient",
+            "AsyncModeClient",
+            "AsyncAccidentStatsClient",
+            "AsyncCrowdingClient",
+            "AsyncOccupancyClient",
+            "AsyncLiftDisruptionsClient",
         ],
     )
     def test_client_imports(self, isolated_env: Any, client: Any) -> None:
@@ -150,6 +166,10 @@ class TestPackageInstallation:
         "import_stmt",
         [
             "from pydantic_tfl_api.core import Client, ResponseModel, ApiError",
+            "from pydantic_tfl_api.core import AsyncClient, AsyncRestClient",
+            "from pydantic_tfl_api.core import HttpxClient, AsyncHttpxClient",
+            "from pydantic_tfl_api.core import HTTPClientBase, AsyncHTTPClientBase",
+            "from pydantic_tfl_api.core import get_default_http_client, get_default_async_http_client",
             "from pydantic_tfl_api.models import Line, LineArray, Mode, ModeArray",
         ],
     )

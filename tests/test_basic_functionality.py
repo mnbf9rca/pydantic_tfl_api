@@ -16,7 +16,18 @@ from contextlib import suppress
 import pytest
 
 from pydantic_tfl_api.core import ApiError, ResponseModel, get_default_http_client
-from pydantic_tfl_api.endpoints import BikePointClient, JourneyClient, LineClient, ModeClient, StopPointClient
+from pydantic_tfl_api.endpoints import (
+    AsyncBikePointClient,
+    AsyncJourneyClient,
+    AsyncLineClient,
+    AsyncModeClient,
+    AsyncStopPointClient,
+    BikePointClient,
+    JourneyClient,
+    LineClient,
+    ModeClient,
+    StopPointClient,
+)
 
 
 class TestBasicFunctionality:
@@ -133,6 +144,102 @@ class TestBasicFunctionality:
         """Test that invalid API calls return ApiError objects."""
         client = LineClient("invalid_api_key")
         result = client.MetaModes()
+
+        # Should return ApiError for invalid key
+        assert isinstance(result, ApiError), f"Expected ApiError for invalid key, got {type(result)}"
+        assert hasattr(result, "http_status_code"), "ApiError should have status code"
+        assert hasattr(result, "http_status"), "ApiError should have status message"
+
+    # Async client tests
+
+    @pytest.mark.asyncio
+    async def test_async_line_client_basic_query(self, api_health_check: bool) -> None:
+        """Test AsyncLineClient can query TfL and parse response."""
+        client = AsyncLineClient()
+        result = await client.MetaModes()
+
+        # Should get ResponseModel, not ApiError
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_line_client_tube_status(self, api_health_check: bool) -> None:
+        """Test AsyncLineClient can get tube line status."""
+        client = AsyncLineClient()
+        result = await client.StatusByModeByPathModesQueryDetailQuerySeverityLevel("tube")
+
+        # Should parse without errors
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_stoppoint_client_basic_query(self, api_health_check: bool) -> None:
+        """Test AsyncStopPointClient can query TfL and parse response."""
+        client = AsyncStopPointClient()
+        result = await client.MetaModes()
+
+        # Should parse without errors
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_stoppoint_client_by_type(self, api_health_check: bool) -> None:
+        """Test AsyncStopPointClient can get stops by type."""
+        client = AsyncStopPointClient()
+        result = await client.GetByTypeByPathTypes("NaptanMetroStation")
+
+        # Should parse without errors
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_bikepoint_client_basic_query(self, api_health_check: bool) -> None:
+        """Test AsyncBikePointClient can query TfL and parse response."""
+        client = AsyncBikePointClient()
+        result = await client.GetAll()
+
+        # Should parse without errors
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_mode_client_basic_query(self, api_health_check: bool) -> None:
+        """Test AsyncModeClient can query TfL and parse response."""
+        client = AsyncModeClient()
+        result = await client.GetActiveServiceTypes()
+
+        # Should parse without errors
+        self._validate_response_model(result)
+
+    @pytest.mark.asyncio
+    async def test_async_journey_client_basic_query(self, api_health_check: bool) -> None:
+        """Test AsyncJourneyClient can query TfL and parse response."""
+        client = AsyncJourneyClient()
+        # Use specific station codes to avoid ambiguity
+        result = await client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "940GZZLUKSX", "940GZZLUVIC"
+        )
+
+        # Should parse without errors (ResponseModel or ApiError both indicate parsing worked)
+        assert isinstance(result, ResponseModel | ApiError), f"Expected ResponseModel or ApiError, got {type(result)}"
+
+        # If we got a ResponseModel, validate it has content
+        # If we got an ApiError, that's also valid (could be network/API issue)
+        # Both outcomes indicate successful parsing, which is what we're testing here
+        self._validate_journey_result(result)
+
+    @pytest.mark.asyncio
+    async def test_async_journey_client_invalid_station_codes(self, api_health_check: bool) -> None:
+        """Test AsyncJourneyClient returns ApiError for ambiguous or invalid station codes."""
+        client = AsyncJourneyClient()
+        result = await client.JourneyResultsByPathFromPathToQueryViaQueryNationalSearchQueryDateQu(
+            "INVALID_CODE", "940GZZLUXXX"
+        )
+
+        # Should return ApiError for invalid/ambiguous station codes
+        assert isinstance(result, ApiError), f"Expected ApiError for invalid station codes, got {type(result)}"
+        assert result.http_status_code is not None, "ApiError should have HTTP status code"
+
+    @pytest.mark.asyncio
+    async def test_async_error_handling_returns_api_error(self) -> None:
+        """Test that invalid async API calls return ApiError objects."""
+        client = AsyncLineClient("invalid_api_key")
+        result = await client.MetaModes()
 
         # Should return ApiError for invalid key
         assert isinstance(result, ApiError), f"Expected ApiError for invalid key, got {type(result)}"

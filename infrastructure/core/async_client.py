@@ -172,9 +172,8 @@ class AsyncClient:
 
     def _deserialize_error(self, response: UnifiedResponse) -> ApiError:
         """Deserialize error response into ApiError model."""
-        # Check content-type (may have charset suffix)
-        content_type = response.headers.get("Content-Type") or ""
-        if content_type.startswith("application/json"):
+        # if content is json, deserialize it, otherwise manually create an ApiError object
+        if response.headers.get("Content-Type") == "application/json":
             result = self._deserialize("ApiError", response)
             return result.content  # Extract ApiError from ResponseModel
         # Get timestamp from Date header, or use current time if not present
