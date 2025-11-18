@@ -16,7 +16,7 @@ from packaging.version import Version
 BumpType = Literal["major", "minor", "patch"]
 
 # Production dependencies to check
-PRODUCTION_DEPENDENCIES = ["pydantic", "requests"]
+PRODUCTION_DEPENDENCIES = ["pydantic", "httpx", "requests"]
 
 
 def get_pyproject_content(git_ref: str) -> str:

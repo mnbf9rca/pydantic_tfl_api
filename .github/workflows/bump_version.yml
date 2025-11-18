@@ -4,22 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       bump_type:
-        description: 'Version bump type'
+        description: 'Version bump type (select explicitly)'
         required: true
         type: choice
         options:
-          - auto
+          - none
           - major
           - minor
           - patch
-        default: auto
+        default: none
   workflow_call:
     inputs:
       bump_type:
-        description: 'Version bump type (auto, major, minor, or patch)'
-        required: false
+        description: 'Version bump type (major, minor, or patch)'
+        required: true
         type: string
-        default: 'auto'
     outputs:
       new_version:
         description: 'The new version number'
@@ -70,29 +69,75 @@ jobs:
           echo "## 🔢 Determining Version Bump" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          INPUT_TYPE="${{ inputs.bump_type }}"
+          USER_TYPE="${{ inputs.bump_type }}"
 
-          # Check if auto-detect is requested
-          if [ "$INPUT_TYPE" = "auto" ] || [ -z "$INPUT_TYPE" ]; then
-            echo "**Auto-detecting from dependency changes...**" >> $GITHUB_STEP_SUMMARY
-            BUMP_TYPE=$(uv run --group release bash scripts/determine-version-bump.sh)
-            echo "**Detected bump type:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
-          else
-            # Use manual override
-            BUMP_TYPE="$INPUT_TYPE"
-
-            # Validate bump type
-            if [[ ! "$BUMP_TYPE" =~ ^(major|minor|patch)$ ]]; then
-              echo "❌ Invalid bump type: $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
-              echo "Valid options: auto, major, minor, patch" >> $GITHUB_STEP_SUMMARY
-              exit 1
-            fi
-
-            echo "**Manual override provided:** \`$BUMP_TYPE\`" >> $GITHUB_STEP_SUMMARY
+          # Fail if user didn't make an explicit choice
+          if [ "$USER_TYPE" = "none" ] || [ -z "$USER_TYPE" ]; then
+            echo "## ❌ Version Bump Type Required" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "You must select one of: **major**, **minor**, or **patch**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The 'none' option exists to ensure you make an explicit choice." >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
 
-          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          # Validate user input
+          if [[ ! "$USER_TYPE" =~ ^(major|minor|patch)$ ]]; then
+            echo "❌ Invalid bump type: $USER_TYPE" >> $GITHUB_STEP_SUMMARY
+            echo "Valid options: major, minor, patch" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # Always run auto-detection to establish floor
+          echo "**Auto-detecting minimum bump from dependency changes...**" >> $GITHUB_STEP_SUMMARY
+          AUTO_TYPE=$(uv run --group release bash scripts/determine-version-bump.sh)
+
+          # Validate auto-detected type
+          if [[ ! "$AUTO_TYPE" =~ ^(major|minor|patch)$ ]]; then
+            echo "❌ Auto-detection returned invalid bump type: $AUTO_TYPE" >> $GITHUB_STEP_SUMMARY
+            echo "This is an internal error. Please check the determine-version-bump.sh script." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "**Auto-detected minimum:** \`$AUTO_TYPE\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "**User selected:** \`$USER_TYPE\`" >> $GITHUB_STEP_SUMMARY
+
+          # Determine final bump type: use the higher of auto-detected and user-selected
+          # Priority: major > minor > patch
+          # Auto-detection sets the floor, user can only go higher
+          bump_priority() {
+            case "$1" in
+              major) echo 3 ;;
+              minor) echo 2 ;;
+              patch) echo 1 ;;
+              *) echo 0 ;;
+            esac
+          }
+
+          AUTO_PRIORITY=$(bump_priority "$AUTO_TYPE")
+          USER_PRIORITY=$(bump_priority "$USER_TYPE")
+
+          if [ "$USER_PRIORITY" -ge "$AUTO_PRIORITY" ]; then
+            BUMP_TYPE="$USER_TYPE"
+            if [ "$USER_PRIORITY" -gt "$AUTO_PRIORITY" ]; then
+              echo "**Result:** Using user selection \`$BUMP_TYPE\` (higher than auto-detected minimum)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Result:** Using \`$BUMP_TYPE\` (matches auto-detected minimum)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## ❌ Version Bump Too Low" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "You selected \`$USER_TYPE\` but the auto-detected minimum is \`$AUTO_TYPE\`." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please re-run the workflow with at least \`$AUTO_TYPE\` selected." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
 
       - name: Bump version and create tag
         id: bump_version
