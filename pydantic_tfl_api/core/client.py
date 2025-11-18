@@ -172,6 +172,8 @@ class Client:
         # Get timestamp from Date header, or use current time if not present
         date_header = response.headers.get("Date")
         timestamp = parsedate_to_datetime(date_header) if date_header else datetime.now(UTC)
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=UTC)
         return ApiError(
             timestamp_utc=timestamp,
             exception_type="Unknown",
