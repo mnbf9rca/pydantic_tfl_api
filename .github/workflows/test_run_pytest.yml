@@ -42,8 +42,12 @@ jobs:
 
       - name: Install dependencies with Pydantic ${{ matrix.pydantic-version }} and extras "${{ matrix.extras }}"
         run: |
-          # Pin pydantic version BEFORE syncing (if not latest)
-          if [ "${{ matrix.pydantic-version }}" != "latest" ]; then
+          # Set pydantic version BEFORE syncing
+          if [ "${{ matrix.pydantic-version }}" = "latest" ]; then
+            # Upgrade to actual latest pydantic
+            uv lock --upgrade-package pydantic
+          else
+            # Pin specific version
             uv add "pydantic==${{ matrix.pydantic-version }}"
           fi
 
