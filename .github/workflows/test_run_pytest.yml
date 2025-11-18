@@ -12,8 +12,19 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
-        pydantic-version: ["2.8.2", "latest"]
+        pydantic-version: ["2.8.2", "2.12.0", "latest"]
         extras: ["", "requests"]
+        exclude:
+          # Python 3.14 requires pydantic >= 2.12.0 (PyO3 compatibility)
+          - python-version: "3.14"
+            pydantic-version: "2.8.2"
+          # Don't need to test 2.12.0 on older Python versions (2.8.2 and latest cover them)
+          - python-version: "3.11"
+            pydantic-version: "2.12.0"
+          - python-version: "3.12"
+            pydantic-version: "2.12.0"
+          - python-version: "3.13"
+            pydantic-version: "2.12.0"
     runs-on: ubuntu-latest
 
     steps:
