@@ -30,11 +30,12 @@ from importlib import import_module
 from typing import Any
 
 from pydantic import BaseModel, RootModel
-from requests import Response
 
 from pydantic_tfl_api import models
 
+from .http_client import HTTPClientBase
 from .package_models import ApiError, ResponseModel
+from .response import UnifiedResponse
 from .rest_client import RestClient
 
 
@@ -42,10 +43,11 @@ class Client:
     """Client
 
     :param str api_token: API token to access TfL unified API
+    :param HTTPClientBase http_client: HTTP client implementation (defaults to RequestsClient)
     """
 
-    def __init__(self, api_token: str | None = None):
-        self.client = RestClient(api_token)
+    def __init__(self, api_token: str | None = None, http_client: HTTPClientBase | None = None):
+        self.client = RestClient(api_token, http_client)
         self.models = self._load_models()
 
     def _load_models(self) -> dict[str, type[BaseModel]]:
@@ -79,7 +81,7 @@ class Client:
             return None
 
     @staticmethod
-    def _get_maxage_headers_from_cache_control_header(response: Response) -> tuple[int | None, int | None]:
+    def _get_maxage_headers_from_cache_control_header(response: UnifiedResponse) -> tuple[int | None, int | None]:
         cache_control = response.headers.get("Cache-Control")
         # e.g. 'public, must-revalidate, max-age=43200, s-maxage=86400'
         if cache_control is None:
@@ -99,7 +101,7 @@ class Client:
             return None
 
     @staticmethod
-    def _get_result_expiry(response: Response) -> tuple[datetime | None, datetime | None]:
+    def _get_result_expiry(response: UnifiedResponse) -> tuple[datetime | None, datetime | None]:
         s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(response)
         request_datetime = parsedate_to_datetime(response.headers.get("Date")) if "Date" in response.headers else None
 
@@ -109,14 +111,14 @@ class Client:
         return s_maxage_expiry, maxage_expiry
 
     @staticmethod
-    def _get_datetime_from_response_headers(response: Response) -> datetime | None:
+    def _get_datetime_from_response_headers(response: UnifiedResponse) -> datetime | None:
         response_headers = response.headers
         try:
             return parsedate_to_datetime(response_headers.get("Date")) if "Date" in response_headers else None
         except (TypeError, ValueError):
             return None
 
-    def _deserialize(self, model_name: str, response: Response) -> Any:
+    def _deserialize(self, model_name: str, response: UnifiedResponse) -> Any:
         shared_expiry, result_expiry = self._get_result_expiry(response)
         response_date_time = self._get_datetime_from_response_headers(response)
         Model = self._get_model(model_name)
@@ -162,7 +164,7 @@ class Client:
             response_timestamp=response_date_time,
         )
 
-    def _deserialize_error(self, response: Response) -> ApiError:
+    def _deserialize_error(self, response: UnifiedResponse) -> ApiError:
         # if content is json, deserialize it, otherwise manually create an ApiError object
         if response.headers.get("Content-Type") == "application/json":
             return self._deserialize("ApiError", response)

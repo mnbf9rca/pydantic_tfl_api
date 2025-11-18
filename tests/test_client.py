@@ -191,7 +191,8 @@ def test_client_initialization(api_token: str | None, expected_client_type: type
         # Assert
         assert isinstance(test_client.client, expected_client_type)
         assert test_client.models == expected_models
-        MockRestClient.assert_called_once_with(api_token)
+        # RestClient now accepts optional http_client parameter (defaults to None)
+        MockRestClient.assert_called_once_with(api_token, None)
         MockLoadModels.assert_called_once()
 
 
