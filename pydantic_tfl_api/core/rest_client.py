@@ -23,7 +23,7 @@
 
 # try:
 from typing import Any
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
 
 from .http_backends import RequestsClient
 from .http_client import HTTPClientBase
@@ -50,7 +50,17 @@ class RestClient:
     ) -> UnifiedResponse:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
-        url = f"{request_path}?{self._get_query_strings(params)}"
+
+        # Build URL using urllib for reliability
+        query_string = self._get_query_strings(params)
+        url_parts = urlsplit(request_path)
+        url = urlunsplit((
+            url_parts.scheme,
+            url_parts.netloc,
+            url_parts.path,
+            query_string,
+            url_parts.fragment,
+        ))
 
         response = self.http_client.get(
             url,
