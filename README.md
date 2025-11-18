@@ -229,6 +229,7 @@ line = models.Line(id="victoria", name="Victoria", ...)
 ```
 
 Key points about models:
+
 - **Circular references** are handled using `ForwardRef`
 - **Field names match the API** except for Python reserved words (e.g., `class` → `class_`)
 - **Array responses** are wrapped in `RootModel` (access via `.root` attribute)
