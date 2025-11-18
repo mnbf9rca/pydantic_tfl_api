@@ -10,18 +10,22 @@ readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["pydantic", "tfl", "tfl-api", "transport-for-london", "unified-api"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "pydantic>=2.8.2,<3.0",
-    "requests>=2.32.3,<3.0",
+    "httpx>=0.27.0,<1.0",
 ]
+
+[project.optional-dependencies]
+requests = ["requests>=2.32.3,<3.0"]
 
 [project.urls]
 Homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"
@@ -41,6 +45,7 @@ dev = [
     "pre-commit>=4.3.0",
     "jsonschema>=4.25.1",
     "types-jsonschema>=4.25.1.20250822",
+    "httpx>=0.27.0,<1.0",
 ]
 release = [
     "packaging>=24.0",
@@ -66,7 +71,7 @@ include = [
 ]
 
 [tool.coverage.run]
-source = ["pydantic_tfl_api"]
+source = ["pydantic_tfl_api", "scripts/build_system"]
 omit = [
     "*/test/*",
     "*/tests/*",
@@ -75,8 +80,10 @@ omit = [
     "*/.tox/*",
     "*/.eggs/*",
     "*/.vscode-remote/*",
-    "*/build_script/*",
-    "*/scripts/*",
+    # Exclude generated output (focus on source code)
+    "*/endpoints/*Client.py",
+    "*/endpoints/*_config.py",
+    "*/models/*.py",
 ]
 relative_files = true
 branch = true
@@ -214,5 +221,6 @@ exclude = [
 module = [
     "requests.*",
     "jsonschema.*",
+    "httpx.*",
 ]
 ignore_missing_imports = true

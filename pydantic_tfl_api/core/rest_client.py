@@ -21,29 +21,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# try:
 from typing import Any
 from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
 
-from .http_backends import RequestsClient
-from .http_client import HTTPClientBase
+from .http_client import HTTPClientBase, get_default_http_client
 from .response import UnifiedResponse
-
-# except ImportError:
-#     from urllib import urlencode
-# from config import base_url
 
 
 class RestClient:
     """RestClient.
 
     :param str app_key: App key to access TfL unified API
-    :param HTTPClientBase http_client: HTTP client implementation (defaults to RequestsClient)
+    :param HTTPClientBase http_client: HTTP client implementation (defaults to HttpxClient)
     """
 
     def __init__(self, app_key: str | None = None, http_client: HTTPClientBase | None = None) -> None:
         self.app_key = {"app_key": app_key} if app_key else None
-        self.http_client = http_client if http_client is not None else RequestsClient()
+        self.http_client = http_client if http_client is not None else get_default_http_client()
 
     def send_request(
         self, base_url: str, location: str, params: dict[str, Any] | None = None

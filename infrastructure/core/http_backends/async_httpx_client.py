@@ -1,25 +1,23 @@
-# Requests-based HTTP Client Implementation
-# This module provides an HTTP client implementation using the requests library.
+# httpx-based Async HTTP Client Implementation
+# This module provides an asynchronous HTTP client implementation using the httpx library.
 
 from collections.abc import Mapping
 from typing import Any
 
-import requests
-from requests import Response
+import httpx
 
-from ..http_client import HTTPClientBase, HTTPResponse
+from ..http_client import AsyncHTTPClientBase, HTTPResponse
 
 
-class RequestsResponse:
-    """Wrapper around requests.Response to ensure HTTPResponse protocol compliance.
+class AsyncHttpxResponse:
+    """Wrapper around httpx.Response to ensure HTTPResponse protocol compliance for async clients.
 
-    This class wraps a requests.Response object to provide a consistent interface
-    that matches the HTTPResponse protocol. While requests.Response already has
-    most of these properties, this wrapper ensures type consistency and allows
-    for any necessary adaptations.
+    This class wraps an httpx.Response object to provide a consistent interface
+    that matches the HTTPResponse protocol. It's identical to HttpxResponse but
+    is used by the async client for clarity.
     """
 
-    def __init__(self, response: Response) -> None:
+    def __init__(self, response: httpx.Response) -> None:
         self._response = response
 
     @property
@@ -30,7 +28,7 @@ class RequestsResponse:
     @property
     def headers(self) -> Mapping[str, str]:
         """Response headers as a case-insensitive mapping."""
-        # Return original CaseInsensitiveDict which is case-insensitive
+        # Return original httpx.Headers which is case-insensitive
         return self._response.headers
 
     @property
@@ -46,7 +44,7 @@ class RequestsResponse:
     @property
     def reason(self) -> str:
         """HTTP reason phrase (e.g., 'OK', 'Not Found')."""
-        return self._response.reason or ""
+        return self._response.reason_phrase or ""
 
     def json(self) -> Any:
         """Parse response body as JSON."""
@@ -57,20 +55,20 @@ class RequestsResponse:
         self._response.raise_for_status()
 
 
-class RequestsClient(HTTPClientBase):
-    """HTTP client implementation using the requests library.
+class AsyncHttpxClient(AsyncHTTPClientBase):
+    """Asynchronous HTTP client implementation using the httpx library.
 
-    This is the default HTTP client for the library, providing synchronous
-    HTTP requests using the popular requests library.
+    This HTTP client provides async HTTP requests using httpx,
+    enabling high-performance concurrent API calls.
     """
 
-    def get(
+    async def get(
         self,
         url: str,
         headers: dict[str, str] | None = None,
         timeout: int | None = None,
     ) -> HTTPResponse:
-        """Send a GET request using the requests library.
+        """Send an async GET request using the httpx library.
 
         Args:
             url: The URL to send the request to (should include query parameters).
@@ -78,11 +76,12 @@ class RequestsClient(HTTPClientBase):
             timeout: Request timeout in seconds. Defaults to 30 if not specified.
 
         Returns:
-            A RequestsResponse object wrapping the requests.Response.
+            An AsyncHttpxResponse object wrapping the httpx.Response.
         """
-        response = requests.get(
-            url,
-            headers=headers,
-            timeout=timeout if timeout is not None else 30,
-        )
-        return RequestsResponse(response)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url,
+                headers=headers,
+                timeout=timeout if timeout is not None else 30,
+            )
+            return AsyncHttpxResponse(response)

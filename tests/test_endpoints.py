@@ -6,8 +6,12 @@ from pydantic_tfl_api import endpoints
 
 class TestTypeHints(unittest.TestCase):
     def test_model_literal(self) -> None:
-        # endpoints.TfLEndpoint is a Literal which should contain the names of all the endpoints in the package
-        # this test checks that the names are correct, none are missing.
-        # we do this by comparing the __all__ attribute of the endpoints module with the literal
+        # endpoints.TfLEndpoint is a Literal which should contain the names of sync endpoints
+        # endpoints.AsyncTfLEndpoint should contain async endpoints
+        # Together they should equal __all__
 
-        self.assertListEqual(list(get_args(endpoints.TfLEndpoint)), endpoints.__all__)
+        sync_endpoints = list(get_args(endpoints.TfLEndpoint))
+        async_endpoints = list(get_args(endpoints.AsyncTfLEndpoint))
+        all_endpoints = sync_endpoints + async_endpoints
+
+        self.assertListEqual(all_endpoints, endpoints.__all__)

@@ -1,6 +1,7 @@
 # Requests-based HTTP Client Implementation
 # This module provides an HTTP client implementation using the requests library.
 
+from collections.abc import Mapping
 from typing import Any
 
 import requests
@@ -27,10 +28,10 @@ class RequestsResponse:
         return self._response.status_code
 
     @property
-    def headers(self) -> dict[str, str]:
-        """Response headers as a dictionary."""
-        # requests uses a CaseInsensitiveDict, convert to regular dict
-        return dict(self._response.headers)
+    def headers(self) -> Mapping[str, str]:
+        """Response headers as a case-insensitive mapping."""
+        # Return original CaseInsensitiveDict which is case-insensitive
+        return self._response.headers
 
     @property
     def text(self) -> str:
