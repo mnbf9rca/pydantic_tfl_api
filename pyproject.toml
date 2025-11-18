@@ -25,7 +25,6 @@ dependencies = [
 
 [project.optional-dependencies]
 requests = ["requests>=2.32.3,<3.0"]
-all = ["requests>=2.32.3,<3.0"]
 
 [project.urls]
 Homepage = "https://github.com/mnbf9rca/pydantic_tfl_api"

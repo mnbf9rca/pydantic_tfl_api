@@ -13,7 +13,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
         pydantic-version: ["2.8.2", "latest"]
-        extras: ["", "requests", "all"]
+        extras: ["", "requests"]
     runs-on: ubuntu-latest
 
     steps:
@@ -64,7 +64,7 @@ jobs:
             -v
 
       - name: Upload coverage reports to Codecov
-        if: matrix.python-version == '3.12' && matrix.pydantic-version == 'latest' && matrix.extras == 'all'
+        if: matrix.python-version == '3.12' && matrix.pydantic-version == 'latest' && matrix.extras == 'requests'
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           files: ./coverage.xml
