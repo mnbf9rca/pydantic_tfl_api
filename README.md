@@ -6,6 +6,13 @@ Fully typed Python client for Transport for London (TfL) Unified API, using **Py
 
 Originally created as a replacement for [TfL-python-api](https://github.com/dhilmathy/TfL-python-api) which depends on the deprecated [msrest](https://github.com/Azure/msrest-for-python) package.
 
+## What's changed in V3?
+
+- major change: changed default http library has changed from `requests` to `httpx`. The Clients and APIs are all exactly the same and you should not notice any difference. See below for instructions on how to use `requests` if you prefer that.
+- Added async clients. So for each client (e.g. `LineClient`) there's now an async couterpart (`AsyncLineClient`). Other behavior of the clients is identical.
+- Fixed some parsing errors with the ApiError response. You will now always get either `ResponseModel` or `ApiError` when making requests (previously you may have had `ResponseModel[ApiError]` which was not expected behaviour).
+- Removed CHANGELOG as it wasnt being maintained. Please refer to git history for changes.
+
 ## Installation
 
 ```bash
