@@ -66,7 +66,9 @@ class Client:
                 if isinstance(attr, type) and issubclass(attr, BaseModel):
                     models_dict[model_name] = attr
 
-        # print(models_dict)
+        # Register core models used for error handling
+        models_dict["ApiError"] = ApiError
+
         return models_dict
 
     @staticmethod
