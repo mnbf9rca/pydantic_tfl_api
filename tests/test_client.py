@@ -191,7 +191,8 @@ def test_client_initialization(api_token: str | None, expected_client_type: type
         # Assert
         assert isinstance(test_client.client, expected_client_type)
         assert test_client.models == expected_models
-        MockRestClient.assert_called_once_with(api_token)
+        # RestClient now accepts optional http_client parameter (defaults to None)
+        MockRestClient.assert_called_once_with(api_token, None)
         MockLoadModels.assert_called_once()
 
 
@@ -767,3 +768,120 @@ def test_get_datetime_from_response_headers(headers: dict[str, str], expected_re
 
     # Assert
     assert result == expected_result
+
+
+# Regression tests for issue #143: ApiError model registration
+class TestApiErrorRegistration:
+    """Tests to ensure ApiError is properly registered and can be deserialized."""
+
+    def test_api_error_is_registered_in_models_dict(self) -> None:
+        """Verify that ApiError is registered in the Client's models dictionary.
+
+        This is a regression test for issue #143 where ApiError was not registered,
+        causing ValueError when trying to deserialize JSON error responses.
+        """
+        test_client = Client()
+
+        # ApiError should be in the models dictionary
+        assert "ApiError" in test_client.models, "ApiError should be registered in models dictionary"
+        assert test_client.models["ApiError"] == ApiError, "ApiError should map to the correct class"
+
+    def test_get_model_returns_api_error(self) -> None:
+        """Verify that _get_model can successfully look up ApiError."""
+        test_client = Client()
+
+        # Should not raise ValueError
+        model = test_client._get_model("ApiError")
+
+        assert model == ApiError, "Should return ApiError class"
+
+    def test_deserialize_error_json_without_mocking(self) -> None:
+        """Test actual JSON error deserialization without mocking _deserialize.
+
+        This is the critical regression test for issue #143. The original bug
+        occurred because _deserialize_error tried to call _get_model("ApiError")
+        but ApiError wasn't registered in the models dictionary.
+        """
+        # Create a mock JSON error response from TfL API
+        response = Response()
+        error_json = {
+            "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
+            "exceptionType": "ApiException",
+            "httpStatusCode": 429,
+            "httpStatus": "Invalid App Key",
+            "relativeUri": "/Line/Meta/Modes",
+            "message": "Rate limit exceeded",
+        }
+        response._content = bytes(json.dumps(error_json), "utf-8")
+        response.headers.update({
+            "Content-Type": "application/json",
+            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+        })
+        response.status_code = 429
+        response.reason = "Too Many Requests"
+        response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
+
+        test_client = Client()
+
+        # This should NOT raise ValueError about ApiError not being found
+        result = test_client._deserialize_error(response)
+
+        # Verify the result is properly deserialized
+        assert isinstance(result, ResponseModel), "Should return a ResponseModel wrapping ApiError"
+        assert isinstance(result.content, ApiError), "ResponseModel content should be ApiError"
+        assert result.content.http_status_code == 429
+        assert result.content.http_status == "Invalid App Key"
+        assert result.content.message == "Rate limit exceeded"
+
+    def test_deserialize_error_non_json(self) -> None:
+        """Test error deserialization for non-JSON responses (control test)."""
+        response = Response()
+        response._content = b"Internal Server Error"
+        response.headers.update({
+            "Content-Type": "text/html",
+            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+        })
+        response.status_code = 500
+        response.reason = "Internal Server Error"
+        response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
+
+        test_client = Client()
+
+        # Non-JSON path should still work (this was already working)
+        result = test_client._deserialize_error(response)
+
+        assert isinstance(result, ApiError), "Should return ApiError directly for non-JSON"
+        assert result.http_status_code == 500
+        assert result.exception_type == "Unknown"
+
+    def test_send_request_and_deserialize_error_response(self) -> None:
+        """Test full flow: API call returning JSON error response."""
+        test_client = SampleClient()
+
+        # Mock the API to return a JSON error
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.reason = "Bad Request"
+        mock_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
+        mock_response.headers = {
+            "Content-Type": "application/json",
+            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+            "Cache-Control": "public, max-age=300",
+        }
+        mock_response.json.return_value = {
+            "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
+            "exceptionType": "EntityNotFoundException",
+            "httpStatusCode": 400,
+            "httpStatus": "Bad Request",
+            "relativeUri": "/Line/Mode/invalid/Status",
+            "message": "Invalid mode 'invalid'",
+        }
+
+        with patch("requests.Session.request", return_value=mock_response):
+            result = test_client.Line_test_endpoint("invalid")
+
+        # Should successfully deserialize the JSON error
+        assert isinstance(result, ResponseModel), "Should return ResponseModel for JSON error"
+        assert isinstance(result.content, ApiError), "Content should be ApiError"
+        assert result.content.http_status_code == 400
+        assert result.content.message == "Invalid mode 'invalid'"

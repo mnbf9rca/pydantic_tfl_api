@@ -23,10 +23,11 @@
 
 # try:
 from typing import Any
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlsplit, urlunsplit
 
-import requests
-from requests import Response
+from .http_backends import RequestsClient
+from .http_client import HTTPClientBase
+from .response import UnifiedResponse
 
 # except ImportError:
 #     from urllib import urlencode
@@ -37,20 +38,36 @@ class RestClient:
     """RestClient.
 
     :param str app_key: App key to access TfL unified API
+    :param HTTPClientBase http_client: HTTP client implementation (defaults to RequestsClient)
     """
 
-    def __init__(self, app_key: str | None = None) -> None:
+    def __init__(self, app_key: str | None = None, http_client: HTTPClientBase | None = None) -> None:
         self.app_key = {"app_key": app_key} if app_key else None
+        self.http_client = http_client if http_client is not None else RequestsClient()
 
-    def send_request(self, base_url: str, location: str, params: dict[str, Any] | None = None) -> Response:
+    def send_request(
+        self, base_url: str, location: str, params: dict[str, Any] | None = None
+    ) -> UnifiedResponse:
         request_headers = self._get_request_headers()
         request_path = urljoin(base_url, location)
 
-        return requests.get(
-            f"{request_path}?{self._get_query_strings(params)}",
+        # Build URL using urllib for reliability
+        query_string = self._get_query_strings(params)
+        url_parts = urlsplit(request_path)
+        url = urlunsplit((
+            url_parts.scheme,
+            url_parts.netloc,
+            url_parts.path,
+            query_string,
+            url_parts.fragment,
+        ))
+
+        response = self.http_client.get(
+            url,
             headers=request_headers,
             timeout=30,
         )
+        return UnifiedResponse(response)
 
     def _get_request_headers(self) -> dict[str, str]:
         request_headers = {

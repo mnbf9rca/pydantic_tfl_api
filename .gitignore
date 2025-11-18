@@ -214,3 +214,5 @@ test_output/
 
 # Spec change metadata (uploaded as GitHub artifacts, not committed)
 .github/spec_changes/
+
+settings.local.json

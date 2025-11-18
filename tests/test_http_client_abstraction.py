@@ -1,0 +1,378 @@
+"""Tests for the HTTP client abstraction layer (Phase 1)."""
+
+from unittest.mock import Mock, patch
+
+import pytest
+import requests
+
+from pydantic_tfl_api.core import Client, HTTPClientBase, HTTPResponse, RequestsClient, RestClient, UnifiedResponse
+from pydantic_tfl_api.core.http_backends.requests_client import RequestsResponse
+
+
+class TestHTTPClientBase:
+    """Tests for the HTTPClientBase abstract class."""
+
+    def test_cannot_instantiate_directly(self) -> None:
+        """Test that HTTPClientBase cannot be instantiated directly."""
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            HTTPClientBase()  # type: ignore[abstract]
+
+    def test_subclass_must_implement_get(self) -> None:
+        """Test that subclasses must implement the get method."""
+
+        class IncompleteClient(HTTPClientBase):
+            pass
+
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            IncompleteClient()  # type: ignore[abstract]
+
+
+class TestHTTPResponse:
+    """Tests for the HTTPResponse protocol."""
+
+    def test_requests_response_conforms_to_protocol(self) -> None:
+        """Test that RequestsResponse conforms to HTTPResponse protocol."""
+        mock_response = Mock(spec=requests.Response)
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.text = "test"
+        mock_response.url = "http://test.com"
+        mock_response.reason = "OK"
+        mock_response.json.return_value = {"key": "value"}
+
+        response = RequestsResponse(mock_response)
+        assert isinstance(response, HTTPResponse)
+
+
+class TestRequestsResponse:
+    """Tests for the RequestsResponse wrapper class."""
+
+    @pytest.fixture
+    def mock_requests_response(self) -> Mock:
+        """Create a mock requests.Response for testing."""
+        mock = Mock(spec=requests.Response)
+        mock.status_code = 200
+        mock.headers = {"Content-Type": "application/json", "Date": "Mon, 01 Jan 2024 00:00:00 GMT"}
+        mock.text = '{"message": "success"}'
+        mock.url = "http://api.tfl.gov.uk/Line/victoria"
+        mock.reason = "OK"
+        mock.json.return_value = {"message": "success"}
+        return mock
+
+    def test_status_code(self, mock_requests_response: Mock) -> None:
+        """Test status_code property."""
+        response = RequestsResponse(mock_requests_response)
+        assert response.status_code == 200
+
+    def test_headers(self, mock_requests_response: Mock) -> None:
+        """Test headers property returns dict."""
+        response = RequestsResponse(mock_requests_response)
+        headers = response.headers
+        assert isinstance(headers, dict)
+        assert headers["Content-Type"] == "application/json"
+
+    def test_text(self, mock_requests_response: Mock) -> None:
+        """Test text property."""
+        response = RequestsResponse(mock_requests_response)
+        assert response.text == '{"message": "success"}'
+
+    def test_url(self, mock_requests_response: Mock) -> None:
+        """Test url property."""
+        response = RequestsResponse(mock_requests_response)
+        assert response.url == "http://api.tfl.gov.uk/Line/victoria"
+
+    def test_reason(self, mock_requests_response: Mock) -> None:
+        """Test reason property."""
+        response = RequestsResponse(mock_requests_response)
+        assert response.reason == "OK"
+
+    def test_reason_empty(self) -> None:
+        """Test reason property returns empty string when None."""
+        mock = Mock(spec=requests.Response)
+        mock.reason = None
+        response = RequestsResponse(mock)
+        assert response.reason == ""
+
+    def test_json(self, mock_requests_response: Mock) -> None:
+        """Test json method."""
+        response = RequestsResponse(mock_requests_response)
+        data = response.json()
+        assert data == {"message": "success"}
+
+    def test_raise_for_status(self, mock_requests_response: Mock) -> None:
+        """Test raise_for_status delegates to underlying response."""
+        response = RequestsResponse(mock_requests_response)
+        response.raise_for_status()
+        mock_requests_response.raise_for_status.assert_called_once()
+
+
+class TestRequestsClient:
+    """Tests for the RequestsClient implementation."""
+
+    def test_get_makes_request(self) -> None:
+        """Test that get method makes a GET request."""
+        with patch("pydantic_tfl_api.core.http_backends.requests_client.requests.get") as mock_get:
+            mock_response = Mock(spec=requests.Response)
+            mock_get.return_value = mock_response
+
+            client = RequestsClient()
+            result = client.get("http://test.com", headers={"Accept": "application/json"}, timeout=60)
+
+            mock_get.assert_called_once_with("http://test.com", headers={"Accept": "application/json"}, timeout=60)
+            assert isinstance(result, RequestsResponse)
+
+    def test_get_default_timeout(self) -> None:
+        """Test that get method uses default timeout of 30 seconds."""
+        with patch("pydantic_tfl_api.core.http_backends.requests_client.requests.get") as mock_get:
+            mock_response = Mock(spec=requests.Response)
+            mock_get.return_value = mock_response
+
+            client = RequestsClient()
+            client.get("http://test.com")
+
+            mock_get.assert_called_once_with("http://test.com", headers=None, timeout=30)
+
+
+class TestUnifiedResponse:
+    """Tests for the UnifiedResponse wrapper class."""
+
+    @pytest.fixture
+    def mock_http_response(self) -> Mock:
+        """Create a mock HTTPResponse for testing."""
+        mock = Mock()
+        mock.status_code = 200
+        mock.headers = {"Content-Type": "application/json"}
+        mock.text = '{"data": "test"}'
+        mock.url = "http://test.com/api"
+        mock.reason = "OK"
+        mock.json.return_value = {"data": "test"}
+        return mock
+
+    def test_status_code(self, mock_http_response: Mock) -> None:
+        """Test status_code property."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.status_code == 200
+
+    def test_headers(self, mock_http_response: Mock) -> None:
+        """Test headers property."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.headers == {"Content-Type": "application/json"}
+
+    def test_text(self, mock_http_response: Mock) -> None:
+        """Test text property."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.text == '{"data": "test"}'
+
+    def test_url(self, mock_http_response: Mock) -> None:
+        """Test url property."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.url == "http://test.com/api"
+
+    def test_reason(self, mock_http_response: Mock) -> None:
+        """Test reason property."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.reason == "OK"
+
+    def test_json(self, mock_http_response: Mock) -> None:
+        """Test json method."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.json() == {"data": "test"}
+
+    def test_raise_for_status(self, mock_http_response: Mock) -> None:
+        """Test raise_for_status method."""
+        response = UnifiedResponse(mock_http_response)
+        response.raise_for_status()
+        mock_http_response.raise_for_status.assert_called_once()
+
+    def test_ok_for_success(self, mock_http_response: Mock) -> None:
+        """Test ok property returns True for successful responses."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.ok is True
+
+    def test_ok_for_error(self) -> None:
+        """Test ok property returns False for error responses."""
+        mock = Mock()
+        mock.status_code = 400
+        response = UnifiedResponse(mock)
+        assert response.ok is False
+
+    def test_is_error_for_success(self, mock_http_response: Mock) -> None:
+        """Test is_error property returns False for successful responses."""
+        response = UnifiedResponse(mock_http_response)
+        assert response.is_error is False
+
+    def test_is_error_for_error(self) -> None:
+        """Test is_error property returns True for error responses."""
+        mock = Mock()
+        mock.status_code = 500
+        response = UnifiedResponse(mock)
+        assert response.is_error is True
+
+    def test_is_client_error(self) -> None:
+        """Test is_client_error property."""
+        mock = Mock()
+
+        # Test 4xx status codes
+        for status in [400, 401, 403, 404, 422, 499]:
+            mock.status_code = status
+            response = UnifiedResponse(mock)
+            assert response.is_client_error is True, f"Expected True for status {status}"
+
+        # Test non-4xx status codes
+        for status in [200, 300, 500]:
+            mock.status_code = status
+            response = UnifiedResponse(mock)
+            assert response.is_client_error is False, f"Expected False for status {status}"
+
+    def test_is_server_error(self) -> None:
+        """Test is_server_error property."""
+        mock = Mock()
+
+        # Test 5xx status codes
+        for status in [500, 501, 502, 503, 504]:
+            mock.status_code = status
+            response = UnifiedResponse(mock)
+            assert response.is_server_error is True, f"Expected True for status {status}"
+
+        # Test non-5xx status codes
+        for status in [200, 400, 404]:
+            mock.status_code = status
+            response = UnifiedResponse(mock)
+            assert response.is_server_error is False, f"Expected False for status {status}"
+
+
+class TestRestClientWithHTTPClientAbstraction:
+    """Tests for RestClient with the new HTTP client abstraction."""
+
+    def test_default_http_client_is_requests_client(self) -> None:
+        """Test that RestClient uses RequestsClient by default."""
+        client = RestClient()
+        assert isinstance(client.http_client, RequestsClient)
+
+    def test_custom_http_client_injection(self) -> None:
+        """Test that a custom HTTP client can be injected."""
+
+        class CustomClient(HTTPClientBase):
+            def get(
+                self,
+                url: str,
+                headers: dict[str, str] | None = None,
+                timeout: int | None = None,
+            ) -> HTTPResponse:
+                mock = Mock()
+                mock.status_code = 200
+                mock.headers = {}
+                mock.text = ""
+                mock.url = url
+                mock.reason = "OK"
+                mock.json.return_value = {}
+                return mock
+
+        custom_client = CustomClient()
+        rest_client = RestClient(http_client=custom_client)
+        assert rest_client.http_client is custom_client
+
+    def test_send_request_returns_unified_response(self) -> None:
+        """Test that send_request returns a UnifiedResponse."""
+        with patch("pydantic_tfl_api.core.http_backends.requests_client.requests.get") as mock_get:
+            mock_response = Mock(spec=requests.Response)
+            mock_response.status_code = 200
+            mock_response.headers = {}
+            mock_response.text = "{}"
+            mock_response.url = "http://test.com"
+            mock_response.reason = "OK"
+            mock_get.return_value = mock_response
+
+            client = RestClient()
+            result = client.send_request("http://api.tfl.gov.uk/", "Line/victoria")
+
+            assert isinstance(result, UnifiedResponse)
+
+    def test_app_key_included_in_headers(self) -> None:
+        """Test that app_key is included in request headers."""
+        with patch("pydantic_tfl_api.core.http_backends.requests_client.requests.get") as mock_get:
+            mock_response = Mock(spec=requests.Response)
+            mock_response.status_code = 200
+            mock_get.return_value = mock_response
+
+            client = RestClient(app_key="test_key")
+            client.send_request("http://api.tfl.gov.uk/", "Line/victoria")
+
+            call_args = mock_get.call_args
+            headers = call_args.kwargs.get("headers") or call_args[1].get("headers")
+            assert headers["app_key"] == "test_key"
+
+
+class TestClientWithHTTPClientAbstraction:
+    """Tests for Client with the new HTTP client abstraction."""
+
+    def test_default_client_works(self) -> None:
+        """Test that Client works with default HTTP client."""
+        client = Client()
+        assert isinstance(client.client.http_client, RequestsClient)
+
+    def test_custom_http_client_passed_through(self) -> None:
+        """Test that custom HTTP client is passed to RestClient."""
+
+        class MockHTTPClient(HTTPClientBase):
+            def get(
+                self,
+                url: str,
+                headers: dict[str, str] | None = None,
+                timeout: int | None = None,
+            ) -> HTTPResponse:
+                mock = Mock()
+                mock.status_code = 200
+                return mock
+
+        mock_client = MockHTTPClient()
+        client = Client(http_client=mock_client)
+        assert client.client.http_client is mock_client
+
+    def test_backward_compatibility_with_api_token(self) -> None:
+        """Test backward compatibility - Client can still be created with just api_token."""
+        client = Client("test_token")
+        assert client.client.app_key == {"app_key": "test_token"}
+
+    def test_backward_compatibility_without_args(self) -> None:
+        """Test backward compatibility - Client can still be created without arguments."""
+        client = Client()
+        assert client.client.app_key is None
+
+
+class TestBuildSystemCopiesHTTPBackends:
+    """Tests to verify the build system copies HTTP backend files correctly."""
+
+    def test_py_typed_marker_exists(self) -> None:
+        """Test that py.typed marker file exists for PEP 561 compliance."""
+        from pathlib import Path
+
+        import pydantic_tfl_api
+
+        package_dir = Path(pydantic_tfl_api.__file__).parent
+        py_typed_path = package_dir / "py.typed"
+        assert py_typed_path.exists(), f"py.typed marker file should exist at {py_typed_path}"
+
+    def test_http_backends_module_is_importable(self) -> None:
+        """Test that http_backends module can be imported."""
+        from pydantic_tfl_api.core import http_backends
+
+        assert hasattr(http_backends, "RequestsClient")
+
+    def test_requests_client_importable_from_core(self) -> None:
+        """Test that RequestsClient can be imported from core."""
+        from pydantic_tfl_api.core import RequestsClient
+
+        assert RequestsClient is not None
+
+    def test_http_client_base_importable_from_core(self) -> None:
+        """Test that HTTPClientBase can be imported from core."""
+        from pydantic_tfl_api.core import HTTPClientBase
+
+        assert HTTPClientBase is not None
+
+    def test_unified_response_importable_from_core(self) -> None:
+        """Test that UnifiedResponse can be imported from core."""
+        from pydantic_tfl_api.core import UnifiedResponse
+
+        assert UnifiedResponse is not None
