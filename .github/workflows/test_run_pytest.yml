@@ -42,16 +42,16 @@ jobs:
 
       - name: Install dependencies with Pydantic ${{ matrix.pydantic-version }} and extras "${{ matrix.extras }}"
         run: |
+          # Pin pydantic version BEFORE syncing (if not latest)
+          if [ "${{ matrix.pydantic-version }}" != "latest" ]; then
+            uv add "pydantic==${{ matrix.pydantic-version }}"
+          fi
+
           # Install with specified extras (or no extras for base install test)
           if [ -z "${{ matrix.extras }}" ]; then
             uv sync --dev
           else
             uv sync --extra ${{ matrix.extras }} --dev
-          fi
-
-          # Pin pydantic version if not latest
-          if [ "${{ matrix.pydantic-version }}" != "latest" ]; then
-            uv add "pydantic==${{ matrix.pydantic-version }}"
           fi
 
       - name: Lint with ruff
