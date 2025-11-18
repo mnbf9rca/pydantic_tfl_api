@@ -182,7 +182,7 @@ jobs:
           BUMP_TYPE="${{ github.event.inputs.bump_type }}"
 
           # Fail if user didn't make an explicit choice
-          if [ "$BUMP_TYPE" = "none" ]; then
+          if [ "$BUMP_TYPE" = "none" ] || [ -z "$BUMP_TYPE" ]; then
             echo "❌ You must select a version bump type (major, minor, or patch)"
             echo "The 'none' option is a placeholder to ensure you make an explicit choice."
             echo ""

@@ -91,6 +91,14 @@ jobs:
           # Always run auto-detection to establish floor
           echo "**Auto-detecting minimum bump from dependency changes...**" >> $GITHUB_STEP_SUMMARY
           AUTO_TYPE=$(uv run --group release bash scripts/determine-version-bump.sh)
+
+          # Validate auto-detected type
+          if [[ ! "$AUTO_TYPE" =~ ^(major|minor|patch)$ ]]; then
+            echo "❌ Auto-detection returned invalid bump type: $AUTO_TYPE" >> $GITHUB_STEP_SUMMARY
+            echo "This is an internal error. Please check the determine-version-bump.sh script." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
           echo "**Auto-detected minimum:** \`$AUTO_TYPE\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
