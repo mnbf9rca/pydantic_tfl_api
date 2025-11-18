@@ -401,9 +401,11 @@ class TestClientGenerator:
         assert endpoints_init.exists()
 
         endpoints_content = endpoints_init.read_text()
-        assert "from .UserClient import UserClient" in endpoints_content
-        assert "from .OrderClient import OrderClient" in endpoints_content
+        # New format exports both sync and async clients
+        assert "from .UserClient import AsyncUserClient, UserClient" in endpoints_content
+        assert "from .OrderClient import AsyncOrderClient, OrderClient" in endpoints_content
         assert "TfLEndpoint = Literal[" in endpoints_content
+        assert "AsyncTfLEndpoint = Literal[" in endpoints_content
 
         # Check individual client files
         assert (endpoints_dir / "UserClient.py").exists()
@@ -541,3 +543,220 @@ class TestClientGenerator:
         # Should contain full path, not just "/v2/"
         assert "'/Disruptions/Lifts/v2/'" in content, f"Expected full path in config, got: {content}"
         assert "'uri': '/v2/'" not in content, "Should not have partial path /v2/"
+
+
+class TestAsyncClientGeneration:
+    """Test async client generation features."""
+
+    @pytest.fixture
+    def client_generator(self) -> ClientGenerator:
+        """Create a ClientGenerator instance for testing."""
+        return ClientGenerator()
+
+    @pytest.fixture
+    def temp_dir(self) -> Generator[Path, None, None]:
+        """Create a temporary directory for testing."""
+        temp_dir = tempfile.mkdtemp()
+        yield Path(temp_dir)
+        shutil.rmtree(temp_dir)
+
+    @pytest.fixture
+    def sample_spec(self) -> dict[str, Any]:
+        """Create a sample OpenAPI specification for testing."""
+        return {
+            "openapi": "3.0.0",
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "servers": [{"url": "https://api.example.com/v1/test"}],
+            "paths": {
+                "/users": {
+                    "get": {
+                        "operationId": "getUsers",
+                        "description": "Get all users",
+                        "parameters": [
+                            {
+                                "name": "limit",
+                                "in": "query",
+                                "required": False,
+                                "schema": {"type": "integer"},
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
+                                    }
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        }
+
+    def test_create_async_method_signature(self, client_generator: Any) -> None:
+        """Test creating async method signatures."""
+        operation_id = "getUserById"
+        parameters = [
+            {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
+        ]
+        model_name = "User"
+
+        signature = client_generator.create_method_signature(operation_id, parameters, model_name, is_async=True)
+
+        assert "async def GetUserById(self," in signature
+        assert "-> ResponseModel[User] | ApiError:" in signature
+
+    def test_create_async_method_implementation(self, client_generator: Any) -> None:
+        """Test creating async method implementations with await."""
+        operation_id = "getUsers"
+        parameters: list[dict[str, Any]] = []
+
+        implementation = client_generator.create_method_implementation(operation_id, parameters, is_async=True)
+
+        assert "return await self._send_request_and_deserialize" in implementation
+
+    def test_create_sync_method_implementation(self, client_generator: Any) -> None:
+        """Test that sync methods don't have await."""
+        operation_id = "getUsers"
+        parameters: list[dict[str, Any]] = []
+
+        implementation = client_generator.create_method_implementation(operation_id, parameters, is_async=False)
+
+        assert "return self._send_request_and_deserialize" in implementation
+        assert "await" not in implementation
+
+    def test_generate_import_lines_with_async(self, client_generator: Any) -> None:
+        """Test that import lines include AsyncClient when include_async=True."""
+        all_types: set[type] = set()
+        all_package_models: set[str] = {"User"}
+
+        import_lines = client_generator.generate_import_lines("TestClient", all_types, all_package_models, include_async=True)
+        import_content = "".join(import_lines)
+
+        assert "AsyncClient" in import_content
+        assert "Client" in import_content
+
+    def test_generate_import_lines_without_async(self, client_generator: Any) -> None:
+        """Test that import lines don't include AsyncClient when include_async=False."""
+        all_types: set[type] = set()
+        all_package_models: set[str] = {"User"}
+
+        import_lines = client_generator.generate_import_lines("TestClient", all_types, all_package_models, include_async=False)
+        import_content = "".join(import_lines)
+
+        assert "AsyncClient" not in import_content
+        assert "Client" in import_content
+
+    def test_create_class_generates_both_sync_and_async(self, client_generator: Any, temp_dir: Any, sample_spec: Any) -> None:
+        """Test that create_class generates both sync and async client classes."""
+        client_generator.create_class(sample_spec, str(temp_dir))
+
+        class_file = temp_dir / "TestClient.py"
+        assert class_file.exists()
+
+        content = class_file.read_text()
+
+        # Check sync class
+        assert "class TestClient(Client):" in content
+
+        # Check async class
+        assert "class AsyncTestClient(AsyncClient):" in content
+
+        # Check async method
+        assert "async def GetUsers" in content
+        assert "await self._send_request_and_deserialize" in content
+
+    def test_save_classes_exports_async_clients(self, client_generator: Any, temp_dir: Any) -> None:
+        """Test that save_classes exports both sync and async clients."""
+        # Create a simple spec with a known name (avoid "Test" which gets normalized to "User")
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Sample API", "version": "1.0.0"},
+            "servers": [{"url": "https://api.example.com/v1/test"}],
+            "paths": {
+                "/users": {
+                    "get": {
+                        "operationId": "getUsers",
+                        "parameters": [],
+                        "responses": {
+                            "200": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
+                                    }
+                                }
+                            }
+                        },
+                    }
+                },
+            },
+        }
+        specs = [spec]
+
+        client_generator.save_classes(specs, str(temp_dir), "https://api.example.com")
+
+        # Check main __init__.py
+        init_file = temp_dir / "__init__.py"
+        init_content = init_file.read_text()
+
+        assert "SampleClient" in init_content
+        assert "AsyncSampleClient" in init_content
+
+        # Check endpoints __init__.py
+        endpoints_init = temp_dir / "endpoints" / "__init__.py"
+        endpoints_content = endpoints_init.read_text()
+
+        assert "from .SampleClient import AsyncSampleClient, SampleClient" in endpoints_content
+        assert "TfLEndpoint" in endpoints_content
+        assert "AsyncTfLEndpoint" in endpoints_content
+
+    def test_process_single_method_async(self, client_generator: Any) -> None:
+        """Test processing a single method with is_async=True."""
+        all_types: set[type] = set()
+        all_package_models: set[str] = set()
+
+        details = {
+            "operationId": "getUsers",
+            "parameters": [],
+            "responses": {
+                "200": {
+                    "content": {
+                        "application/json": {
+                            "schema": {"type": "array", "items": {"$ref": "#/components/schemas/User"}}
+                        }
+                    }
+                }
+            },
+        }
+
+        result = client_generator.process_single_method(
+            "/users", "get", details, "/api", all_types, all_package_models, is_async=True
+        )
+
+        assert "async def GetUsers" in result
+        assert "await self._send_request_and_deserialize" in result
+
+    def test_async_method_with_path_params(self, client_generator: Any) -> None:
+        """Test async method generation with path parameters."""
+        operation_id = "getUserById"
+        parameters = [
+            {"name": "id", "in": "path", "required": True, "schema": {"type": "string"}},
+        ]
+
+        implementation = client_generator.create_method_implementation(operation_id, parameters, is_async=True)
+
+        assert "await" in implementation
+        assert "params=[id]" in implementation
+
+    def test_async_method_with_query_params(self, client_generator: Any) -> None:
+        """Test async method generation with query parameters."""
+        operation_id = "getUsers"
+        parameters = [
+            {"name": "limit", "in": "query", "required": False, "schema": {"type": "integer"}},
+        ]
+
+        implementation = client_generator.create_method_implementation(operation_id, parameters, is_async=True)
+
+        assert "await" in implementation
+        assert "'limit': limit" in implementation

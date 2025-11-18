@@ -1,4 +1,6 @@
-# portions of this code are from https://github.com/dhilmathy/TfL-python-api
+# Async Client Base Class
+# This module provides the base class for generated async API clients.
+
 # MIT License
 
 # Copyright (c) 2018 Mathivanan Palanisamy
@@ -33,24 +35,25 @@ from pydantic import BaseModel, RootModel
 
 from pydantic_tfl_api import models
 
-from .http_client import HTTPClientBase
+from .async_rest_client import AsyncRestClient
+from .http_client import AsyncHTTPClientBase
 from .package_models import ApiError, ResponseModel
 from .response import UnifiedResponse
-from .rest_client import RestClient
 
 
-class Client:
-    """Client
+class AsyncClient:
+    """Async base client for generated API clients.
 
     :param str api_token: API token to access TfL unified API
-    :param HTTPClientBase http_client: HTTP client implementation (defaults to RequestsClient)
+    :param AsyncHTTPClientBase http_client: Async HTTP client implementation (defaults to AsyncHttpxClient)
     """
 
-    def __init__(self, api_token: str | None = None, http_client: HTTPClientBase | None = None):
-        self.client = RestClient(api_token, http_client)
+    def __init__(self, api_token: str | None = None, http_client: AsyncHTTPClientBase | None = None):
+        self.client = AsyncRestClient(api_token, http_client)
         self.models = self._load_models()
 
     def _load_models(self) -> dict[str, type[BaseModel]]:
+        """Load all Pydantic models for deserialization."""
         models_dict: dict[str, type[BaseModel]] = {}
 
         # Load models from individual model files
@@ -75,6 +78,7 @@ class Client:
 
     @staticmethod
     def _parse_int_or_none(value: str) -> int | None:
+        """Parse integer from string or return None."""
         try:
             return int(value)
         except (TypeError, ValueError):
@@ -82,19 +86,19 @@ class Client:
 
     @staticmethod
     def _get_maxage_headers_from_cache_control_header(response: UnifiedResponse) -> tuple[int | None, int | None]:
+        """Extract max-age values from Cache-Control header."""
         cache_control = response.headers.get("Cache-Control")
-        # e.g. 'public, must-revalidate, max-age=43200, s-maxage=86400'
         if cache_control is None:
             return None, None
         directives = cache_control.split(", ")
-        # e.g. ['public', 'must-revalidate', 'max-age=43200', 's-maxage=86400']
         directive_dict = {d.split("=")[0]: d.split("=")[1] for d in directives if "=" in d}
-        smaxage = Client._parse_int_or_none(directive_dict.get("s-maxage", ""))
-        maxage = Client._parse_int_or_none(directive_dict.get("max-age", ""))
+        smaxage = AsyncClient._parse_int_or_none(directive_dict.get("s-maxage", ""))
+        maxage = AsyncClient._parse_int_or_none(directive_dict.get("max-age", ""))
         return smaxage, maxage
 
     @staticmethod
     def _parse_timedelta(value: int | None, base_time: datetime | None) -> datetime | None:
+        """Calculate datetime from timedelta and base time."""
         try:
             return base_time + timedelta(seconds=value) if value is not None and base_time is not None else None
         except (TypeError, ValueError):
@@ -102,23 +106,28 @@ class Client:
 
     @staticmethod
     def _get_result_expiry(response: UnifiedResponse) -> tuple[datetime | None, datetime | None]:
-        s_maxage, maxage = Client._get_maxage_headers_from_cache_control_header(response)
-        request_datetime = parsedate_to_datetime(response.headers.get("Date")) if "Date" in response.headers else None
+        """Calculate expiry times from response headers."""
+        s_maxage, maxage = AsyncClient._get_maxage_headers_from_cache_control_header(response)
+        date_header = response.headers.get("Date")
+        request_datetime = parsedate_to_datetime(date_header) if date_header else None
 
-        s_maxage_expiry = Client._parse_timedelta(s_maxage, request_datetime)
-        maxage_expiry = Client._parse_timedelta(maxage, request_datetime)
+        s_maxage_expiry = AsyncClient._parse_timedelta(s_maxage, request_datetime)
+        maxage_expiry = AsyncClient._parse_timedelta(maxage, request_datetime)
 
         return s_maxage_expiry, maxage_expiry
 
     @staticmethod
     def _get_datetime_from_response_headers(response: UnifiedResponse) -> datetime | None:
+        """Extract datetime from response Date header."""
         response_headers = response.headers
         try:
-            return parsedate_to_datetime(response_headers.get("Date")) if "Date" in response_headers else None
+            date_header = response_headers.get("Date")
+            return parsedate_to_datetime(date_header) if date_header else None
         except (TypeError, ValueError):
             return None
 
     def _deserialize(self, model_name: str, response: UnifiedResponse) -> Any:
+        """Deserialize response into a model instance."""
         shared_expiry, result_expiry = self._get_result_expiry(response)
         response_date_time = self._get_datetime_from_response_headers(response)
         Model = self._get_model(model_name)
@@ -129,6 +138,7 @@ class Client:
         return result
 
     def _get_model(self, model_name: str) -> type[BaseModel]:
+        """Get model class by name."""
         Model = self.models.get(model_name)
         if Model is None:
             raise ValueError(f"No model found with name {model_name}")
@@ -142,19 +152,15 @@ class Client:
         shared_expiry: datetime | None,
         response_date_time: datetime | None,
     ) -> ResponseModel:
+        """Create a ResponseModel instance containing the deserialized content."""
         is_root_model = isinstance(model, type) and issubclass(model, RootModel)
 
         # Adjust for root models: RootModel expects one positional argument
         if is_root_model:
-            # If it's a root model and response_json is not already a list, wrap it in a list
             if not isinstance(response_json, (list)):
-                response_json = [response_json]  # Wrap the input in a list if necessary
-
-            # Create the root model by passing the input directly
+                response_json = [response_json]
             content = model(response_json)
-
         else:
-            # For non-root models: If it's a dict, expand it into keyword arguments
             content = model(**response_json) if isinstance(response_json, dict) else model(response_json)
 
         return ResponseModel(
@@ -165,8 +171,10 @@ class Client:
         )
 
     def _deserialize_error(self, response: UnifiedResponse) -> ApiError:
-        # if content is json, deserialize it, otherwise manually create an ApiError object
-        if response.headers.get("Content-Type") == "application/json":
+        """Deserialize error response into ApiError model."""
+        # Check content-type (may have charset suffix)
+        content_type = response.headers.get("Content-Type") or ""
+        if content_type.startswith("application/json"):
             return self._deserialize("ApiError", response)
         # Get timestamp from Date header, or use current time if not present
         date_header = response.headers.get("Date")
@@ -180,13 +188,24 @@ class Client:
             message=response.text,
         )
 
-    def _send_request_and_deserialize(
+    async def _send_request_and_deserialize(
         self,
         base_url: str,
         endpoint_and_model: dict[str, str],
         params: str | float | list[str | int | float] | None = None,
         endpoint_args: dict[str, Any] | None = None,
     ) -> ResponseModel | ApiError:
+        """Send async request and deserialize the response.
+
+        Args:
+            base_url: The base URL for the API.
+            endpoint_and_model: Dict containing 'uri' and 'model' keys.
+            params: Optional path parameters.
+            endpoint_args: Optional query parameters.
+
+        Returns:
+            ResponseModel on success or ApiError on failure.
+        """
         if params is None:
             params = []
         if not isinstance(params, list):
@@ -195,7 +214,7 @@ class Client:
         endpoint = endpoint_and_model["uri"].format(*params)
         model_name = endpoint_and_model["model"]
 
-        response = self.client.send_request(base_url, endpoint, endpoint_args)
+        response = await self.client.send_request(base_url, endpoint, endpoint_args)
 
         if response.status_code != 200:
             return self._deserialize_error(response)

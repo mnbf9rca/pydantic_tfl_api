@@ -1,6 +1,7 @@
 # Unified Response Wrapper
 # This module provides a unified response wrapper for consistency across HTTP clients.
 
+from collections.abc import Mapping
 from typing import Any
 
 from .http_client import HTTPResponse
@@ -32,8 +33,8 @@ class UnifiedResponse:
         return self._response.status_code
 
     @property
-    def headers(self) -> dict[str, str]:
-        """Response headers as a dictionary."""
+    def headers(self) -> Mapping[str, str]:
+        """Response headers as a case-insensitive mapping."""
         return self._response.headers
 
     @property

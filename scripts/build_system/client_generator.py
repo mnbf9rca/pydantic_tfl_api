@@ -64,10 +64,12 @@ class ClientGenerator:
         query_params = [param["name"] for param in parameters if param["in"] == "query"]
         return path_params, query_params
 
-    def create_method_signature(self, operation_id: str, parameters: list[dict], model_name: str) -> str:
+    def create_method_signature(self, operation_id: str, parameters: list[dict], model_name: str, is_async: bool = False) -> str:
         """Create method signature for a single API operation."""
         param_str = self.create_function_parameters(parameters)
         sanitized_operation_id = self.sanitize_name(operation_id, prefix="Query")
+        if is_async:
+            return f"    async def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
         return f"    def {sanitized_operation_id}(self, {param_str}) -> ResponseModel[{model_name}] | ApiError:\n"
 
     def create_method_docstring(
@@ -92,7 +94,7 @@ class ClientGenerator:
 
         return f"        '''\n        {docstring}\n\n  Parameters:\n{docstring_parameters}\n        '''\n"
 
-    def create_method_implementation(self, operation_id: str, parameters: list[dict]) -> str:
+    def create_method_implementation(self, operation_id: str, parameters: list[dict], is_async: bool = False) -> str:
         """Create method implementation for a single API operation."""
         path_params, query_params = self.classify_parameters(parameters)
 
@@ -104,13 +106,15 @@ class ClientGenerator:
         else:
             query_params_dict = "endpoint_args=None"
 
+        await_keyword = "await " if is_async else ""
+
         if path_params:
-            return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
+            return f"        return {await_keyword}self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], params=[{formatted_path_params}], {query_params_dict})\n\n"
         else:
-            return f"        return self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
+            return f"        return {await_keyword}self._send_request_and_deserialize(base_url, endpoints['{operation_id}'], {query_params_dict})\n\n"
 
     def process_single_method(
-        self, path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set
+        self, path: str, method: str, details: dict[str, Any], api_path: str, all_types: set, all_package_models: set, is_async: bool = False
     ) -> str:
         """Process a single API method and return its complete definition."""
         operation_id = details.get("operationId")
@@ -127,13 +131,13 @@ class ClientGenerator:
         full_path = self.join_url_paths(api_path, path)
 
         # Build complete method definition
-        method_lines = [self.create_method_signature(operation_id, parameters, model_name)]
+        method_lines = [self.create_method_signature(operation_id, parameters, model_name, is_async)]
         method_lines.append(self.create_method_docstring(details, full_path, model_name, parameters))
-        method_lines.append(self.create_method_implementation(operation_id, parameters))
+        method_lines.append(self.create_method_implementation(operation_id, parameters, is_async))
 
         return "".join(method_lines)
 
-    def generate_import_lines(self, class_name: str, all_types: set, all_package_models: set) -> list[str]:
+    def generate_import_lines(self, class_name: str, all_types: set, all_package_models: set, include_async: bool = False) -> list[str]:
         """Generate all import statements for the client class."""
         import_lines = []
 
@@ -157,11 +161,17 @@ class ClientGenerator:
         # Parent imports for core modules (..) - alphabetically sorted items
         needs_generic_response_model = "GenericResponseModel" in all_package_models
         if needs_generic_response_model:
-            local_imports.append("from ..core import ApiError, Client, GenericResponseModel, ResponseModel\n")
+            if include_async:
+                local_imports.append("from ..core import ApiError, AsyncClient, Client, GenericResponseModel, ResponseModel\n")
+            else:
+                local_imports.append("from ..core import ApiError, Client, GenericResponseModel, ResponseModel\n")
             # Remove GenericResponseModel from models import
             all_package_models = all_package_models - {"GenericResponseModel"}
         else:
-            local_imports.append("from ..core import ApiError, Client, ResponseModel\n")
+            if include_async:
+                local_imports.append("from ..core import ApiError, AsyncClient, Client, ResponseModel\n")
+            else:
+                local_imports.append("from ..core import ApiError, Client, ResponseModel\n")
 
         # Parent imports for models (..)
         if all_package_models:
@@ -232,11 +242,17 @@ class ClientGenerator:
         self._generated_clients.append(config_file_path)
 
     def create_class(self, spec: dict[str, Any], output_path: str) -> None:
-        """Generate API client class from OpenAPI specification."""
+        """Generate API client class from OpenAPI specification.
+
+        Generates both synchronous and asynchronous client classes in the same file.
+        """
         class_name, api_path, paths = self.extract_api_metadata(spec)
+        async_class_name = f"Async{class_name}"
 
         all_types: set[str] = set()
         all_package_models: set[str] = set()
+
+        # Generate sync class
         method_lines = [f"class {class_name}(Client):\n"]
 
         # Add class docstring from API description if available
@@ -246,7 +262,7 @@ class ClientGenerator:
             if normalized_desc:  # Only add if not empty
                 method_lines.append(f'    """{normalized_desc}"""\n\n')
 
-        # Process all API methods
+        # Process all API methods for sync class
         for path, methods in paths.items():
             for method, details in methods.items():
                 method_definition = self.process_single_method(
@@ -255,8 +271,26 @@ class ClientGenerator:
                 if method_definition:
                     method_lines.append(method_definition)
 
-        # Generate complete file
-        import_lines = self.generate_import_lines(class_name, all_types, all_package_models)
+        # Generate async class
+        method_lines.append(f"\nclass {async_class_name}(AsyncClient):\n")
+
+        # Add class docstring for async class
+        if api_description := spec.get("info", {}).get("description"):
+            normalized_desc = normalize_description(api_description)
+            if normalized_desc:
+                method_lines.append(f'    """{normalized_desc}"""\n\n')
+
+        # Process all API methods for async class
+        for path, methods in paths.items():
+            for method, details in methods.items():
+                method_definition = self.process_single_method(
+                    path, method, details, api_path, all_types, all_package_models, is_async=True
+                )
+                if method_definition:
+                    method_lines.append(method_definition)
+
+        # Generate complete file with both classes
+        import_lines = self.generate_import_lines(class_name, all_types, all_package_models, include_async=True)
 
         class_file_path = os.path.join(output_path, f"{class_name}.py")
         os.makedirs(output_path, exist_ok=True)
@@ -354,21 +388,27 @@ class ClientGenerator:
         self._reference_map = reference_map or {}
 
         class_names = []
+        async_class_names = []
         for i, spec in enumerate(specs):
             api_name = get_api_name(spec)
             api_name_clean = self._normalize_api_name(api_name, i)
 
             class_name = f"{sanitize_name(api_name_clean)}Client"
             class_names.append(class_name)
+            async_class_names.append(f"Async{class_name}")
+
+        # Combine all class names for exports
+        all_class_names = class_names + async_class_names
+
         init_file_path = os.path.join(base_path, "__init__.py")
         with open(init_file_path, "w") as init_file:
-            class_names_joined = ",\n    ".join(class_names)
+            class_names_joined = ",\n    ".join(all_class_names)
             init_file.write(f"from .endpoints import (\n    {class_names_joined},\n)\n")
             init_file.write("from . import models\n")
             init_file.write("from .core import __version__\n")
 
             init_file.write("\n__all__ = [\n")
-            init_file.write(",\n".join([f'    "{name}"' for name in class_names]))
+            init_file.write(",\n".join([f'    "{name}"' for name in all_class_names]))
             init_file.write(',\n    "models",\n    "__version__",\n]\n')
 
         endpoint_path = os.path.join(base_path, "endpoints")
@@ -376,15 +416,22 @@ class ClientGenerator:
         endpoint_init_file = os.path.join(endpoint_path, "__init__.py")
         with open(endpoint_init_file, "w") as endpoint_init:
             endpoint_init.write("from typing import Literal\n\n")
-            endpoint_init.write("\n".join([f"from .{name} import {name}" for name in class_names]))
-            endpoint_init.write("\n\n")
+            # Import both sync and async clients from each file
+            for class_name in class_names:
+                async_class_name = f"Async{class_name}"
+                endpoint_init.write(f"from .{class_name} import {async_class_name}, {class_name}\n")
+            endpoint_init.write("\n")
 
-            # Generate TfLEndpoint Literal type
+            # Generate TfLEndpoint Literal type (sync clients only for backwards compatibility)
             endpoint_names = ",\n    ".join(f'"{name}"' for name in class_names)
             endpoint_init.write(f"TfLEndpoint = Literal[\n    {endpoint_names},\n]\n\n")
 
+            # Generate AsyncTfLEndpoint Literal type for async clients
+            async_endpoint_names = ",\n    ".join(f'"{name}"' for name in async_class_names)
+            endpoint_init.write(f"AsyncTfLEndpoint = Literal[\n    {async_endpoint_names},\n]\n\n")
+
             endpoint_init.write("__all__ = [\n")
-            endpoint_init.write(",\n".join([f'    "{name}"' for name in class_names]))
+            endpoint_init.write(",\n".join([f'    "{name}"' for name in all_class_names]))
             endpoint_init.write(",\n]\n")
 
         self._generated_clients.append(init_file_path)
