@@ -7,13 +7,20 @@ Simple tests to verify that:
 3. Error objects contain useful information for debugging
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import httpx
 import pytest
-from requests.exceptions import ConnectionError, Timeout
 
 from pydantic_tfl_api.core import ApiError
+from pydantic_tfl_api.core.http_client import HTTPClientBase
 from pydantic_tfl_api.endpoints import LineClient
+
+
+@pytest.fixture
+def mock_http_client() -> Mock:
+    """Create a mock HTTPClientBase for testing."""
+    return Mock(spec=HTTPClientBase)
 
 
 class TestErrorHandling:
@@ -33,48 +40,45 @@ class TestErrorHandling:
         assert result.http_status_code == 429, f"Expected 429 status code, got {result.http_status_code}"
         assert "Invalid App Key" in result.http_status, f"Expected 'Invalid App Key' in status: {result.http_status}"
 
-    def test_network_timeout_propagates(self) -> None:
+    def test_network_timeout_propagates(self, mock_http_client: Mock) -> None:
         """Test that network timeouts propagate to caller."""
-        client = LineClient()
+        mock_http_client.get.side_effect = httpx.TimeoutException("Connection timed out")
 
-        with patch("requests.Session.request") as mock_request:
-            mock_request.side_effect = Timeout("Connection timed out")
+        client = LineClient(http_client=mock_http_client)
 
-            # Should raise Timeout exception, not catch it
-            with pytest.raises(Timeout):
-                client.MetaModes()
+        # Should raise TimeoutException, not catch it
+        with pytest.raises(httpx.TimeoutException):
+            client.MetaModes()
 
-    def test_connection_error_propagates(self) -> None:
+    def test_connection_error_propagates(self, mock_http_client: Mock) -> None:
         """Test that connection errors propagate to caller."""
-        client = LineClient()
+        mock_http_client.get.side_effect = httpx.ConnectError("Connection refused")
 
-        with patch("requests.Session.request") as mock_request:
-            mock_request.side_effect = ConnectionError("Connection refused")
+        client = LineClient(http_client=mock_http_client)
 
-            # Should raise ConnectionError exception, not catch it
-            with pytest.raises(ConnectionError):
-                client.MetaModes()
+        # Should raise ConnectError exception, not catch it
+        with pytest.raises(httpx.ConnectError):
+            client.MetaModes()
 
-    def test_http_500_returns_api_error(self) -> None:
+    def test_http_500_returns_api_error(self, mock_http_client: Mock) -> None:
         """Test handling of HTTP 500 server errors."""
-        client = LineClient()
+        # Create mock HTTP response
+        mock_http_response = Mock()
+        mock_http_response.status_code = 500
+        mock_http_response.text = "Internal Server Error"
+        mock_http_response.reason = "Internal Server Error"
+        mock_http_response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
+        mock_http_response.headers = {"Content-Type": "text/html", "Date": "Sat, 28 Sep 2025 18:00:00 GMT"}
+        mock_http_response.json.side_effect = ValueError("No JSON object could be decoded")
 
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.text = "Internal Server Error"
-        mock_response.reason = "Internal Server Error"
-        mock_response.url = "https://api.tfl.gov.uk/Line/Meta/Modes"
-        mock_response.headers = {"content-type": "text/html", "Date": "Sat, 28 Sep 2025 18:00:00 GMT"}
-        mock_response.json.side_effect = ValueError("No JSON object could be decoded")
+        mock_http_client.get.return_value = mock_http_response
 
-        with patch("requests.Session.request") as mock_request:
-            mock_request.return_value = mock_response
+        client = LineClient(http_client=mock_http_client)
+        result = client.MetaModes()
 
-            result = client.MetaModes()
-
-            # Should return ApiError for server errors
-            assert isinstance(result, ApiError), f"Expected ApiError for 500 error, got {type(result)}"
-            assert result.http_status_code == 500, f"Expected 500 status code, got {result.http_status_code}"
+        # Should return ApiError for server errors
+        assert isinstance(result, ApiError), f"Expected ApiError for 500 error, got {type(result)}"
+        assert result.http_status_code == 500, f"Expected 500 status code, got {result.http_status_code}"
 
     def test_api_error_has_useful_information(self) -> None:
         """Test that ApiError objects contain debugging information."""

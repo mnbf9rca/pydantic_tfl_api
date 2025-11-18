@@ -466,3 +466,64 @@ class TestImports:
 
         assert get_default_http_client is not None
         assert get_default_async_http_client is not None
+
+
+class TestImportErrorHandling:
+    """Tests for import error handling when optional dependencies are missing."""
+
+    def test_get_default_async_http_client_raises_helpful_error_when_httpx_missing(self) -> None:
+        """Test that get_default_async_http_client raises helpful error when httpx not installed."""
+        import builtins
+        import sys
+
+        original_import = builtins.__import__
+
+        def mock_import(name: str, *args: object, **kwargs: object) -> object:
+            if "async_httpx_client" in name:
+                raise ImportError("No module named 'httpx'")
+            return original_import(name, *args, **kwargs)
+
+        # Remove cached module to force reimport
+        modules_to_remove = [k for k in sys.modules if "async_httpx_client" in k]
+        removed = {k: sys.modules.pop(k) for k in modules_to_remove}
+
+        try:
+            with patch.object(builtins, "__import__", side_effect=mock_import):
+                from pydantic_tfl_api.core.http_client import get_default_async_http_client
+
+                with pytest.raises(ImportError) as exc_info:
+                    get_default_async_http_client()
+
+                assert "httpx is required" in str(exc_info.value)
+                assert "pip install pydantic-tfl-api[httpx]" in str(exc_info.value)
+        finally:
+            # Restore modules
+            sys.modules.update(removed)
+
+    def test_get_default_http_client_falls_back_to_requests(self) -> None:
+        """Test that get_default_http_client falls back to requests when httpx not available."""
+        import builtins
+        import sys
+
+        from pydantic_tfl_api.core.http_backends.requests_client import RequestsClient
+
+        original_import = builtins.__import__
+
+        def mock_import(name: str, *args: object, **kwargs: object) -> object:
+            if "httpx_client" in name and "async" not in name:
+                raise ImportError("No module named 'httpx'")
+            return original_import(name, *args, **kwargs)
+
+        # Remove cached module to force reimport
+        modules_to_remove = [k for k in sys.modules if "httpx_client" in k and "async" not in k]
+        removed = {k: sys.modules.pop(k) for k in modules_to_remove}
+
+        try:
+            with patch.object(builtins, "__import__", side_effect=mock_import):
+                from pydantic_tfl_api.core.http_client import get_default_http_client
+
+                client = get_default_http_client()
+                assert isinstance(client, RequestsClient)
+        finally:
+            # Restore modules
+            sys.modules.update(removed)

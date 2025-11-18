@@ -1,7 +1,7 @@
 from .async_client import AsyncClient
 from .async_rest_client import AsyncRestClient
 from .client import Client
-from .http_backends import RequestsClient
+from .http_backends import AsyncHttpxClient, HttpxClient
 from .http_client import (
     AsyncHTTPClientBase,
     HTTPClientBase,
@@ -13,13 +13,13 @@ from .package_models import ApiError, GenericResponseModel, ResponseModel
 from .response import UnifiedResponse
 from .rest_client import RestClient
 
-# Optional httpx imports - only available if httpx is installed
+# Optional requests import - only available if requests is installed
 try:
-    from .http_backends import AsyncHttpxClient, HttpxClient  # noqa: F401
+    from .http_backends import RequestsClient  # noqa: F401
 
-    _httpx_available = True
+    _requests_available = True
 except ImportError:
-    _httpx_available = False
+    _requests_available = False
 
 # Runtime version discovery from installed package metadata
 try:
@@ -41,13 +41,14 @@ __all__ = [
     "HTTPClientBase",
     "AsyncHTTPClientBase",
     "HTTPResponse",
-    "RequestsClient",
+    "HttpxClient",
+    "AsyncHttpxClient",
     "UnifiedResponse",
     "get_default_http_client",
     "get_default_async_http_client",
     "__version__",
 ]
 
-# Add httpx clients to __all__ if available
-if _httpx_available:
-    __all__ += ["HttpxClient", "AsyncHttpxClient"]
+# Add requests client to __all__ if available
+if _requests_available:
+    __all__ += ["RequestsClient"]

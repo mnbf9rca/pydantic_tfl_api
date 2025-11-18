@@ -5,8 +5,9 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from pydantic_tfl_api.core import Client, HTTPClientBase, HTTPResponse, RequestsClient, RestClient, UnifiedResponse
-from pydantic_tfl_api.core.http_backends.requests_client import RequestsResponse
+from pydantic_tfl_api.core import Client, HTTPClientBase, HTTPResponse, RestClient, UnifiedResponse
+from pydantic_tfl_api.core.http_backends.httpx_client import HttpxClient
+from pydantic_tfl_api.core.http_backends.requests_client import RequestsClient, RequestsResponse
 
 
 class TestHTTPClientBase:
@@ -244,10 +245,10 @@ class TestUnifiedResponse:
 class TestRestClientWithHTTPClientAbstraction:
     """Tests for RestClient with the new HTTP client abstraction."""
 
-    def test_default_http_client_is_requests_client(self) -> None:
-        """Test that RestClient uses RequestsClient by default."""
+    def test_default_http_client_is_httpx_client(self) -> None:
+        """Test that RestClient uses HttpxClient by default."""
         client = RestClient()
-        assert isinstance(client.http_client, RequestsClient)
+        assert isinstance(client.http_client, HttpxClient)
 
     def test_custom_http_client_injection(self) -> None:
         """Test that a custom HTTP client can be injected."""
@@ -290,17 +291,19 @@ class TestRestClientWithHTTPClientAbstraction:
 
     def test_app_key_included_in_headers(self) -> None:
         """Test that app_key is included in request headers."""
-        with patch("pydantic_tfl_api.core.http_backends.requests_client.requests.get") as mock_get:
-            mock_response = Mock(spec=requests.Response)
-            mock_response.status_code = 200
-            mock_get.return_value = mock_response
+        # Create mock HTTP client that captures the call
+        mock_http_client = Mock(spec=HTTPClientBase)
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_http_client.get.return_value = mock_response
 
-            client = RestClient(app_key="test_key")
-            client.send_request("http://api.tfl.gov.uk/", "Line/victoria")
+        client = RestClient(app_key="test_key", http_client=mock_http_client)
+        client.send_request("http://api.tfl.gov.uk/", "Line/victoria")
 
-            call_args = mock_get.call_args
-            headers = call_args.kwargs.get("headers") or call_args[1].get("headers")
-            assert headers["app_key"] == "test_key"
+        # Verify the headers passed to the HTTP client
+        call_args = mock_http_client.get.call_args
+        headers = call_args.kwargs.get("headers") or call_args[1].get("headers")
+        assert headers["app_key"] == "test_key"
 
 
 class TestClientWithHTTPClientAbstraction:
@@ -309,7 +312,7 @@ class TestClientWithHTTPClientAbstraction:
     def test_default_client_works(self) -> None:
         """Test that Client works with default HTTP client."""
         client = Client()
-        assert isinstance(client.client.http_client, RequestsClient)
+        assert isinstance(client.client.http_client, HttpxClient)
 
     def test_custom_http_client_passed_through(self) -> None:
         """Test that custom HTTP client is passed to RestClient."""

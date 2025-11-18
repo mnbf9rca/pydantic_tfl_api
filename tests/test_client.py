@@ -856,19 +856,21 @@ class TestApiErrorRegistration:
 
     def test_send_request_and_deserialize_error_response(self) -> None:
         """Test full flow: API call returning JSON error response."""
+        from pydantic_tfl_api.core.response import UnifiedResponse
+
         test_client = SampleClient()
 
-        # Mock the API to return a JSON error
-        mock_response = Mock()
-        mock_response.status_code = 400
-        mock_response.reason = "Bad Request"
-        mock_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
-        mock_response.headers = {
+        # Create a mock that satisfies the HTTPResponse protocol
+        mock_http_response = Mock()
+        mock_http_response.status_code = 400
+        mock_http_response.reason = "Bad Request"
+        mock_http_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
+        mock_http_response.headers = {
             "Content-Type": "application/json",
             "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
             "Cache-Control": "public, max-age=300",
         }
-        mock_response.json.return_value = {
+        mock_http_response.json.return_value = {
             "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
             "exceptionType": "EntityNotFoundException",
             "httpStatusCode": 400,
@@ -877,7 +879,10 @@ class TestApiErrorRegistration:
             "message": "Invalid mode 'invalid'",
         }
 
-        with patch("requests.Session.request", return_value=mock_response):
+        # Mock at the RestClient.send_request level to return UnifiedResponse
+        mock_unified_response = UnifiedResponse(mock_http_response)
+
+        with patch.object(test_client.client, "send_request", return_value=mock_unified_response):
             result = test_client.Line_test_endpoint("invalid")
 
         # Should successfully deserialize the JSON error

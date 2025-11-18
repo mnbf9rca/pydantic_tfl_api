@@ -263,7 +263,7 @@ if not validate_response_content(result):
         assert result.returncode == 0, f"TfL API query failed: {result.stderr}"
         assert "TfL API query successful" in result.stdout, "API query did not complete successfully"
 
-    @pytest.mark.parametrize("dependency", ["pydantic", "requests"])
+    @pytest.mark.parametrize("dependency", ["pydantic", "httpx"])
     def test_package_dependencies_correct(self, isolated_env: Any, dependency: Any) -> None:
         """Test that individual package dependencies are installed correctly."""
         python_path = isolated_env["python_path"]
