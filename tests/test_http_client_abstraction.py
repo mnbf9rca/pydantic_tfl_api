@@ -1,7 +1,7 @@
 """Tests for the HTTP client abstraction layer (Phase 1)."""
 
 from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -348,8 +348,9 @@ class TestBuildSystemCopiesHTTPBackends:
 
     def test_py_typed_marker_exists(self) -> None:
         """Test that py.typed marker file exists for PEP 561 compliance."""
-        import pydantic_tfl_api
         from pathlib import Path
+
+        import pydantic_tfl_api
 
         package_dir = Path(pydantic_tfl_api.__file__).parent
         py_typed_path = package_dir / "py.typed"
