@@ -14,9 +14,8 @@ import time
 from contextlib import suppress
 
 import pytest
-import requests
 
-from pydantic_tfl_api.core import ApiError, ResponseModel
+from pydantic_tfl_api.core import ApiError, ResponseModel, get_default_http_client
 from pydantic_tfl_api.endpoints import BikePointClient, JourneyClient, LineClient, ModeClient, StopPointClient
 
 
@@ -49,7 +48,8 @@ class TestBasicFunctionality:
         """Skip tests if TfL API is unavailable."""
 
         with suppress(Exception):
-            response = requests.get("https://api.tfl.gov.uk/", timeout=10)
+            http_client = get_default_http_client()
+            response = http_client.get("https://api.tfl.gov.uk/", timeout=10)
             if response.status_code == 200:
                 return True
         pytest.skip("TfL API unavailable - skipping basic functionality tests")

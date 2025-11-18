@@ -266,9 +266,13 @@ class TestGetDefaultHttpClient:
         assert isinstance(client, HttpxClient)
 
         # Also verify that RequestsClient is importable as a fallback option
-        from pydantic_tfl_api.core.http_backends.requests_client import RequestsClient
+        # (only when requests is installed)
+        from contextlib import suppress
 
-        assert RequestsClient is not None
+        with suppress(ImportError):
+            from pydantic_tfl_api.core.http_backends.requests_client import RequestsClient
+
+            assert RequestsClient is not None
 
 
 class TestGetDefaultAsyncHttpClient:
@@ -502,6 +506,9 @@ class TestImportErrorHandling:
 
     def test_get_default_http_client_falls_back_to_requests(self) -> None:
         """Test that get_default_http_client falls back to requests when httpx not available."""
+        # Skip if requests is not installed (this test needs requests for the fallback)
+        pytest.importorskip("requests")
+
         import builtins
         import sys
 

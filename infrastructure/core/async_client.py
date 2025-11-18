@@ -175,7 +175,8 @@ class AsyncClient:
         # Check content-type (may have charset suffix)
         content_type = response.headers.get("Content-Type") or ""
         if content_type.startswith("application/json"):
-            return self._deserialize("ApiError", response)
+            result = self._deserialize("ApiError", response)
+            return result.content  # Extract ApiError from ResponseModel
         # Get timestamp from Date header, or use current time if not present
         date_header = response.headers.get("Date")
         timestamp = parsedate_to_datetime(date_header) if date_header else datetime.now(UTC)
