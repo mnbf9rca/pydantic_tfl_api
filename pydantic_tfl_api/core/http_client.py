@@ -136,6 +136,12 @@ def get_default_async_http_client() -> AsyncHTTPClientBase:
     Raises:
         ImportError: If httpx is not installed.
     """
-    from .http_backends.async_httpx_client import AsyncHttpxClient
+    try:
+        from .http_backends.async_httpx_client import AsyncHttpxClient
 
-    return AsyncHttpxClient()
+        return AsyncHttpxClient()
+    except ImportError:
+        raise ImportError(
+            "httpx is required for async client support. "
+            "Install it with: pip install pydantic-tfl-api[httpx]"
+        ) from None

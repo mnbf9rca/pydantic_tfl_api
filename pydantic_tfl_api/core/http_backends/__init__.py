@@ -1,14 +1,14 @@
 # HTTP Backend Implementations
 # This package contains concrete HTTP client implementations.
 
-from .requests_client import RequestsClient
+from .async_httpx_client import AsyncHttpxClient
+from .httpx_client import HttpxClient
 
-# Optional httpx imports - only available if httpx is installed
+# Optional requests import - only available if requests is installed
 try:
-    from .async_httpx_client import AsyncHttpxClient
-    from .httpx_client import HttpxClient
+    from .requests_client import RequestsClient
 
-    __all__ = ["RequestsClient", "HttpxClient", "AsyncHttpxClient"]
+    __all__ = ["HttpxClient", "AsyncHttpxClient", "RequestsClient"]
 except ImportError:
-    # httpx not installed, only requests backend available
-    __all__ = ["RequestsClient"]
+    # requests not installed, only httpx backends available
+    __all__ = ["HttpxClient", "AsyncHttpxClient"]
