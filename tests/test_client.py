@@ -390,13 +390,16 @@ def test_get_maxage_headers_from_cache_control_header(
         "list_of_models",
     ],
 )
-def test_deserialize(model_name: str, response_content: dict[str, str] | list[dict[str, str]], expected_result: MockModel | list[MockModel]) -> None:
+def test_deserialize(
+    model_name: str,
+    response_content: dict[str, str] | list[dict[str, str]],
+    expected_result: MockModel | list[MockModel],
+) -> None:
     # Create mock response
     response_date_time = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UTC)
     response_date_time_string = format_datetime(response_date_time)
     Response_Object = create_mock_http_response(
-        headers={"Date": response_date_time_string},
-        text=json.dumps(response_content)
+        headers={"Date": response_date_time_string}, text=json.dumps(response_content)
     )
     Response_Object.json.return_value = response_content
 
