@@ -678,7 +678,7 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
 
 
 @pytest.mark.parametrize(
-    "content_type, response_content, mock_deserialize_result, expected_result",
+    "content_type, response_content, expected_result",
     [
         (
             "application/json",
@@ -690,36 +690,22 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
                 "relativeUri": "/uri",
                 "message": "message",
             },
-            # Mock _deserialize returns ResponseModel, we extract .content
-            ResponseModel(
-                content_expires=None,
-                shared_expires=None,
-                response_timestamp=None,
-                content=ApiError(
-                    timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
-                    exception_type="type",
-                    http_status_code=404,
-                    http_status="Not Found",
-                    relative_uri="/uri",
-                    message="message",
-                ),
-            ),
+            # _deserialize_error now returns raw text without JSON parsing
             ApiError(
                 timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
-                exception_type="type",
+                exception_type="Not Found",
                 http_status_code=404,
                 http_status="Not Found",
                 relative_uri="/uri",
-                message="message",
+                message='{"timestampUtc": "Date", "exceptionType": "type", "httpStatusCode": 404, "httpStatus": "Not Found", "relativeUri": "/uri", "message": "message"}',
             ),
         ),
         (
             "text/html",
             "Error message",
-            None,  # _deserialize not called for non-JSON
             ApiError(
                 timestamp_utc=parsedate_to_datetime("Tue, 15 Nov 1994 12:45:26 GMT"),
-                exception_type="Unknown",
+                exception_type="Not Found",
                 http_status_code=404,
                 http_status="Not Found",
                 relative_uri="/uri",
@@ -735,7 +721,6 @@ datetime_object_with_time_and_tz_utc = datetime(2023, 12, 31, 1, 2, 3, tzinfo=UT
 def test_deserialize_error(
     content_type: str,
     response_content: dict[str, str | int] | str,
-    mock_deserialize_result: ResponseModel | None,
     expected_result: ApiError,
 ) -> None:
     # Create mock response
@@ -754,9 +739,8 @@ def test_deserialize_error(
     response._content = bytes(content_text, "utf-8")
 
     test_client = Client()
-    with patch.object(test_client, "_deserialize", return_value=mock_deserialize_result):
-        # Act
-        result = test_client._deserialize_error(response)
+    # Act - no mocking needed, _deserialize_error no longer calls _deserialize
+    result = test_client._deserialize_error(response)
 
     # Assert
     assert result == expected_result
@@ -858,9 +842,8 @@ class TestApiErrorRegistration:
     def test_deserialize_error_json_without_mocking(self) -> None:
         """Test actual JSON error deserialization without mocking _deserialize.
 
-        This is the critical regression test for issue #143. The original bug
-        occurred because _deserialize_error tried to call _get_model("ApiError")
-        but ApiError wasn't registered in the models dictionary.
+        After issue #158, _deserialize_error no longer parses JSON content.
+        It returns the raw response text as the message.
         """
         # Create a mock JSON error response from TfL API
         error_json = {
@@ -886,14 +869,15 @@ class TestApiErrorRegistration:
 
         test_client = Client()
 
-        # This should NOT raise ValueError about ApiError not being found
+        # This should return an ApiError with raw text
         result = test_client._deserialize_error(response)
 
-        # Verify the result is properly deserialized as ApiError
+        # Verify the result is an ApiError with raw response text
         assert isinstance(result, ApiError), "Should return an ApiError"
         assert result.http_status_code == 429
-        assert result.http_status == "Invalid App Key"
-        assert result.message == "Rate limit exceeded"
+        assert result.http_status == "Too Many Requests"  # Uses response.reason
+        assert result.exception_type == "Too Many Requests"  # Uses response.reason
+        assert result.message == error_text  # Raw JSON text
 
     def test_deserialize_error_non_json(self) -> None:
         """Test error deserialization for non-JSON responses (control test)."""
@@ -916,7 +900,7 @@ class TestApiErrorRegistration:
 
         assert isinstance(result, ApiError), "Should return ApiError directly for non-JSON"
         assert result.http_status_code == 500
-        assert result.exception_type == "Unknown"
+        assert result.exception_type == "Internal Server Error"
 
     def test_send_request_and_deserialize_error_response(self) -> None:
         """Test full flow: API call returning JSON error response."""
@@ -924,17 +908,8 @@ class TestApiErrorRegistration:
 
         test_client = SampleClient()
 
-        # Create a mock that satisfies the HTTPResponse protocol
-        mock_http_response = Mock()
-        mock_http_response.status_code = 400
-        mock_http_response.reason = "Bad Request"
-        mock_http_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
-        mock_http_response.headers = {
-            "Content-Type": "application/json",
-            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
-            "Cache-Control": "public, max-age=300",
-        }
-        mock_http_response.json.return_value = {
+        # Create JSON error response
+        error_json = {
             "timestampUtc": "Mon, 15 Jan 2024 12:00:00 GMT",
             "exceptionType": "EntityNotFoundException",
             "httpStatusCode": 400,
@@ -942,6 +917,20 @@ class TestApiErrorRegistration:
             "relativeUri": "/Line/Mode/invalid/Status",
             "message": "Invalid mode 'invalid'",
         }
+        error_text = json.dumps(error_json)
+
+        # Create a mock that satisfies the HTTPResponse protocol
+        mock_http_response = Mock()
+        mock_http_response.status_code = 400
+        mock_http_response.reason = "Bad Request"
+        mock_http_response.url = "https://api.tfl.gov.uk/Line/Mode/invalid/Status"
+        mock_http_response.text = error_text
+        mock_http_response.headers = {
+            "Content-Type": "application/json",
+            "Date": "Mon, 15 Jan 2024 12:00:00 GMT",
+            "Cache-Control": "public, max-age=300",
+        }
+        mock_http_response.json.return_value = error_json
 
         # Mock at the RestClient.send_request level to return UnifiedResponse
         mock_unified_response = UnifiedResponse(mock_http_response)
@@ -949,7 +938,9 @@ class TestApiErrorRegistration:
         with patch.object(test_client.client, "send_request", return_value=mock_unified_response):
             result = test_client.Line_test_endpoint("invalid")
 
-        # Should successfully deserialize the JSON error and return ApiError directly
+        # Should return ApiError with raw text (no JSON parsing after issue #158)
         assert isinstance(result, ApiError), "Should return ApiError for JSON error"
         assert result.http_status_code == 400
-        assert result.message == "Invalid mode 'invalid'"
+        assert result.http_status == "Bad Request"
+        assert result.exception_type == "Bad Request"
+        assert result.message == error_text  # Raw JSON text
