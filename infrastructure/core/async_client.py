@@ -172,10 +172,6 @@ class AsyncClient:
 
     def _deserialize_error(self, response: UnifiedResponse) -> ApiError:
         """Deserialize error response into ApiError model."""
-        # if content is json, deserialize it, otherwise manually create an ApiError object
-        if response.headers.get("Content-Type") == "application/json":
-            result = self._deserialize("ApiError", response)
-            return result.content  # Extract ApiError from ResponseModel
         # Get timestamp from Date header, or use current time if not present
         date_header = response.headers.get("Date")
         timestamp = parsedate_to_datetime(date_header) if date_header else datetime.now(UTC)
@@ -183,11 +179,11 @@ class AsyncClient:
             timestamp = timestamp.replace(tzinfo=UTC)
         return ApiError(
             timestamp_utc=timestamp,
-            exception_type="Unknown",
+            exception_type=response.reason or "HTTP Response Error",
             http_status_code=response.status_code,
-            http_status=response.reason,
-            relative_uri=response.url,
-            message=response.text,
+            http_status=response.reason or "Unknown",
+            relative_uri=response.url or "",
+            message=response.text or "No response body",
         )
 
     async def _send_request_and_deserialize(
