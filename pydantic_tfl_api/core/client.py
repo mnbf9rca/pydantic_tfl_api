@@ -172,11 +172,11 @@ class Client:
             timestamp = timestamp.replace(tzinfo=UTC)
         return ApiError(
             timestamp_utc=timestamp,
-            exception_type="Unknown",
+            exception_type=response.reason or "HTTP Response Error",
             http_status_code=response.status_code,
-            http_status=response.reason,
-            relative_uri=response.url,
-            message=response.text,
+            http_status=response.reason or "Unknown",
+            relative_uri=response.url or "",
+            message=response.text or "No response body",
         )
 
     def _send_request_and_deserialize(
