@@ -147,7 +147,7 @@ jobs:
 
       - name: Upload build artifact
         id: upload-artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           compression-level: 0 # no compression
           if-no-files-found: error
