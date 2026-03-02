@@ -136,7 +136,7 @@ jobs:
 
       - name: attest artifacts
         id: attest-artifacts
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*'
 
@@ -147,7 +147,7 @@ jobs:
 
       - name: Upload build artifact
         id: upload-artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           compression-level: 0 # no compression
           if-no-files-found: error
